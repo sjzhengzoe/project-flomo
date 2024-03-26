@@ -10,9 +10,6 @@
         <el-radio v-model="formData.type" :label="TypeOptions.SHARE_DRAMA">
           {{ TypeOptions.SHARE_DRAMA }}
         </el-radio>
-        <el-radio v-model="formData.type" :label="TypeOptions.COVER">
-          {{ TypeOptions.COVER }}
-        </el-radio>
       </el-form-item>
 
       <!-- Share Drama -->
@@ -56,13 +53,6 @@
         </el-form-item>
         <el-form-item label="内容">
           <el-input v-model="formData.text[0]" autosize type="textarea" />
-        </el-form-item>
-      </template>
-
-      <!-- cover -->
-      <template v-if="formData.type === TypeOptions.COVER">
-        <el-form-item label="标题">
-          <el-input v-model="formData.text[0]" />
         </el-form-item>
       </template>
     </el-form>

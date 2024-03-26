@@ -8,10 +8,10 @@
     </div>
 
     <!-- 预览区 -->
-    <div :class="['pic_limit_box flex f-y-c']">
+    <div :class="['width_limit_box flex f-y-c']">
       <!-- Share Drama -->
       <template v-if="formData.type === TypeOptions.SHARE_DRAMA">
-        <div id="red_pic_0" class="pic_box share_drama flex-y f-x-c">
+        <div id="pic_0" class="pic_box share_drama flex-y f-x-c">
           <div class="title">{{ formData.title }}</div>
           <img class="flex intro_pic" alt="" :src="formData.text[2]" />
           <div class="name">「 {{ formData.text[0] }} 」</div>
@@ -34,7 +34,7 @@
           :key="idx"
         >
           <template v-if="item">
-            <div :id="`red_pic_${idx}`" class="flex-y pic_box text f-y-c f-x-c">
+            <div :id="`pic_${idx}`" class="flex-y pic_box text f-y-c f-x-c">
               <div class="title">{{ formData.title }}</div>
               <div
                 v-for="(text, idx) in item.split('\n')"
@@ -46,19 +46,6 @@
             </div>
           </template>
         </template>
-      </template>
-
-      <!-- COVER -->
-      <template v-if="formData.type === TypeOptions.COVER">
-        <div id="red_pic_0" class="pic_box cover flex-y f-x-c">
-          {{
-            JSON.stringify(formData.text[0])
-              .replace(/\\n\\n/g, "\n")
-              .replace(/\\n/g, "\n")
-              .replace(/^"/, "")
-              .replace(/"$/, "")
-          }}
-        </div>
       </template>
     </div>
   </div>
@@ -77,7 +64,7 @@ const formData = computed(() => store.formData);
 
 // 下载图片
 const handleToDownload = async () => {
-  const name = "red_pic_";
+  const name = "pic_";
   let index = 0;
   while (document.getElementById(`${name}${index}`)) {
     const node = document.getElementById(`${name}${index}`);
@@ -99,7 +86,7 @@ const handleToDownload = async () => {
   position: relative;
   overflow: hidden;
 
-  .pic_limit_box {
+  .width_limit_box {
     width: 10100px;
     position: absolute;
     top: 20px;
@@ -165,12 +152,6 @@ const handleToDownload = async () => {
           overflow: hidden;
           text-overflow: ellipsis;
         }
-      }
-      &.cover {
-        line-height: 360px;
-        text-align: center;
-        font-family: "en1";
-        font-size: 200px;
       }
     }
   }

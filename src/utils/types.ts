@@ -6,5 +6,4 @@ export interface FormData {
 export enum TypeOptions {
   TEXT = "TEXT",
   SHARE_DRAMA = "Share Drama",
-  COVER = "COVER",
 }
