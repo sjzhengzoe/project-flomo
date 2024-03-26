@@ -6,6 +6,7 @@ import postcssPxToViewport from "postcss-px-to-viewport";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === "development" ? "/" : "./",
   plugins: [vue()],
   css: {
     postcss: {
@@ -31,7 +32,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "src"),
+      "@": path.resolve("./", "src"),
     },
     extensions: [".ts", ".less"],
   },
