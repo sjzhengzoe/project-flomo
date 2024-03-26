@@ -21,7 +21,7 @@ export default defineConfig({
           propList: ["*"], // 要进行转换的属性列表,*表示匹配所有,!表示不转换
           viewportUnit: "vw", // 转换后的视口单位
           fontViewportUnit: "vw", // 转换后字体使用的视口单位
-          selectorBlackList: ["html", ".usePx"], // 不进行转换的css选择器，继续使用原有单位
+          selectorBlackList: ["html", ".usePx", ".pic_box"], // 不进行转换的css选择器，继续使用原有单位
           minPixelValue: 0, // 设置最小的转换数值
           mediaQuery: true, // 设置媒体查询里的单位是否需要转换单位
           replace: true, // 是否直接更换属性值，而不添加备用属性

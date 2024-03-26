@@ -34,10 +34,7 @@
           :key="idx"
         >
           <template v-if="item">
-            <div
-              :id="`red_pic_${idx}`"
-              class="flex-y pic_box pic_box text f-y-c f-x-c"
-            >
+            <div :id="`red_pic_${idx}`" class="flex-y pic_box text f-y-c f-x-c">
               <div class="title">{{ formData.title }}</div>
               <div
                 v-for="(text, idx) in item.split('\n')"
@@ -72,7 +69,7 @@ import { ref, computed } from "vue";
 import { downloadBlob } from "@/utils";
 import { useStore } from "@/store";
 import domtoimage from "dom-to-image";
-import { TypeOptions } from "../types.d";
+import { TypeOptions } from "@/utils/types";
 
 const store = useStore();
 const loading = ref(false);
@@ -105,7 +102,7 @@ const handleToDownload = async () => {
   .pic_limit_box {
     width: 10100px;
     position: absolute;
-    top: 80px;
+    top: 20px;
     transform: scale(0.13);
     transform-origin: 0px 0px;
     .pic_box {
@@ -167,16 +164,6 @@ const handleToDownload = async () => {
           white-space: pre-line;
           overflow: hidden;
           text-overflow: ellipsis;
-        }
-        .show_more {
-          font-size: 60px;
-          line-height: 104px;
-          font-family: "zh1";
-          white-space: pre-line;
-          text-align: right;
-          position: absolute;
-          bottom: 90px;
-          left: 1150px;
         }
       }
       &.cover {

@@ -1,5 +1,5 @@
 import { defineStore, createPinia } from "pinia";
-import { FormData, TypeOptions } from "../types.d";
+import { FormData, TypeOptions } from "@/utils/types";
 
 export default createPinia();
 

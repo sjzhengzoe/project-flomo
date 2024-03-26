@@ -1,4 +1,4 @@
-import useClipboard from 'vue-clipboard3';
+import useClipboard from "vue-clipboard3";
 // 复制
 export const copyLink = async (content: string) => {
   const { toClipboard } = useClipboard();
@@ -11,8 +11,8 @@ export const downloadBlob = (blob: Blob, fileName: string) => {
   let url = URL.createObjectURL(blob);
 
   // 创建一个隐藏的<a>元素
-  let a = document.createElement('a');
-  a.style.display = 'none';
+  let a = document.createElement("a");
+  a.style.display = "none";
   a.href = url;
   a.download = fileName;
 

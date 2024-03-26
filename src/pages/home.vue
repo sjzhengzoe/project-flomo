@@ -74,7 +74,7 @@
 import { reactive } from "vue";
 import { useStore } from "@/store";
 import Card from "@/components/Card.vue";
-import { TypeOptions } from "@/types.d";
+import { TypeOptions } from "@/utils/types";
 import type { UploadProps } from "element-plus";
 
 const store = useStore();
@@ -97,3 +97,4 @@ const handleChange: UploadProps["onChange"] = async (uploadFile) => {
   background-color: rgba(250, 235, 215, 0.5);
 }
 </style>
+@/utils/types
