@@ -1,41 +1,38 @@
 <template>
-  <div class="content_box flex-y">
+  <div class="card_box flex-y">
     <!-- 操作区 -->
-    <div>
+    <div class="btn_box">
       <el-button :loading="loading" type="primary" @click="handleToDownload">
         下载图片
       </el-button>
     </div>
 
     <!-- 预览区 -->
-    <div :class="['width_limit_box flex f-y-c']">
-      <!-- Share Drama -->
-      <template v-if="formData.type === TypeOptions.SHARE_DRAMA">
-        <div id="pic_0" class="pic_box share_drama flex-y f-x-c">
-          <div class="title">{{ formData.title }}</div>
-          <img class="flex intro_pic" alt="" :src="formData.text[2]" />
-          <div class="name">「 {{ formData.text[0] }} 」</div>
-          <div :class="['key_box flex f-y-c f-x-c flex-w']">
-            <div
-              v-for="(key, idx) in formData.text[1].split(' ')"
-              :key="idx"
-              class="key"
-            >
-              {{ key }}
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <!-- Text -->
-      <template v-if="formData.type === TypeOptions.TEXT">
+    <div :class="['width_limit_box flex']">
+      <!-- THEME_1 -->
+      <template v-if="formData.theme === Theme.THEME_1">
         <template
-          v-for="(item, idx) in formData.text[0].split('\n\n')"
+          v-for="(item, idx) in formData.content
+            .replace(/\n{3,}/g, '\n\n')
+            .split('\n\n')"
           :key="idx"
         >
-          <template v-if="item">
-            <div :id="`pic_${idx}`" class="flex-y pic_box text f-y-c f-x-c">
-              <div class="title">{{ formData.title }}</div>
+          <template v-if="idx == 0">
+            <div :id="`pic_${idx}`" class="flex-y pic_box theme_1 text">
+              <div
+                v-for="(text, idx) in item.split('\n')"
+                :key="idx"
+                :class="['title']"
+              >
+                #
+                {{ text }}
+              </div>
+              <div class="footer_box">{{ formData.footer }}</div>
+            </div>
+          </template>
+
+          <template v-else>
+            <div :id="`pic_${idx}`" class="flex-y pic_box theme_1 text">
               <div
                 v-for="(text, idx) in item.split('\n')"
                 :key="idx"
@@ -56,7 +53,7 @@ import { ref, computed } from "vue";
 import { downloadBlob } from "@/utils";
 import { useStore } from "@/store";
 import domtoimage from "dom-to-image";
-import { TypeOptions } from "@/utils/types";
+import { Theme } from "@/utils/types";
 
 const store = useStore();
 const loading = ref(false);
@@ -71,7 +68,7 @@ const handleToDownload = async () => {
     loading.value = true;
     const blob = await domtoimage.toBlob(node, {
       width: 1440,
-      height: 1920,
+      height: 1440,
     });
     downloadBlob(blob, `${name}${index + 1}.png`);
     loading.value = false;
@@ -81,76 +78,53 @@ const handleToDownload = async () => {
 </script>
 
 <style lang="less" scoped>
-.content_box {
+.card_box {
   height: 340px;
   position: relative;
-  overflow: hidden;
+
+  .btn_box {
+    margin-bottom: 10px;
+  }
 
   .width_limit_box {
-    width: 10100px;
-    position: absolute;
+    width: 2700px;
+    flex-wrap: wrap;
     top: 20px;
     transform: scale(0.13);
     transform-origin: 0px 0px;
     .pic_box {
-      background-color: #000;
-      color: #fff;
+      &.theme_1 {
+        background: url("@/assets/images/theme_bg_1.jpg") top/cover no-repeat;
+      }
+      color: #000;
       box-sizing: border-box;
       width: 1440px;
-      height: 1920px;
-      // padding: 0 250px 0 120px;
-      padding: 0 180px;
-      &.share_drama {
-        .title {
-          font-size: 110px;
-          line-height: 200px;
-          text-align: center;
-          font-family: "en1";
-          margin-bottom: 70px;
-        }
-        .intro_pic {
-          margin: 10px 0 100px;
-          object-fit: contain;
-          max-height: 800px;
-        }
-        .name {
-          font-size: 100px;
-          line-height: 104px;
-          font-family: "zh1";
-          white-space: pre-line;
-          text-align: center;
-          margin-bottom: 40px;
-        }
-        .key_box {
-          .key {
-            font-size: 64px;
-            font-family: "zh1";
-            white-space: pre-line;
-            background-color: #fff;
-            color: #000;
-            margin: 14px 10px;
-            padding: 5px 10px;
-          }
-        }
-      }
+      height: 1440px;
+      margin: 0 20px 20px 0;
+      justify-content: center;
+      position: relative;
       &.text {
-        padding: 0 130px;
+        padding: 0px 130px;
         .title {
+          font-size: 90px;
+          line-height: 150px;
+          text-align: center;
+          padding: 0px 100px;
+          font-weight: 900;
+        }
+        .footer_box {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: 200px 0 30px;
           line-height: 200px;
           text-align: center;
-          font-family: "en1";
-          font-size: 95px;
-          margin-bottom: 30px;
+          font-size: 50px;
         }
         .desc {
-          font-size: 70px;
-          text-align: justify;
-          line-height: 98px;
-          font-family: "zh1";
-          text-indent: 120px;
-          white-space: pre-line;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-size: 60px;
+          line-height: 110px;
         }
       }
     }

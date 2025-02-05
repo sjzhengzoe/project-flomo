@@ -1,9 +1,12 @@
 export interface FormData {
-  text: string[]; // 内容
-  type: TypeOptions; // 类型
-  title: string; // 标题
+  content: string; // 内容
+  theme: Theme; // 主题
+  title: string; //标题
+  tagsOfRed: string; // 小红书标签
+  tagsOfDou: string; // 抖音标签
+  footer: string; // 底部
 }
-export enum TypeOptions {
-  TEXT = "TEXT",
-  SHARE_DRAMA = "Share Drama",
+export enum Theme {
+  THEME_1 = "THEME_1",
+  THEME_2 = "THEME_2",
 }
