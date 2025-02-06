@@ -38,7 +38,7 @@ jobs:
       - name: Install Tencent Cloud SDK
         run: |
           source venv/bin/activate
-          pip install tencentcloud-sdk-python
+          pip install -i https://mirrirs.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
           pip list  # 调试步骤，列出已安装的包
           pip show tencentcloud-sdk-python  # 调试步骤，显示安装路径
         shell: bash
