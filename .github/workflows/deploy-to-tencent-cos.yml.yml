@@ -1,0 +1,39 @@
+name: Deploy to Tencent COS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build # 或者你的构建命令
+
+      - name: Install Tencent Cloud CLI
+        run: |
+          pip install qcloudcli
+
+      - name: Configure Tencent Cloud CLI
+        run: |
+          qcloudcli configure set secretId ${{ secrets.TENCENT_SECRET_ID }}
+          qcloudcli configure set secretKey ${{ secrets.TENCENT_SECRET_KEY }}
+          qcloudcli configure set region ${{ secrets.TENCENT_REGION }}
+
+      - name: Upload files to Tencent COS
+        run: |
+          qcloudcli cos cp -r ./dist/ cos://{{ secrets.TENCENT_BUCKET_NAME }}/
