@@ -30,7 +30,9 @@ jobs:
           python-version: "3.8" # 使用一个兼容的 Python 版本
 
       - name: Install Tencent Cloud SDK
-        run: pip install tencentcloud-sdk-python
+        run: |
+          pip install tencentcloud-sdk-python
+          pip list  # 调试步骤，列出已安装的包
 
       - name: Upload files to Tencent COS
         run: |
