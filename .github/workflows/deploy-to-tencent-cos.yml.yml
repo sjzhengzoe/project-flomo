@@ -25,7 +25,6 @@ jobs:
         run: npm run build # 或者你的构建命令
 
       - name: Set up Python
-        uses: actions/setup-python@v4
         run: |
           pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
 
