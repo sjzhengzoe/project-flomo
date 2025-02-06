@@ -29,17 +29,25 @@ jobs:
         with:
           python-version: "3.9" # 使用一个兼容的 Python 版本
 
+      - name: Create and activate virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+
       - name: Install Tencent Cloud SDK
         run: |
+          source venv/bin/activate
           pip install tencentcloud-sdk-python
           pip list  # 调试步骤，列出已安装的包
 
       - name: Verify Tencent Cloud SDK Installation
         run: |
+          source venv/bin/activate
           python -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
 
       - name: Upload files to Tencent COS
         run: |
+          source venv/bin/activate
           python upload_to_cos.py
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
