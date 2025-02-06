@@ -26,7 +26,8 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
-        run: pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
+        run: |
+          pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
 
       - name: Verify Tencent Cloud SDK Installation
         run: |
