@@ -87,10 +87,10 @@ const handleToDownload = async () => {
   }
 
   .width_limit_box {
-    width: 2700px;
+    width: 1900px;
     flex-wrap: wrap;
     top: 20px;
-    transform: scale(0.13);
+    transform: scale(0.19);
     transform-origin: 0px 0px;
     .pic_box {
       &.theme_1 {
