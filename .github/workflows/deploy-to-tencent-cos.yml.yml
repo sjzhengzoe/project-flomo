@@ -34,6 +34,10 @@ jobs:
           pip install tencentcloud-sdk-python
           pip list  # 调试步骤，列出已安装的包
 
+      - name: Verify Tencent Cloud SDK Installation
+        run: |
+          python -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
+
       - name: Upload files to Tencent COS
         run: |
           python upload_to_cos.py
