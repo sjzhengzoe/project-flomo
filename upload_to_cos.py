@@ -1,10 +1,8 @@
 import os
 import sys
-import tencentcloud.cos.v5.cos_client as cos_client
-import tencentcloud.cos.v5.exception.cos_exception as cos_exception
-from tencentcloud.common import credential
-from tencentcloud.common.profile.client_profile import ClientProfile
-from tencentcloud.common.profile.http_profile import HttpProfile
+from tencentcloud.cos import CosConfig
+from tencentcloud.cos import CosS3Client
+from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 
 # 获取环境变量
 secret_id = os.getenv('TENCENT_SECRET_ID')
@@ -12,32 +10,24 @@ secret_key = os.getenv('TENCENT_SECRET_KEY')
 region = os.getenv('TENCENT_REGION')
 bucket_name = os.getenv('TENCENT_BUCKET_NAME')
 
-# 初始化凭证
-cred = credential.Credential(secret_id, secret_key)
+# 初始化配置
+token = None  # 使用临时密钥需要传入 token，默认为空
+scheme = 'https'  # 指定使用 https 协议
 
-# 初始化 HTTPProfile
-http_profile = HttpProfile()
-http_profile.endpoint = f"cos.{region}.myqcloud.com"
-
-# 初始化 ClientProfile
-client_profile = ClientProfile()
-client_profile.httpProfile = http_profile
-
-# 初始化 COS 客户端
-cos_client = cos_client.CosClient(cred, region, client_profile)
+config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token, Scheme=scheme)
+client = CosS3Client(config)
 
 # 上传文件
 def upload_file(local_file, cos_file):
     try:
-        response = cos_client.upload_file(
+        response = client.upload_file(
             Bucket=bucket_name,
             LocalFilePath=local_file,
             Key=cos_file
         )
         print(f"Uploaded {local_file} to {cos_file}")
-    except cos_exception.CosServiceError as e:
-        print(e.get_error_code())
-        print(e.get_error_message())
+    except TencentCloudSDKException as e:
+        print(e)
         sys.exit(1)
 
 # 遍历 dist 目录并上传文件

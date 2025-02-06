@@ -24,6 +24,11 @@ jobs:
       - name: Build project
         run: npm run build # 或者你的构建命令
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8" # 使用一个兼容的 Python 版本
+
       - name: Install Tencent Cloud SDK
         run: pip install tencentcloud-sdk-python
 
