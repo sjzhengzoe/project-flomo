@@ -27,12 +27,8 @@ jobs:
       - name: Set up Python
         run: |
           pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
-
-      - name: Verify Tencent Cloud SDK Installation
-        run: |
-          source venv/bin/activate
+          python -v
           python -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
-        shell: bash
 
       - name: Upload files to Tencent COS
         run: |
