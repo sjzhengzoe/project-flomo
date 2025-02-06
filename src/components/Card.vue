@@ -53,7 +53,7 @@ import { ref, computed } from "vue";
 import { downloadBlob } from "@/utils";
 import { useStore } from "@/store";
 import domtoimage from "dom-to-image";
-import { Theme } from "@/utils/types";
+import { Theme } from "@/utils/const";
 
 const store = useStore();
 const loading = ref(false);

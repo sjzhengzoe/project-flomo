@@ -36,7 +36,7 @@
 import { reactive } from "vue";
 import { useStore } from "@/store";
 import Card from "@/components/Card.vue";
-import { Theme } from "@/utils/types";
+import { Theme } from "@/utils/const";
 
 const store = useStore();
 const formData = reactive(store.formData);

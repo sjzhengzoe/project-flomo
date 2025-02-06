@@ -1,5 +1,5 @@
 import { defineStore, createPinia } from "pinia";
-import { FormData, Theme } from "@/utils/types";
+import { FormData, Theme } from "@/utils/const";
 
 export default createPinia();
 
@@ -14,7 +14,7 @@ export const useStore = defineStore("store", {
         tagsOfRed:
           "#自我觉察力[话题]# #有觉知的生活[话题]# #提升觉察力[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
-        content: "",
+        content: `测试标题\n\n测试内容 1\n\n测试内容 2`,
         theme: Theme.THEME_1,
         footer: "- 觉察练习 第 001 问 -",
       },
