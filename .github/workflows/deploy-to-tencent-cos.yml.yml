@@ -24,16 +24,14 @@ jobs:
       - name: Build project
         run: npm run build # 或者你的构建命令
 
-      - name: Install Tencent Cloud CLI
-        run: |
-          pip install qcloudcli
-
-      - name: Configure Tencent Cloud CLI
-        run: |
-          qcloudcli configure set secretId ${{ secrets.TENCENT_SECRET_ID }}
-          qcloudcli configure set secretKey ${{ secrets.TENCENT_SECRET_KEY }}
-          qcloudcli configure set region ${{ secrets.TENCENT_REGION }}
+      - name: Install Tencent Cloud SDK
+        run: pip install tencentcloud-sdk-python
 
       - name: Upload files to Tencent COS
         run: |
-          qcloudcli cos cp -r ./dist/ cos://{{ secrets.TENCENT_BUCKET_NAME }}/
+          python upload_to_cos.py
+        env:
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          TENCENT_REGION: ${{ secrets.TENCENT_REGION }}
+          TENCENT_BUCKET_NAME: ${{ secrets.TENCENT_BUCKET_NAME }}
