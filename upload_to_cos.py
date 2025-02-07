@@ -4,7 +4,6 @@ from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from qcloud_cos.cos_exception import CosClientError, CosServiceError
 
-
 # 获取环境变量
 secret_id = os.getenv('TENCENT_SECRET_ID')
 secret_key = os.getenv('TENCENT_SECRET_KEY')
@@ -18,21 +17,37 @@ scheme = 'https'  # 指定使用 https 协议
 config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token, Scheme=scheme)
 client = CosS3Client(config)
 
+# 上传文件
+def upload_file(local_file, cos_file, max_retries=3, retry_delay=5):
+    attempt = 0
+    while attempt < max_retries:
+        try:
+            response = client.upload_file(
+                Bucket=bucket_name,
+                LocalFilePath=local_file,
+                Key=cos_file
+            )
+            print(f"Uploaded {local_file} to {cos_file}")
+            return
+        except (CosClientError, CosServiceError) as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            attempt += 1
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print(f"Max retries reached. Failed to upload {local_file} to {cos_file}")
+                sys.exit(1)
+
 # 上传文件夹
 def upload_folder(local_folder, cos_folder):
-    try:
-        response = client.upload_folder(
-            Bucket=bucket_name,
-            LocalFolder=local_folder,
-            RemoteFolder=cos_folder
-        )
-        print(f"Uploaded folder {local_folder} to {cos_folder}")
-    except CosClientError as e:
-        print(f"CosClientError: {e}")
-        sys.exit(1)
-    except CosServiceError as e:
-        print(f"CosServiceError: {e}")
-        sys.exit(1)
+    for root, dirs, files in os.walk(local_folder):
+        for file in files:
+            local_file = os.path.join(root, file)
+            cos_file = os.path.relpath(local_file, local_folder)
+            if cos_folder:
+                cos_file = os.path.join(cos_folder, cos_file)
+            upload_file(local_file, cos_file)
 
 # 上传 dist 文件夹
 local_folder = 'dist'
