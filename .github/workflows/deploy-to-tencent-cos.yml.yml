@@ -26,9 +26,9 @@ jobs:
 
       - name: Set up Python
         run: |
-          pip install -i https://mirrors.tencent.com/pypi/simple/ --upgrade tencentcloud-sdk-python
-          python -v
-          python -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
+          pip3 install --upgrade tencentcloud-sdk-python
+          python3 -v
+          python3 -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
 
       - name: Upload files to Tencent COS
         run: |
