@@ -1,7 +1,7 @@
 import os
 import sys
-from tencentcloud.cos import CosConfig
-from tencentcloud.cos import CosS3Client
+from qcloud_cos import CosConfig
+from qcloud_cos import CosS3Client
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 
 # 获取环境变量

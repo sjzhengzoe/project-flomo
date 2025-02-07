@@ -26,9 +26,7 @@ jobs:
 
       - name: Set up Python
         run: |
-          pip3 install --upgrade tencentcloud-sdk-python
-          python3 -v
-          python3 -c "import tencentcloud.cos; print(tencentcloud.cos.__version__)"
+          pip3 install -U cos-python-sdk-v5
 
       - name: Upload files to Tencent COS
         run: |
