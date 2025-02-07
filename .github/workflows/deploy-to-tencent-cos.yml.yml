@@ -34,7 +34,7 @@ jobs:
           env
           python3 upload_to_cos.py
         env:
-          TENCENT_SECRET_ID: ${{ secrets }}
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           TENCENT_REGION: ${{ secrets.TENCENT_REGION }}
           TENCENT_BUCKET_NAME: ${{ secrets.TENCENT_BUCKET_NAME }}
