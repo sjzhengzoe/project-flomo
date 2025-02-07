@@ -27,6 +27,7 @@ jobs:
       - name: Set up SDK
         run: |
           pip3 install -U cos-python-sdk-v5
+          print(secrets)
 
       - name: Upload files to Tencent COS
         run: python3 upload_to_cos.py
