@@ -18,22 +18,23 @@ scheme = 'https'  # 指定使用 https 协议
 config = CosConfig(Region=region, SecretId=secret_id, SecretKey=secret_key, Token=token, Scheme=scheme)
 client = CosS3Client(config)
 
-# 上传文件
-def upload_file(local_file, cos_file):
+# 上传文件夹
+def upload_folder(local_folder, cos_folder):
     try:
-        response = client.upload_file(
+        response = client.upload_folder(
             Bucket=bucket_name,
-            LocalFilePath=local_file,
-            Key=cos_file
+            LocalFolder=local_folder,
+            RemoteFolder=cos_folder
         )
-        print(f"Uploaded {local_file} to {cos_file}")
-    except CosClientError or CosServiceError as e:
-        print(e)
+        print(f"Uploaded folder {local_folder} to {cos_folder}")
+    except CosClientError as e:
+        print(f"CosClientError: {e}")
+        sys.exit(1)
+    except CosServiceError as e:
+        print(f"CosServiceError: {e}")
         sys.exit(1)
 
-# 遍历 dist 目录并上传文件
-for root, dirs, files in os.walk('dist'):
-    for file in files:
-        local_file = os.path.join(root, file)
-        cos_file = os.path.relpath(local_file, 'dist')
-        upload_file(local_file, cos_file)
+# 上传 dist 文件夹
+local_folder = 'dist'
+cos_folder = 'project-flomo'  # 如果要上传到根目录，可以留空；否则指定子目录
+upload_folder(local_folder, cos_folder)

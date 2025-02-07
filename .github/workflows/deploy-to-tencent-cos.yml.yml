@@ -25,17 +25,13 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Set up SDK
-        run: |
-          pip3 install -U cos-python-sdk-v5
+      - name: Set up Tencent COS SDK
+        run: pip3 install -U cos-python-sdk-v5
 
       - name: Upload files to Tencent COS
-        run: |
-          echo "feifei: $TENCENT_SECRET_ID"
-          python3 upload_to_cos.py
+        run: python3 upload_to_cos.py
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
           TENCENT_REGION: ${{ secrets.TENCENT_REGION }}
           TENCENT_BUCKET_NAME: ${{ secrets.TENCENT_BUCKET_NAME }}
-        shell: bash
