@@ -10,7 +10,7 @@ export const useStore = defineStore("store", {
   state: () => {
     const state: State = {
       formData: {
-        title: "🍃 被 AI 的答案温暖到的瞬间",
+        title: "🧩 生活碎片收集中...",
         tagsOfRed:
           "#自我觉察力[话题]# #有觉知的生活[话题]# #提升觉察力[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",

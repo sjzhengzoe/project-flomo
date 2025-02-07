@@ -68,7 +68,7 @@ const handleToDownload = async () => {
     loading.value = true;
     const blob = await domtoimage.toBlob(node, {
       width: 1440,
-      height: 1440,
+      height: 1920,
     });
     downloadBlob(blob, `${name}${index + 1}.png`);
     loading.value = false;
@@ -99,14 +99,14 @@ const handleToDownload = async () => {
       color: #000;
       box-sizing: border-box;
       width: 1440px;
-      height: 1440px;
+      height: 1920px;
       margin: 0 20px 20px 0;
       justify-content: center;
       position: relative;
       &.text {
         padding: 0px 130px;
         .title {
-          font-size: 90px;
+          font-size: 120px;
           line-height: 150px;
           text-align: center;
           padding: 0px 100px;
@@ -120,7 +120,7 @@ const handleToDownload = async () => {
           margin: 200px 0 30px;
           line-height: 200px;
           text-align: center;
-          font-size: 50px;
+          font-size: 70px;
         }
         .desc {
           font-size: 60px;
