@@ -5,7 +5,7 @@
       <!-- 选择主题 -->
       <el-form-item label="主题：">
         <el-radio v-model="formData.theme" :label="Theme.THEME_1">
-          主题 1
+          主题一
         </el-radio>
       </el-form-item>
 
