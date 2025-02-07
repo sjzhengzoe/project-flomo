@@ -22,16 +22,14 @@ jobs:
         run: npm install
 
       - name: Build project
-        run: npm run build # 或者你的构建命令
+        run: npm run build
 
-      - name: Set up Python
+      - name: Set up SDK
         run: |
           pip3 install -U cos-python-sdk-v5
 
       - name: Upload files to Tencent COS
-        run: |
-          source venv/bin/activate
-          python upload_to_cos.py
+        run: python upload_to_cos.py
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
