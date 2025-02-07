@@ -30,9 +30,8 @@ jobs:
 
       - name: Upload files to Tencent COS
         run: |
-          print(secrets)
+          env
           python3 upload_to_cos.py
-
         env:
           TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
           TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
