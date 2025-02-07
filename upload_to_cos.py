@@ -2,7 +2,8 @@ import os
 import sys
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
-from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+from qcloud_cos.cos_exception import CosClientError, CosServiceError
+
 
 # 获取环境变量
 secret_id = os.getenv('TENCENT_SECRET_ID')
@@ -26,7 +27,7 @@ def upload_file(local_file, cos_file):
             Key=cos_file
         )
         print(f"Uploaded {local_file} to {cos_file}")
-    except TencentCloudSDKException as e:
+    except CosClientError or CosServiceError as e:
         print(e)
         sys.exit(1)
 
