@@ -1,14 +1,21 @@
 <template>
   <div class="Page">
     <!-- 操作区 -->
-    <el-form label-position="right" label-width="100px" :model="formData">
+    <el-form label-position="right" label-width="100px">
       <!-- 选择主题 -->
       <el-form-item label="主题：">
-        <el-radio v-model="formData.theme" :label="Theme.THEME_1">
-          主题一
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
+          觉察
+        </el-radio>
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
+          美食鉴赏家
+        </el-radio>
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
+          打怪升级计划
         </el-radio>
       </el-form-item>
-
+    </el-form>
+    <el-form label-position="right" label-width="100px" :model="formData">
       <!-- 内容 -->
       <el-form-item label="标题：">
         <el-input v-model="formData.title" />
@@ -33,13 +40,25 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
-import Card from "@/components/Card.vue";
+import Card from "@/components/Card/index.vue";
 import { Theme } from "@/utils/const";
 
 const store = useStore();
-const formData = reactive(store.formData);
+const formData = computed(() => {
+  if (store.nowTheme == Theme.THEME_1) {
+    return store.formData1;
+  }
+  if (store.nowTheme == Theme.THEME_2) {
+    return store.formData2;
+  }
+  if (store.nowTheme == Theme.THEME_3) {
+    return store.formData3;
+  }
+
+  return store.formData1;
+});
 </script>
 
 <style lang="less">
