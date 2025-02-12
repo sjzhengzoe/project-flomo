@@ -6,21 +6,10 @@
         .split('\n\n\n')"
       :key="idx"
     >
-      <!-- <template v-if="idx == 0">
-        <div :id="`pic_${idx}`" class="flex-y pic_box theme_1">
-          <div
-            v-for="(text, idx) in item.split('\n')"
-            :key="idx"
-            :class="['title']"
-          >
-            #
-            {{ text }}
-          </div>
-          <div class="footer_box">{{ formData.footer }}</div>
-        </div>
-      </template> -->
-
       <div :id="`pic_${idx}`" class="pic_box theme_1">
+        <div class="desc">
+          {{ idx + 1 < 10 ? "0" : "" }}{{ idx + 1 }} <br />
+        </div>
         <div v-for="text in item.split('\n')" :key="idx" :class="['desc']">
           {{ text }}
         </div>
@@ -34,7 +23,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-const formData = computed(() => store.formData1);
+const formData = computed(() => store.formData4);
 </script>
 
 <style lang="less" scoped>

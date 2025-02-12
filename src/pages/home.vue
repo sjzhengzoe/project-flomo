@@ -7,6 +7,9 @@
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
           觉察
         </el-radio>
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
+          碎碎念
+        </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
           美食鉴赏家
         </el-radio>
@@ -55,6 +58,9 @@ const formData = computed(() => {
   }
   if (store.nowTheme == Theme.THEME_3) {
     return store.formData3;
+  }
+  if (store.nowTheme == Theme.THEME_4) {
+    return store.formData4;
   }
 
   return store.formData1;

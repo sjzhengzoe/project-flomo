@@ -56,7 +56,6 @@ const formData = computed(() => store.formData2);
     position: relative;
     &.theme_2 {
       background: url("@/assets/images/theme_bg_1.jpg") top/cover no-repeat;
-
       padding: 650px 130px;
       .title {
         font-size: 120px;

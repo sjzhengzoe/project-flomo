@@ -17,6 +17,9 @@
 
       <!-- THEME_3 -->
       <Theme3 v-if="nowTheme === Theme.THEME_3" />
+
+      <!-- THEME_4 -->
+      <Theme4 v-if="nowTheme === Theme.THEME_4" />
     </div>
   </div>
 </template>
@@ -30,6 +33,7 @@ import { Theme } from "@/utils/const";
 import Theme1 from "./ui/Theme1.vue";
 import Theme2 from "./ui/Theme2.vue";
 import Theme3 from "./ui/Theme3.vue";
+import Theme4 from "./ui/Theme4.vue";
 
 const store = useStore();
 const nowTheme = computed(() => store.nowTheme);

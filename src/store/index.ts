@@ -8,18 +8,19 @@ interface State {
   formData1: FormData;
   formData2: FormData;
   formData3: FormData;
+  formData4: FormData;
 }
 export const useStore = defineStore("store", {
   state: () => {
     const state: State = {
       nowTheme: Theme.THEME_1,
       formData1: {
-        title: "🧩 生活碎片收集中...",
+        title: "📝 我的觉察日志",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
-        content: `今天有什么令你感动的事情发生吗？\n\n内容 1\n\n内容 2`,
-        footer: "- 觉察练习 第 001 问 -",
+        content: `今天有什么令你感动的事情发生吗？\n\n\n内容 1\n\n\n内容 2`,
+        footer: "",
       },
       formData2: {
         title: "🍚 选择困难症｜随机选粮票决定吃什么",
@@ -36,6 +37,14 @@ export const useStore = defineStore("store", {
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
         content: `测试标题\n\n测试内容 1\n\n测试内容 2`,
         footer: "- 觉察练习 第 001 问 -",
+      },
+      formData4: {
+        title: "📝 我的觉察日志",
+        tagsOfRed:
+          "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
+        tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
+        content: `今天有什么令你感动的事情发生吗？\n\n\n内容 1\n\n\n内容 2`,
+        footer: "",
       },
     };
     return state;
