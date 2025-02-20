@@ -7,13 +7,13 @@
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
           觉察
         </el-radio>
-        <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
           碎碎念
         </el-radio>
-        <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
           美食鉴赏家
         </el-radio>
-        <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
           打怪升级计划
         </el-radio>
       </el-form-item>
