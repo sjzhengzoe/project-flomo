@@ -6,7 +6,7 @@
         .split('\n\n\n')"
       :key="idx"
     >
-      <div :id="`pic_${idx}`" class="pic_box theme_1">
+      <div :id="`pic_${idx}`" class="pic_box">
         <div class="desc">
           {{ idx + 1 < 10 ? "0" : "" }}{{ idx + 1 }} <br />
         </div>
@@ -41,30 +41,18 @@ const formData = computed(() => store.formData4);
     margin: 0 20px 20px 0;
     justify-content: center;
     position: relative;
-    &.theme_1 {
-      background: url("@/assets/images/theme_bg_1.jpg") top/cover no-repeat;
-      padding: 650px 130px;
-      .title {
-        font-size: 120px;
-        line-height: 200px;
-        text-align: center;
-        padding: 0px 100px;
-        font-weight: 900;
-      }
-      .footer_box {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: 200px 0 30px;
-        line-height: 200px;
-        text-align: center;
-        font-size: 70px;
-      }
-      .desc {
-        font-size: 60px;
-        line-height: 110px;
-      }
+    background: url("@/assets/background/theme_bg10.jpg") top/cover no-repeat;
+    padding: 650px 130px;
+    .title {
+      font-size: 120px;
+      line-height: 200px;
+      text-align: center;
+      padding: 0px 100px;
+      font-weight: 900;
+    }
+    .desc {
+      font-size: 60px;
+      line-height: 110px;
     }
   }
 }
