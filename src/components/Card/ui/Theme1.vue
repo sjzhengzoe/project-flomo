@@ -43,7 +43,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-const formData = computed(() => store.formData4);
+const formData = computed(() => store.formData1);
 </script>
 
 <style lang="less" scoped>

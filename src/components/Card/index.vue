@@ -8,7 +8,7 @@
     </div>
 
     <!-- 预览区 -->
-    <div>
+    <div class="preview_box">
       <!-- THEME_1 -->
       <Theme1 v-if="nowTheme === Theme.THEME_1" />
 
@@ -59,11 +59,14 @@ const handleToDownload = async () => {
 
 <style lang="less" scoped>
 .card_box {
-  height: 340px;
   position: relative;
 
   .btn_box {
     margin-bottom: 10px;
+  }
+  .preview_box {
+    height: 110px;
+    overflow: hidden;
   }
 }
 </style>

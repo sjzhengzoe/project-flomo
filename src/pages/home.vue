@@ -39,6 +39,9 @@
     </el-form>
 
     <Card />
+    <a class="icp flex f-x-c" href="https://beian.miit.gov.cn" target="_blank"
+      >粤ICP备2025373031号</a
+    >
   </div>
 </template>
 
@@ -71,5 +74,14 @@ const formData = computed(() => {
 .Page {
   padding: 20px;
   background-color: rgba(250, 235, 215, 0.5);
+
+  .icp {
+    font-size: 3px;
+    color: #000;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 </style>
