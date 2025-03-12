@@ -8,7 +8,9 @@
     >
       <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
         <div class="main flex-y f-x-c f-y-c">
-          <div class="decorate1"></div>
+          <div class="decorate1">
+            <img :src="formData.pic" alt="" />
+          </div>
 
           <div class="decorate2">JOURNAL</div>
 
@@ -78,6 +80,7 @@ const formData = computed(() => store.formData1);
         border-radius: 60px;
         width: 1080px;
         height: 650px;
+        overflow: hidden;
         line-height: 60px;
         position: absolute;
         top: 60px;

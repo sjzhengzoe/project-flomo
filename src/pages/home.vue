@@ -24,14 +24,19 @@
         <el-input v-model="formData.title" />
         <div>{{ formData.title.length }} 字</div>
       </el-form-item>
-      <el-form-item label="底部：">
+      <!-- <el-form-item label="底部：">
         <el-input v-model="formData.footer" />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="小红书标签：">
         <el-input v-model="formData.tagsOfRed" />
       </el-form-item>
       <el-form-item label="抖音标签：">
         <el-input v-model="formData.tagsOfDou" />
+      </el-form-item>
+      <el-form-item label="封面">
+        <el-upload v-model="formData.pic" :on-change="handleChange">
+          <el-button type="primary">Click to upload</el-button>
+        </el-upload>
       </el-form-item>
       <el-form-item label="内容：">
         <el-input v-model="formData.content" autosize type="textarea" />
@@ -50,6 +55,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import Card from "@/components/Card/index.vue";
 import { Theme } from "@/utils/const";
+import { UploadProps } from "element-plus";
 
 const store = useStore();
 const formData = computed(() => {
@@ -68,6 +74,16 @@ const formData = computed(() => {
 
   return store.formData1;
 });
+
+const handleChange: UploadProps["onChange"] = async (uploadFile) => {
+  const file = uploadFile.raw;
+  if (!file) return;
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = (e) => {
+    formData.value.pic = e?.target?.result as string;
+  };
+};
 </script>
 
 <style lang="less">

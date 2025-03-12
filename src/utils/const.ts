@@ -4,6 +4,7 @@ export interface FormData {
   tagsOfRed: string; // 小红书标签
   tagsOfDou: string; // 抖音标签
   footer: string; // 底部
+  pic: string;
 }
 export enum Theme {
   THEME_1 = "THEME_1",
