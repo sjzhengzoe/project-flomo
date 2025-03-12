@@ -19,19 +19,13 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-
-      - name: Set up Tencent COS SDK
-        run: pip3 install -U cos-python-sdk-v5
-
-      - name: Upload files to Tencent COS
-        run: python3 upload_to_cos.py
-        env:
-          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
-          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
-          TENCENT_REGION: ${{ secrets.TENCENT_REGION }}
-          TENCENT_BUCKET_NAME: ${{ secrets.TENCENT_BUCKET_NAME }}
+      - name: Deploy to Tencent Cloud Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: 106.52.199.208
+          username: ubuntu
+          key: ${{ secrets.OPENSSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/project-flomo
+            git pull
+            npm run build
