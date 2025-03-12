@@ -28,4 +28,4 @@ jobs:
           script: |
             cd /home/ubuntu/project-flomo
             git pull
-            npm run build
+            sudo npm run build
