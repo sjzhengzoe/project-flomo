@@ -8,9 +8,16 @@
     >
       <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
         <div class="main flex-y f-x-c f-y-c">
-          <div class="decorate1">
-            <img :src="formData.pic" alt="" />
-          </div>
+          <div
+            class="decorate1"
+            :style="
+              formData.pic
+                ? {
+                    backgroundImage: `url(${formData.pic})`,
+                  }
+                : {}
+            "
+          ></div>
 
           <div class="decorate2">JOURNAL</div>
 
