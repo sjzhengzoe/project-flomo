@@ -19,13 +19,13 @@
             "
           ></div>
 
-          <div class="decorate2">JOURNAL</div>
+          <div class="decorate2 font_1">JOURNAL</div>
 
           <div class="decorate3"></div>
           <div class="decorate4"></div>
           <div class="decorate5">------------------------</div>
 
-          <div class="decorate6">
+          <div class="decorate6 en_6">
             Do not go gentle into that good night
             <br />
             ———————————————————————————————————————————
@@ -38,7 +38,7 @@
               :key="idx"
               :class="['content']"
             >
-              {{ text }}
+              <div v-html="text"></div>
             </div>
           </div>
         </div>
@@ -85,13 +85,13 @@ const formData = computed(() => store.formData1);
         right: 0;
         margin: 0 auto;
         border-radius: 60px;
-        width: 1080px;
-        height: 650px;
+        width: 1088px;
+        height: 612px;
         overflow: hidden;
         line-height: 60px;
         position: absolute;
         top: 60px;
-        background: url("@/assets/images/theme_pic1.jpg") center no-repeat;
+        background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
       }
       .decorate2 {
         color: #fff;
@@ -101,8 +101,7 @@ const formData = computed(() => store.formData1);
         padding: 0 50px 22px 120px;
         line-height: 220px;
         position: absolute;
-        top: 510px;
-        font-family: "font_1";
+        top: 480px;
       }
 
       .decorate3,
@@ -111,7 +110,7 @@ const formData = computed(() => store.formData1);
         height: 100px;
         background-color: #000;
         position: absolute;
-        top: 720px;
+        top: 700px;
       }
       .decorate3 {
         border-radius: 0 50px 50px 0;
@@ -126,7 +125,8 @@ const formData = computed(() => store.formData1);
         position: absolute;
         width: 1000px;
         color: #000;
-        top: 740px;
+        top: 720px;
+        text-align: center;
       }
 
       .decorate6 {
@@ -137,7 +137,6 @@ const formData = computed(() => store.formData1);
         position: absolute;
         bottom: 40px;
         text-align: center;
-        font-family: "en_6";
       }
 
       .content_box {

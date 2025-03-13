@@ -39,7 +39,12 @@
         </el-upload>
       </el-form-item>
       <el-form-item label="内容：">
-        <el-input v-model="formData.content" autosize type="textarea" />
+        <el-input
+          @input="handleChangeContent"
+          v-model="formData.content"
+          autosize
+          type="textarea"
+        />
       </el-form-item>
     </el-form>
 
@@ -74,6 +79,11 @@ const formData = computed(() => {
 
   return store.formData1;
 });
+
+const handleChangeContent = () => {
+  console.log("feifei", formData.value.content);
+  localStorage.setItem("FORM_DATA_CONTENT", formData.value.content);
+};
 
 const handleChange: UploadProps["onChange"] = async (uploadFile) => {
   const file = uploadFile.raw;
