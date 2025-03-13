@@ -11,7 +11,7 @@
           剧情记录
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
-          美食鉴赏家
+          语录
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
           打怪升级计划
@@ -23,15 +23,6 @@
       <el-form-item label="标题：">
         <el-input v-model="formData.title" />
         <div>{{ formData.title.length }} 字</div>
-      </el-form-item>
-      <!-- <el-form-item label="底部：">
-        <el-input v-model="formData.footer" />
-      </el-form-item> -->
-      <el-form-item label="小红书标签：">
-        <el-input v-model="formData.tagsOfRed" />
-      </el-form-item>
-      <el-form-item label="抖音标签：">
-        <el-input v-model="formData.tagsOfDou" />
       </el-form-item>
       <el-form-item label="封面">
         <el-upload v-model="formData.pic" :on-change="handleChange">
