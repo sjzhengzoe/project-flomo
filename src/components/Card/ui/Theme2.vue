@@ -6,27 +6,39 @@
         .split('\n\n\n')"
       :key="idx"
     >
-      <template v-if="idx == 0">
-        <div :id="`pic_00`" class="flex-y pic_box">
-          <div :class="['title']"># 今天吃什么？</div>
-          <div class="footer_box">{{ formData.footer }}</div>
-        </div>
-        <div :id="`pic_${idx}`" class="pic_box">
-          <template v-for="(text, idx) in item.split('\n')" :key="idx">
-            <div class="name" v-if="idx == 0">[{{ text }}]</div>
-            <div class="desc" v-else>{{ text }}</div>
-          </template>
-        </div>
-      </template>
+      <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
+        <div class="main flex-y f-x-c f-y-c">
+          <div
+            class="decorate1"
+            :style="
+              formData.pic
+                ? {
+                    backgroundImage: `url(${formData.pic})`,
+                  }
+                : {}
+            "
+          ></div>
 
-      <template v-else>
-        <div :id="`pic_${idx}`" class="pic_box">
-          <template v-for="(text, idx) in item.split('：')" :key="idx">
-            <div class="name" v-if="idx == 0">[{{ text }}]</div>
-            <div class="desc" v-else>{{ text }}</div>
-          </template>
+          <div class="decorate2 font_6 flex f-sb">
+            <div>《默读》第一季 01</div>
+            <div style="font-size: 40px">何忠义案</div>
+          </div>
+
+          <div class="decorate3"></div>
+          <div class="decorate4"></div>
+          <div class="decorate5">------------------------</div>
+
+          <div class="content_box flex-y f-x-c font_6">
+            <div
+              v-for="text in item.split('\n')"
+              :key="idx"
+              :class="['content']"
+            >
+              <div v-html="text"></div>
+            </div>
+          </div>
         </div>
-      </template>
+      </div>
     </template>
   </div>
 </template>
@@ -47,42 +59,84 @@ const formData = computed(() => store.formData2);
   transform: scale(0.19);
   transform-origin: 0px 0px;
   .pic_box {
-    color: #2b2b2b;
-    box-sizing: border-box;
     width: 1440px;
     height: 1920px;
-    margin: 0 20px 20px 0;
-    justify-content: center;
+    background: url("@/assets/background/theme_bg2.jpg");
     position: relative;
-    background: url("@/assets/background/theme_bg11.jpg") top/cover no-repeat;
-    padding: 650px 130px;
-    .title {
-      font-size: 120px;
-      line-height: 150px;
-      text-align: center;
-      padding: 0px 100px;
-      font-weight: 900;
-    }
-
-    .footer_box {
-      position: absolute;
-      bottom: 0;
+    overflow: hidden;
+    .main {
+      width: 1200px;
+      height: 1700px;
+      background: url("@/assets/background/theme_bg9.jpg");
+      position: relative;
+      border-radius: 70px;
+      box-sizing: border-box;
+      color: #2b2b2b;
       left: 0;
       right: 0;
-      margin: 200px 0 30px;
-      line-height: 200px;
-      text-align: center;
-      font-size: 70px;
-    }
-    .name {
-      font-size: 100px;
-      line-height: 200px;
-      font-weight: 900;
-    }
+      top: 0;
+      bottom: 0;
+      .decorate1 {
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        border-radius: 60px;
+        width: 1088px;
+        height: 612px;
+        overflow: hidden;
+        line-height: 60px;
+        position: absolute;
+        top: 60px;
+        background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
+      }
+      .decorate2 {
+        color: #2b2b2b;
+        font-size: 76px;
+        font-weight: 900;
+        right: 0;
+        left: 0;
+        padding: 50px 70px;
+        line-height: 76px;
+        position: absolute;
+        top: 760px;
+      }
 
-    .desc {
-      font-size: 60px;
-      line-height: 110px;
+      .decorate3,
+      .decorate4 {
+        width: 50px;
+        height: 100px;
+        background-color: #000;
+        position: absolute;
+        top: 700px;
+      }
+      .decorate3 {
+        border-radius: 0 50px 50px 0;
+        left: -1px;
+      }
+      .decorate4 {
+        border-radius: 50px 0 0 50px;
+        right: -1px;
+      }
+      .decorate5 {
+        font-size: 60px;
+        position: absolute;
+        width: 1000px;
+        color: #000;
+        top: 720px;
+        text-align: center;
+      }
+
+      .content_box {
+        width: 1000px;
+        height: 750px;
+        position: absolute;
+        top: 900px;
+      }
+      .content {
+        text-align: justify;
+        font-size: 50px;
+        line-height: 100px;
+      }
     }
   }
 }

@@ -8,7 +8,7 @@
           觉察
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
-          碎碎念
+          剧情记录
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
           美食鉴赏家
