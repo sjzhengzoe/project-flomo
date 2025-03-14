@@ -7,7 +7,7 @@
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
-        <div class="main flex-y f-x-c f-y-c">
+        <div class="main">
           <div
             class="decorate1"
             :style="
@@ -19,13 +19,33 @@
             "
           ></div>
 
-          <div class="decorate2 font_6">🎬 《哪吒之魔童闹海》</div>
-
+          <div class="decorate2 font_7">🎬 《哪吒之魔童闹海》</div>
           <div class="decorate3"></div>
           <div class="decorate4"></div>
-          <div class="decorate5">--------------------------</div>
+          <div class="decorate5 flex f-x-c">………………………………</div>
 
-          <div class="content_box flex-y f-x-c">
+          <div class="decorate6 flex f-x-c">
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+          </div>
+          <div class="decorate7 flex f-x-c">
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+          </div>
+
+          <div class="content_box flex-y f-x-c font_7">
             <div
               v-for="text in item.split('\n')"
               :key="idx"
@@ -34,6 +54,8 @@
               <div v-html="text"></div>
             </div>
           </div>
+          <div class="decorate5 flex f-x-c">………………………………</div>
+          <div class="decorate2 font_7"></div>
         </div>
       </div>
     </template>
@@ -58,15 +80,17 @@ const formData = computed(() => store.formData3);
   .pic_box {
     width: 1440px;
     height: 1920px;
-    background: url("@/assets/background/theme_bg2.jpg") center/cover no-repeat;
+    background: #000;
     position: relative;
     overflow: hidden;
     .main {
-      width: 1200px;
-      height: 1800px;
-      background: url("@/assets/background/theme_bg9.jpg");
+      width: 850px;
+      height: 1680px;
+      overflow: hidden;
+      background: url("@/assets/background/theme_bg3.jpg");
+      background-color: #000;
       position: relative;
-      border-radius: 70px;
+      border-radius: 8px;
       box-sizing: border-box;
       color: #2b2b2b;
       left: 0;
@@ -74,38 +98,29 @@ const formData = computed(() => store.formData3);
       top: 0;
       bottom: 0;
       .decorate1 {
-        left: 0;
-        right: 0;
-        margin: 0 auto;
-        border-radius: 60px 60px 0 0;
-        width: 1200px;
-        height: 1200px;
-        overflow: hidden;
-        line-height: 60px;
-        position: absolute;
-        top: 0px;
+        margin: 70px auto 0;
+        border-radius: 8px;
+        width: 720px;
+        height: 960px;
         background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
       }
       .decorate2 {
-        color: #2b2b2b;
+        width: 720px;
+        color: #000;
         font-size: 60px;
         font-weight: 900;
-        left: 0;
-        right: 0;
-        text-align: center;
-        padding: 0 50px;
-        line-height: 136px;
-        position: absolute;
-        top: 1200px;
+        line-height: 70px;
+        margin: 50px 60px 0;
+        // position: absolute;
+        // top: 1050px;
       }
-
       .decorate3,
       .decorate4 {
         width: 40px;
         height: 80px;
         background-color: #000;
         position: absolute;
-        top: 1300px;
+        top: 1140px;
       }
       .decorate3 {
         border-radius: 0 40px 40px 0;
@@ -117,23 +132,52 @@ const formData = computed(() => store.formData3);
       }
       .decorate5 {
         font-size: 60px;
-        position: absolute;
-        width: 1300px;
+        // position: absolute;
+        width: 750px;
         color: #000;
-        top: 1310px;
+        margin: 20px 50px;
+        // text-align: center;
+        // left: -5px;
+        // top: 1250px;
         text-align: center;
+      }
+      .decorate6 {
+        position: absolute;
+        top: -40px;
+        left: -50px;
+        .item {
+          width: 80px;
+          height: 80px;
+          box-sizing: border-box;
+          background: #000;
+          border-radius: 50%;
+          margin: 0 20px;
+        }
+      }
+      .decorate7 {
+        position: absolute;
+        bottom: -40px;
+        left: -50px;
+        .item {
+          width: 80px;
+          height: 80px;
+          box-sizing: border-box;
+          background: #000;
+          border-radius: 50%;
+          margin: 0 20px;
+        }
       }
 
       .content_box {
-        width: 1050px;
-        height: 455px;
-        position: absolute;
-        top: 1340px;
+        width: 850px;
+        height: 300px;
+        color: #000;
       }
       .content {
-        text-align: center;
+        // text-align: center;
         font-size: 50px;
-        line-height: 100px;
+        margin: 0 60px;
+        line-height: 70px;
       }
     }
   }

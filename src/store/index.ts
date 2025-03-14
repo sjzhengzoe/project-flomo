@@ -15,7 +15,7 @@ export const useStore = defineStore("store", {
     const state: State = {
       nowTheme: Theme.THEME_1,
       formData1: {
-        title: "📝 Chat With My Friends",
+        title: "📝 待定",
         tagsOfRed:
           "#原创文字[话题]# #文字的力量[话题]# #记录吧就现在[话题]# #日记[话题]# #浪漫生活的记录者[话题]#",
         tagsOfDou: "#随记 #文字的力量 #日记 #生活 #感受",
@@ -26,7 +26,7 @@ export const useStore = defineStore("store", {
         pic: "",
       },
       formData2: {
-        title: "📢 广播剧｜《默读》主演剧情点记录",
+        title: "广播剧｜《默读》骆闻舟&费渡｜关键剧情",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
@@ -37,7 +37,7 @@ export const useStore = defineStore("store", {
         pic: "",
       },
       formData3: {
-        title: "🌍 选择困难症｜已接收本次打怪升级任务",
+        title: "💬 语录｜记录自带能量的文字",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
