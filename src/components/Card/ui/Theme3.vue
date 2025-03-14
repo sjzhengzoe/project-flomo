@@ -87,7 +87,7 @@ const formData = computed(() => store.formData3);
       width: 850px;
       height: 1680px;
       overflow: hidden;
-      background: url("@/assets/background/theme_bg3.jpg");
+      background: url("@/assets/background/theme_bg9.jpg");
       background-color: #000;
       position: relative;
       border-radius: 8px;
