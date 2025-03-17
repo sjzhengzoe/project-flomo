@@ -26,7 +26,7 @@
 
           <div class="decorate3"></div>
           <div class="decorate4"></div>
-          <div class="decorate5">------------------------</div>
+          <div class="decorate5">--------------------------</div>
 
           <div class="content_box flex-y f-x-c font_6">
             <div
@@ -120,7 +120,7 @@ const formData = computed(() => store.formData2);
       .decorate5 {
         font-size: 60px;
         position: absolute;
-        width: 1000px;
+        width: 1100px;
         color: #000;
         top: 720px;
         text-align: center;

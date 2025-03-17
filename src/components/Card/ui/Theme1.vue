@@ -7,7 +7,7 @@
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
-        <div class="main flex-y f-x-c f-y-c">
+        <div class="main">
           <div
             class="decorate1"
             :style="
@@ -23,7 +23,7 @@
 
           <div class="decorate3"></div>
           <div class="decorate4"></div>
-          <div class="decorate5">------------------------</div>
+          <div class="decorate5">---------------------------</div>
 
           <div class="decorate6 en_6">
             Do not go gentle into that good night
@@ -89,8 +89,7 @@ const formData = computed(() => store.formData1);
         height: 612px;
         overflow: hidden;
         line-height: 60px;
-        position: absolute;
-        top: 60px;
+        margin-top: 60px;
         background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
       }
       .decorate2 {
@@ -122,11 +121,21 @@ const formData = computed(() => store.formData1);
       }
       .decorate5 {
         font-size: 60px;
-        position: absolute;
+        color: #000;
+        margin-top: 50px;
+        text-align: center;
+      }
+
+      .decorate7 {
         width: 1000px;
         color: #000;
-        top: 720px;
-        text-align: center;
+        font-size: 55px;
+        font-weight: 900;
+        margin: 20px auto;
+        line-height: 85px;
+        text-decoration: underline;
+        text-underline-offset: 10px;
+        font-weight: 900;
       }
 
       .decorate6 {
@@ -141,9 +150,8 @@ const formData = computed(() => store.formData1);
 
       .content_box {
         width: 1000px;
-        height: 650px;
-        position: absolute;
-        top: 845px;
+        height: 760px;
+        margin: 0 auto;
       }
       .content {
         text-align: justify;

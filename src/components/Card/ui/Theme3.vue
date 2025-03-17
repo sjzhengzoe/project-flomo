@@ -174,10 +174,9 @@ const formData = computed(() => store.formData3);
         color: #000;
       }
       .content {
-        // text-align: center;
         font-size: 50px;
         margin: 0 60px;
-        line-height: 70px;
+        line-height: 100px;
       }
     }
   }
