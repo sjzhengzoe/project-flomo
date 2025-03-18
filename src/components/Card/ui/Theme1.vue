@@ -34,11 +34,12 @@
           </div>
           <div class="content_box flex-y f-x-c">
             <div
-              v-for="text in item.split('\n')"
-              :key="idx"
+              v-for="(text, idx2) in item.split('\n\n')"
+              :key="idx2"
               :class="['content']"
             >
               <div v-html="text"></div>
+              <br v-if="item.split('\n\n').length != idx2 + 1" />
             </div>
           </div>
         </div>
