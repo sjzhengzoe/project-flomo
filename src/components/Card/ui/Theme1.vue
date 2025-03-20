@@ -1,9 +1,7 @@
 <template>
   <div class="theme_box flex">
     <template
-      v-for="(item, idx) in formData.content
-        .replace(/\n{3,}/g, '\n\n\n')
-        .split('\n\n\n')"
+      v-for="(item, idx) in formData.content.split('\n\n\n')"
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
@@ -34,12 +32,12 @@
           </div>
           <div class="content_box flex-y f-x-c">
             <div
-              v-for="(text, idx2) in item.split('\n\n')"
+              v-for="(text, idx2) in item.split('\n')"
               :key="idx2"
               :class="['content']"
             >
-              <div v-html="text"></div>
-              <br v-if="item.split('\n\n').length != idx2 + 1" />
+              <div v-if="text" v-html="text"></div>
+              <div v-else>&nbsp;</div>
             </div>
           </div>
         </div>
