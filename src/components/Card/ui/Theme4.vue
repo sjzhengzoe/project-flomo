@@ -11,8 +11,8 @@
           <div>"</div>
         </div>
         <div class="tags flex f-y-c">
-          <div class="tag">#再见爱人</div>
-          <div class="tag">#人生课题/橘生淮南则为橘</div>
+          <div class="tag">#不要温和地走入那个良夜</div>
+          <div class="tag">#人生课题</div>
         </div>
         <div class="title">{{ formData.title }}</div>
         <div
