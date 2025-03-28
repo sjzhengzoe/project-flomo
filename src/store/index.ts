@@ -48,7 +48,7 @@ export const useStore = defineStore("store", {
         pic: "",
       },
       formData4: {
-        title: "📝 我的觉察日志",
+        title: "🪴 我的觉察日志",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",

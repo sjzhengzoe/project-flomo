@@ -88,12 +88,10 @@ const formattedDate = `${year}/${month}/${day}`;
       }
     }
     .title {
-      font-size: 62px;
+      font-size: 55px;
       line-height: 96px;
-      text-decoration: underline;
       font-family: "font_6";
       margin-bottom: 60px;
-      text-underline-offset: 14px;
     }
     .content {
       text-align: justify;
