@@ -1,18 +1,29 @@
 <template>
   <div class="theme_box flex">
     <template
-      v-for="(item, idx) in formData.content
-        .replace(/\n{3,}/g, '\n\n\n')
-        .split('\n\n\n')"
+      v-for="(item, idx) in formData.content.split('\n\n\n')"
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box">
-        <div class="desc">
-          {{ idx + 1 < 10 ? "0" : "" }}{{ idx + 1 }} <br />
+        <div class="decorate1 flex f-sb">
+          <div>"</div>
+          <div class="text">Episode {{ formattedDate }}</div>
+          <div>"</div>
         </div>
-        <div v-for="text in item.split('\n')" :key="idx" :class="['desc']">
-          {{ text }}
+        <div class="tags flex f-y-c">
+          <div class="tag">#再见爱人</div>
+          <div class="tag">#人生课题/橘生淮南则为橘</div>
         </div>
+        <div class="title">{{ formData.title }}</div>
+        <div
+          v-for="(text, idx2) in item.split('\n')"
+          :key="idx2"
+          :class="['content']"
+        >
+          <div v-if="text" v-html="text"></div>
+          <div style="line-height: 70px" v-else>&nbsp;</div>
+        </div>
+        <div class="decorate2 flex f-x-c">@傲慢的人类</div>
       </div>
     </template>
   </div>
@@ -24,6 +35,12 @@ import { useStore } from "@/store";
 
 const store = useStore();
 const formData = computed(() => store.formData4);
+const date = new Date();
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0");
+const day = String(date.getDate()).padStart(2, "0");
+
+const formattedDate = `${year}/${month}/${day}`;
 </script>
 
 <style lang="less" scoped>
@@ -38,21 +55,59 @@ const formData = computed(() => store.formData4);
     box-sizing: border-box;
     width: 1440px;
     height: 1920px;
-    margin: 0 20px 20px 0;
+    padding: 0 80px;
     justify-content: center;
     position: relative;
-    background: url("@/assets/background/theme_bg10.jpg") top/cover no-repeat;
-    padding: 650px 130px;
-    .title {
-      font-size: 120px;
-      line-height: 200px;
-      text-align: center;
-      padding: 0px 100px;
-      font-weight: 900;
+    background: url("@/assets/background/theme_bg17.jpg") top/cover no-repeat;
+
+    .decorate1 {
+      width: 1326px;
+      height: 285px;
+      font-size: 220px;
+      padding: 96px 0px 0;
+      margin-left: -30px;
+      box-sizing: border-box;
+      .text {
+        font-size: 44px;
+        padding-top: 20px;
+        font-weight: 900;
+        font-family: "en_4";
+      }
     }
-    .desc {
-      font-size: 60px;
-      line-height: 110px;
+    .tags {
+      font-size: 46px;
+      font-family: "font_3";
+      margin: 0px 0px 97px;
+      .tag {
+        color: #fffffff2;
+        background: #1b1b1b;
+        margin-right: 15px;
+        line-height: 60px;
+        padding: 14px 20px 10px;
+        border-radius: 10px;
+      }
+    }
+    .title {
+      font-size: 62px;
+      line-height: 66px;
+      text-decoration: underline;
+      font-family: "font_6";
+      margin-bottom: 60px;
+      text-underline-offset: 14px;
+    }
+    .content {
+      text-align: justify;
+      font-size: 55px;
+      line-height: 96px;
+      font-family: "font_6";
+    }
+    .decorate2 {
+      font-size: 44px;
+      position: absolute;
+      bottom: 97px;
+      left: 0;
+      right: 0;
+      font-family: "font_3";
     }
   }
 }
