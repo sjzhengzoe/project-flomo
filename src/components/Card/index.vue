@@ -62,7 +62,7 @@ const handleToDownload = async () => {
   position: relative;
 
   .btn_box {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
   }
   .preview_box {
     height: 400px;

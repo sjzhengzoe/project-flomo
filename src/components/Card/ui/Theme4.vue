@@ -89,7 +89,7 @@ const formattedDate = `${year}/${month}/${day}`;
     }
     .title {
       font-size: 62px;
-      line-height: 66px;
+      line-height: 96px;
       text-decoration: underline;
       font-family: "font_6";
       margin-bottom: 60px;

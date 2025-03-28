@@ -89,7 +89,7 @@ const handleChange: UploadProps["onChange"] = async (uploadFile) => {
 
 <style lang="less">
 .Page {
-  padding: 20px;
+  padding: 5px 20px;
   background-color: rgba(250, 235, 215, 0.5);
 
   .icp {
