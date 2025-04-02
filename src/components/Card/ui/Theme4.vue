@@ -15,9 +15,9 @@
               : {}
           "
         ></div>
-        <div class="line">----------------------------------</div>
+        <div class="top">&nbsp;</div>
         <div class="from flex f-y-c">
-          <div>@顾飞飞 Fly</div>
+          <div>{{ formData.title }}</div>
         </div>
         <div class="line_2">----------------------------------</div>
         <div class="content_main flex-y f-x-c">
@@ -40,7 +40,7 @@
         <!-- 页脚 -->
         <div class="line_footer">----------------------------------</div>
         <div class="footer flex f-y-c f-sb">
-          <div>Episode</div>
+          <div>{{ formData.footer }}</div>
           <div>{{ formattedDate }}</div>
         </div>
       </div>
@@ -74,6 +74,7 @@ const formattedDate = `${year}/${month}/${day}`;
     box-sizing: border-box;
     width: 1440px;
     height: 1920px;
+    border-radius: 80px;
     justify-content: center;
     overflow: hidden;
     position: relative;
@@ -85,6 +86,9 @@ const formattedDate = `${year}/${month}/${day}`;
       overflow: hidden;
       background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
     }
+    .top {
+      margin-top: 80px;
+    }
     .line {
       font-size: 57px;
       padding: 0 60px;
@@ -93,7 +97,6 @@ const formattedDate = `${year}/${month}/${day}`;
     }
     .from {
       padding: 0 80px;
-      color: #6e6e73;
       text-align: justify;
       font-size: 46px;
       font-family: "font_8_2";
@@ -110,7 +113,7 @@ const formattedDate = `${year}/${month}/${day}`;
 
     .content_box {
       font-size: 56px;
-      font-family: "font_8_1";
+      font-family: "font_8_2";
       margin: 0px 80px 40px;
       line-height: 1.7em;
       .title {
@@ -129,11 +132,10 @@ const formattedDate = `${year}/${month}/${day}`;
       position: absolute;
       bottom: 80px;
       width: 1440px;
-      font-size: 60px;
+      font-size: 46px;
       padding: 0 80px;
-      color: #6e6e73;
       box-sizing: border-box;
-      font-family: "font_4";
+      font-family: "font_2";
     }
   }
 }

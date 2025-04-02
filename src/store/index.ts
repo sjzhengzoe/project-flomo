@@ -20,7 +20,7 @@ export const useStore = defineStore("store", {
           "#原创文字[话题]# #文字的力量[话题]# #记录吧就现在[话题]# #日记[话题]# #浪漫生活的记录者[话题]#",
         tagsOfDou: "#随记 #文字的力量 #日记 #生活 #感受",
         content:
-          localStorage.getItem("FORM_DATA_CONTENT") ||
+          localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_1}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
         footer: "",
         pic: "",
@@ -31,7 +31,7 @@ export const useStore = defineStore("store", {
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
         content:
-          localStorage.getItem("FORM_DATA_CONTENT") ||
+          localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_2}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
         footer: "- 粮票号码 【1】-",
         pic: "",
@@ -42,20 +42,23 @@ export const useStore = defineStore("store", {
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
         content:
-          localStorage.getItem("FORM_DATA_CONTENT") ||
+          localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_3}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
         footer: "- 觉察练习 第 001 问 -",
         pic: "",
       },
       formData4: {
-        title: "不要温和地走入那个良夜。",
+        title:
+          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_4}`) || "@顾飞飞",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
         content:
-          localStorage.getItem("FORM_DATA_CONTENT") ||
+          localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_4}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
-        footer: "",
+        footer:
+          localStorage.getItem(`FORM_DATA_FOOTER_${Theme.THEME_4}`) ||
+          "Episode",
         pic: "",
       },
     };

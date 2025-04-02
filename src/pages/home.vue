@@ -21,7 +21,7 @@
     <el-form label-position="right" label-width="100px" :model="formData">
       <!-- 内容 -->
       <el-form-item label="标题：">
-        <el-input v-model="formData.title" />
+        <el-input @input="handleChangeTitle" v-model="formData.title" />
         <div>{{ formData.title.length }} 字</div>
       </el-form-item>
       <el-form-item label="封面">
@@ -37,12 +37,15 @@
           type="textarea"
         />
       </el-form-item>
+      <el-form-item label="页脚：">
+        <el-input @input="handleChangeFooter" v-model="formData.footer" />
+      </el-form-item>
     </el-form>
 
     <Card />
-    <a class="icp flex f-x-c" href="https://beian.miit.gov.cn" target="_blank"
-      >粤ICP备2025373031号</a
-    >
+    <a class="icp flex f-x-c" href="https://beian.miit.gov.cn" target="_blank">
+      粤ICP备2025373031号
+    </a>
   </div>
 </template>
 
@@ -71,9 +74,24 @@ const formData = computed(() => {
   return store.formData1;
 });
 
+const handleChangeTitle = () => {
+  localStorage.setItem(
+    `FORM_DATA_TITLE_${store.nowTheme}`,
+    formData.value.title
+  );
+};
 const handleChangeContent = () => {
-  console.log("feifei", formData.value.content);
-  localStorage.setItem("FORM_DATA_CONTENT", formData.value.content);
+  localStorage.setItem(
+    `FORM_DATA_CONTENT_${store.nowTheme}`,
+    formData.value.content
+  );
+};
+
+const handleChangeFooter = () => {
+  localStorage.setItem(
+    `FORM_DATA_FOOTER_${store.nowTheme}`,
+    formData.value.footer
+  );
 };
 
 const handleChange: UploadProps["onChange"] = async (uploadFile) => {
