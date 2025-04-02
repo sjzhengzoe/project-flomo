@@ -5,13 +5,8 @@
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box">
-        <div class="decorate1 flex f-sb">
-          <div>"</div>
-          <div class="text">Episode - 0{{ idx + 1 }}</div>
-          <div>"</div>
-        </div>
         <div
-          class="decorate3"
+          class="bg"
           :style="
             formData.pic
               ? {
@@ -20,19 +15,34 @@
               : {}
           "
         ></div>
-        <!-- <div class="tags flex f-y-c">
-          <div class="tag">#不要温和地走入那个良夜</div>
-          <div class="tag">#人生课题</div>
-        </div> -->
-
-        <div
-          v-for="(text, idx2) in item.split('\n')"
-          :key="idx2"
-          :class="['content']"
-        >
-          <div v-if="text" v-html="text"></div>
+        <div class="line">----------------------------------</div>
+        <div class="from flex f-y-c">
+          <div>@顾飞飞 Fly</div>
         </div>
-        <!-- <div class="decorate2 flex f-x-c">@傲慢的人类</div> -->
+        <div class="line_2">----------------------------------</div>
+        <div class="content_main flex-y f-x-c">
+          <div>
+            <div
+              v-for="(text, idx2) in item.split('\n')"
+              :key="idx2"
+              :class="['content_box']"
+            >
+              <div
+                class="title"
+                v-if="text.indexOf('-') != -1"
+                v-html="text.replace('-', '')"
+              />
+              <div class="content" v-else v-html="text" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="line_footer">----------------------------------</div>
+        <div class="footer flex f-y-c f-sb">
+          <div>Episode</div>
+          <div>{{ formattedDate }}</div>
+        </div>
       </div>
     </template>
   </div>
@@ -52,17 +62,6 @@ const day = String(date.getDate()).padStart(2, "0");
 const formattedDate = `${year}/${month}/${day}`;
 </script>
 
-<style lang="less">
-b {
-  font-size: 14px !important;
-  line-height: 16px !important;
-  font-family: "font_8_4" !important;
-  color: #222222 !important;
-  display: flex !important;
-  margin: 10px 0 20px 0;
-}
-</style>
-
 <style lang="less" scoped>
 .theme_box {
   width: 1850px;
@@ -79,37 +78,62 @@ b {
     overflow: hidden;
     position: relative;
     background: url("@/assets/background/theme_bg18.jpg") top/cover no-repeat;
-    .decorate1 {
+    .bg {
       width: 1440px;
-      height: 235px;
-      font-size: 220px;
-      padding: 96px 40px 0;
-      margin: -30px 0 96px 0px;
-      color: #4a4a4a;
-      box-sizing: border-box;
-      .text {
-        font-size: 50px;
-        padding-top: 20px;
-        font-weight: 900;
-        font-family: "font_8_5";
-      }
-    }
-    .content {
-      width: 900px;
-      text-align: justify;
-      font-size: 56px;
-      line-height: 1.8em;
-      font-family: "font_8_1";
-      margin: 54px 80px 0px;
-    }
-    .decorate3 {
-      margin: -40px 0px 210px 360px;
-      width: 1000px;
       border-radius: 10px;
       height: 550px;
       overflow: hidden;
-      line-height: 60px;
       background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
+    }
+    .line {
+      font-size: 57px;
+      padding: 0 60px;
+      line-height: 110px;
+      color: #6e6e73;
+    }
+    .from {
+      padding: 0 80px;
+      color: #6e6e73;
+      text-align: justify;
+      font-size: 46px;
+      font-family: "font_8_2";
+    }
+    .line_2 {
+      font-size: 57px;
+      padding: 0 60px;
+      line-height: 110px;
+      color: #6e6e73;
+    }
+    .content_main {
+      height: 870px;
+    }
+
+    .content_box {
+      font-size: 56px;
+      font-family: "font_8_1";
+      margin: 0px 80px 40px;
+      line-height: 1.7em;
+      .title {
+        font-family: "font_8_4";
+      }
+    }
+    .line_footer {
+      position: absolute;
+      bottom: 120px;
+      font-size: 57px;
+      padding: 0 60px;
+      line-height: 110px;
+      color: #6e6e73;
+    }
+    .footer {
+      position: absolute;
+      bottom: 80px;
+      width: 1440px;
+      font-size: 60px;
+      padding: 0 80px;
+      color: #6e6e73;
+      box-sizing: border-box;
+      font-family: "font_4";
     }
   }
 }
