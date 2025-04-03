@@ -65,7 +65,7 @@ const handleToDownload = async () => {
     margin-bottom: 5px;
   }
   .preview_box {
-    height: 520px;
+    height: 420px;
     overflow-x: hidden;
     overflow-y: scroll;
   }

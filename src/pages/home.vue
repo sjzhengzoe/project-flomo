@@ -1,35 +1,35 @@
 <template>
   <div class="Page">
     <!-- 操作区 -->
-    <el-form label-position="right" label-width="100px">
+    <el-form label-position="right" label-width="60px">
       <!-- 选择主题 -->
-      <el-form-item label="主题：" @change="handleChangeTheme">
+      <el-form-item label="主题" @change="handleChangeTheme">
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
           觉察
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
-          剧情记录
+          剧情
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
           语录
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
-          打怪升级计划
+          打怪
         </el-radio>
       </el-form-item>
     </el-form>
-    <el-form label-position="right" label-width="100px" :model="formData">
+    <el-form label-position="right" label-width="60px" :model="formData">
       <!-- 内容 -->
-      <el-form-item label="标题：">
+      <el-form-item label="标题">
         <el-input @input="handleChangeTitle" v-model="formData.title" />
-        <div>{{ formData.title.length }} 字</div>
+        <!-- <div>{{ formData.title.length }} 字</div> -->
       </el-form-item>
       <el-form-item label="封面">
         <el-upload v-model="formData.pic" :on-change="handleChange">
           <el-button type="primary">Click to upload</el-button>
         </el-upload>
       </el-form-item>
-      <el-form-item label="内容：">
+      <el-form-item label="内容">
         <el-input
           @input="handleChangeContent"
           v-model="formData.content"
@@ -37,7 +37,7 @@
           type="textarea"
         />
       </el-form-item>
-      <el-form-item label="页脚：">
+      <el-form-item label="页脚">
         <el-input @input="handleChangeFooter" v-model="formData.footer" />
       </el-form-item>
     </el-form>
@@ -113,9 +113,14 @@ const handleChange: UploadProps["onChange"] = async (uploadFile) => {
 .Page {
   padding: 5px 20px;
   background-color: rgba(250, 235, 215, 0.5);
-
+  .el-form-item {
+    margin-bottom: 8px;
+  }
+  .el-radio {
+    margin-right: 5px;
+  }
   .icp {
-    font-size: 3px;
+    font-size: 12px;
     color: #000;
     text-decoration: none;
     &:hover {
