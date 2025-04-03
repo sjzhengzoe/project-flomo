@@ -495,6 +495,7 @@ const randomComment = computed(() => {
           color: #fff;
         }
         .collect {
+          padding-right: 16px;
           color: #fff;
         }
       }
