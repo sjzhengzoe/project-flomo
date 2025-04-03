@@ -194,30 +194,28 @@
             <div class="like_num">{{ randomLike }} 次赞</div>
             <div class="comment_num">全部 {{ randomComment }}条评论</div>
           </div> -->
-          <div class="say flex-y f-x-c">
-            <div class="flex f-y-c">
-              {{ formData.title }}
-              <svg
-                aria-label="已验证"
-                class="icon_good"
-                fill="rgb(0, 149, 246)"
-                height="12"
-                role="img"
-                viewBox="0 0 40 40"
-                width="12"
-              >
-                <title>已验证</title>
-                <path
-                  d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z"
-                  fill-rule="evenodd"
-                ></path>
-              </svg>
-              {{ formData.content.slice(0, 17) }}...
-            </div>
-            <div class="tag flex f-y-c">
-              <div>#{{ formData.footer }}</div>
-              <div class="more">更多</div>
-            </div>
+          <div class="say_box flex f-y-c">
+            <div class="name">{{ formData.title }}</div>
+            <svg
+              aria-label="已验证"
+              class="icon_good"
+              fill="rgb(0, 149, 246)"
+              height="12"
+              role="img"
+              viewBox="0 0 40 40"
+              width="12"
+            >
+              <title>已验证</title>
+              <path
+                d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z"
+                fill-rule="evenodd"
+              ></path>
+            </svg>
+            <div class="say">{{ formData.content }}</div>
+          </div>
+          <div class="tag flex f-y-c">
+            <div>#{{ formData.footer }}</div>
+            <div class="more">更多</div>
           </div>
           <div class="time flex g-y-c">
             {{ formattedDate }}&nbsp;&nbsp;·&nbsp;&nbsp;
@@ -426,7 +424,6 @@ const randomComment = computed(() => {
         color: rgba(245, 245, 245, 1);
         padding: 0 100px 0 240px;
         font-family: "font_8_4";
-
         .char {
           margin-right: 100px;
           font-family: "font_8_8";
@@ -506,23 +503,32 @@ const randomComment = computed(() => {
         font-family: "font_8_4";
         margin-bottom: 80px;
       }
-      .say {
+      .say_box {
+        margin-right: 200px;
         line-height: 200px;
         font-size: 150px;
         color: rgba(245, 245, 245, 1);
         font-family: "font_8_4";
         margin-bottom: 40px;
-        .tag {
-          color: rgba(224, 241, 255, 1);
-          margin-right: 50px;
+        .say {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
+        .icon_good {
+          transform: scale(20);
+          padding: 1px 110px 0;
+        }
+      }
+      .tag {
+        line-height: 200px;
+        font-size: 150px;
+        color: rgba(245, 245, 245, 1);
+        font-family: "font_8_4";
+        color: rgba(224, 241, 255, 1);
         .more {
           color: rgba(168, 168, 168, 1);
           margin-left: 50px;
-        }
-        .icon_good {
-          transform: scale(10);
-          padding: 5px 86px 0;
         }
       }
       .comment_num {
