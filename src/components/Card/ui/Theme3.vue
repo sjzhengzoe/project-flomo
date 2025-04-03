@@ -380,7 +380,7 @@ const randomComment = computed(() => {
 
 <style lang="less" scoped>
 .theme_box {
-  width: 3000px;
+  width: 3800px;
   flex-wrap: wrap;
   overflow: hidden;
   transform: scale(0.08);
