@@ -392,7 +392,7 @@ const randomComment = computed(() => {
     background-color: #000;
     .head {
       height: 300px;
-      padding: 120px;
+      padding: 125px 120px;
       .avatar {
         width: 320px;
         height: 320px;
@@ -437,7 +437,7 @@ const randomComment = computed(() => {
     }
     .content_main {
       width: 3750px;
-      height: 2830px;
+      height: 2820px;
       font-family: "font_8_2";
       font-size: 140px;
       line-height: 1.78em;
