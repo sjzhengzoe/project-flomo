@@ -3,7 +3,7 @@
     <!-- 操作区 -->
     <el-form label-position="right" label-width="100px">
       <!-- 选择主题 -->
-      <el-form-item label="主题：">
+      <el-form-item label="主题：" @change="handleChangeTheme">
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
           觉察
         </el-radio>
@@ -73,6 +73,10 @@ const formData = computed(() => {
 
   return store.formData1;
 });
+
+const handleChangeTheme = () => {
+  localStorage.setItem(`FORM_DATA_THEME`, store.nowTheme);
+};
 
 const handleChangeTitle = () => {
   localStorage.setItem(
