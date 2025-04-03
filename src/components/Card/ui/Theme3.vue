@@ -214,7 +214,9 @@
             <div class="say">{{ formData.content }}</div>
           </div>
           <div class="tag flex f-y-c">
-            <div>#{{ formData.footer }}</div>
+            <div v-for="tag in formData.footer.split(' ')">
+              #{{ tag }}&nbsp;
+            </div>
             <div class="more">更多</div>
           </div>
           <div class="time flex g-y-c">
@@ -532,7 +534,6 @@ const randomComment = computed(() => {
         color: rgba(224, 241, 255, 1);
         .more {
           color: rgba(168, 168, 168, 1);
-          margin-left: 50px;
         }
       }
       .comment_num {
