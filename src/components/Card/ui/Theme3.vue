@@ -504,12 +504,15 @@ const randomComment = computed(() => {
         margin-bottom: 80px;
       }
       .say_box {
-        margin-right: 200px;
+        margin-right: 480px;
         line-height: 200px;
         font-size: 150px;
         color: rgba(245, 245, 245, 1);
         font-family: "font_8_4";
         margin-bottom: 40px;
+        .name {
+          flex-shrink: 0;
+        }
         .say {
           overflow: hidden;
           text-overflow: ellipsis;
