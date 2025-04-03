@@ -440,7 +440,7 @@ const randomComment = computed(() => {
       height: 2830px;
       font-family: "font_8_2";
       font-size: 140px;
-      line-height: 230px;
+      line-height: 1.78em;
       padding: 0 200px;
       box-sizing: border-box;
       color: #252525;
@@ -504,7 +504,7 @@ const randomComment = computed(() => {
         margin-bottom: 80px;
       }
       .say_box {
-        margin-right: 480px;
+        margin-right: 40px;
         line-height: 200px;
         font-size: 150px;
         color: rgba(245, 245, 245, 1);
@@ -519,8 +519,9 @@ const randomComment = computed(() => {
           white-space: nowrap;
         }
         .icon_good {
-          transform: scale(20);
-          padding: 1px 110px 0;
+          flex-shrink: 0;
+          transform: scale(10);
+          padding: 0 110px;
         }
       }
       .tag {
