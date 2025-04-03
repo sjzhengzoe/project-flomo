@@ -438,7 +438,7 @@ const randomComment = computed(() => {
     .content_main {
       width: 3750px;
       height: 2820px;
-      font-family: "font_8_2";
+      font-family: "font_8_3";
       font-size: 140px;
       line-height: 1.78em;
       padding: 0 200px;
