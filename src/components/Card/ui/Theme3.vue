@@ -385,7 +385,7 @@ const randomComment = computed(() => {
   width: 3000px;
   flex-wrap: wrap;
   overflow: hidden;
-  transform: scale(0.1);
+  transform: scale(0.08);
   transform-origin: 0px 0px;
   .pic_box {
     width: 3750px;
