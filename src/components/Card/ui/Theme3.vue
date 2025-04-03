@@ -60,13 +60,19 @@
         </div>
 
         <div class="content_main flex-y f-x-c">
-          <div v-for="(text, idx2) in item.split('\n')" :key="idx2">
+          <div>
             <div
-              class="title"
-              v-if="text.indexOf('-') != -1"
-              v-html="text.replace('-', '')"
-            />
-            <div class="content" v-else v-html="text" />
+              v-for="(text, idx2) in item.split('\n')"
+              :key="idx2"
+              :class="['content_box']"
+            >
+              <div
+                class="title"
+                v-if="text.indexOf('-') != -1"
+                v-html="text.replace('-', '')"
+              />
+              <div class="content" v-else v-html="text" />
+            </div>
           </div>
         </div>
 
@@ -442,7 +448,7 @@ const randomComment = computed(() => {
       height: 2820px;
       font-family: "font_8_3";
       font-size: 140px;
-      line-height: 1.78em;
+      line-height: 1.7em;
       padding: 0 200px;
       box-sizing: border-box;
       color: #252525;
@@ -451,6 +457,9 @@ const randomComment = computed(() => {
       //   no-repeat;
       .title {
         font-family: "font_8_4";
+      }
+      .content {
+        min-height: 200px;
       }
     }
     .footer {
