@@ -1,5 +1,5 @@
 <template>
-  <div class="theme_box flex">
+  <div class="theme_box flex f-sa">
     <template
       v-for="(item, idx) in formData.content.split('\n\n\n')"
       :key="idx"
@@ -388,7 +388,7 @@ const randomComment = computed(() => {
 
 <style lang="less" scoped>
 .theme_box {
-  width: 3800px;
+  width: 18000px;
   flex-wrap: wrap;
   overflow: hidden;
   transform: scale(0.08);
