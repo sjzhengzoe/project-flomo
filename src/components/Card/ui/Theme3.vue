@@ -1,5 +1,5 @@
 <template>
-  <div class="theme_box flex f-sa">
+  <div class="theme_box flex f-sb">
     <template
       v-for="(item, idx) in formData.content.split('\n\n\n')"
       :key="idx"
@@ -230,7 +230,7 @@
             <div class="check">查看翻译</div>
           </div>
         </div>
-        <div class="home flex f-y-c f-sb">
+        <!-- <div class="home flex f-y-c f-sb">
           <svg
             aria-label="首页"
             class="x1lliihq x1n2onr6 x5n08af"
@@ -359,7 +359,7 @@
               stroke-width="2"
             ></polygon>
           </svg>
-        </div>
+        </div> -->
       </div>
     </template>
   </div>
@@ -445,7 +445,7 @@ const randomComment = computed(() => {
     }
     .content_main {
       width: 3750px;
-      height: 2820px;
+      height: 3150px;
       font-family: "font_8_3";
       font-size: 140px;
       line-height: 1.7em;
