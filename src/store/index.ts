@@ -32,6 +32,7 @@ export const useStore = defineStore("store", {
       nowTheme: nowTheme,
       formData1: {
         title: "我的觉察日记 |",
+        location: "",
         tagsOfRed:
           "#原创文字[话题]# #文字的力量[话题]# #记录吧就现在[话题]# #日记[话题]# #浪漫生活的记录者[话题]#",
         tagsOfDou: "#随记 #文字的力量 #日记 #生活 #感受",
@@ -43,6 +44,7 @@ export const useStore = defineStore("store", {
       },
       formData2: {
         title: "广播剧 |《默读》骆闻舟&费渡｜关键剧情",
+        location: "",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
@@ -55,6 +57,7 @@ export const useStore = defineStore("store", {
       formData3: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_3}`) || "@顾飞飞",
+        location: "In GuangZhou, China",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
@@ -69,6 +72,7 @@ export const useStore = defineStore("store", {
       formData4: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_4}`) || "@顾飞飞",
+        location: "",
         tagsOfRed:
           "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
         tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",

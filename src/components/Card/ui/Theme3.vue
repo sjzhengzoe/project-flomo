@@ -40,7 +40,7 @@
                   已关注
                 </div>
               </div>
-              <div class="location">In GuangZhou</div>
+              <div class="location">{{ formData.location }}</div>
             </div>
           </div>
           <svg

@@ -22,7 +22,9 @@
       <!-- 内容 -->
       <el-form-item label="标题">
         <el-input @input="handleChangeTitle" v-model="formData.title" />
-        <!-- <div>{{ formData.title.length }} 字</div> -->
+      </el-form-item>
+      <el-form-item label="位置">
+        <el-input v-model="formData.location" />
       </el-form-item>
       <el-form-item label="封面">
         <el-upload v-model="formData.pic" :on-change="handleChange">
