@@ -1,9 +1,9 @@
-# Vue 3 + TypeScript + Vite
+# 更换证书
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-## Recommended Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (previously Volar) and disable Vetur
-
-- Use [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) for performing the same type checking from the command line, or for generating d.ts files for SFCs.
+1. 下载证书到本地 gufeifei.cn_nginx
+2. 部署
+3. ssh gufeifei
+4. cd /etc/nginx/
+5. sudo cp -r /home/ubuntu/project-flomo/gufeifei.cn_nginx .
+6. sudo systemctl restart nginx
+7. 打开 https://www.gufeifei.cn/
