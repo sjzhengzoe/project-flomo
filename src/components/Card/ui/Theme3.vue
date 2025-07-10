@@ -372,19 +372,19 @@ import { useStore } from "@/store";
 
 const store = useStore();
 const formData = computed(() => store.formData3);
-const date = new Date();
-const year = date.getFullYear();
-const month = String(date.getMonth() + 1);
-const day = String(date.getDate());
+// const date = new Date();
+// const year = date.getFullYear();
+// const month = String(date.getMonth() + 1);
+// const day = String(date.getDate());
 
-const formattedDate = `${year}年${month}月${day}日`;
+// const formattedDate = `${year}年${month}月${day}日`;
 
-const randomLike = computed(() => {
-  return Math.floor(Math.random() * 10000);
-});
-const randomComment = computed(() => {
-  return Math.floor(Math.random() * 10000);
-});
+// const randomLike = computed(() => {
+//   return Math.floor(Math.random() * 10000);
+// });
+// const randomComment = computed(() => {
+//   return Math.floor(Math.random() * 10000);
+// });
 </script>
 
 <style lang="less" scoped>
