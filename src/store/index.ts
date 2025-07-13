@@ -31,57 +31,63 @@ export const useStore = defineStore("store", {
     const state: State = {
       nowTheme: nowTheme,
       formData1: {
-        title: "我的觉察日记 |",
-        location: "",
-        tagsOfRed:
-          "#原创文字[话题]# #文字的力量[话题]# #记录吧就现在[话题]# #日记[话题]# #浪漫生活的记录者[话题]#",
-        tagsOfDou: "#随记 #文字的力量 #日记 #生活 #感受",
+        title:
+          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_1}`) || "小诗",
+        location: "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_1}`) ||
-          `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
-        footer: "",
+          `-01
+太阳快要下山了 
+我的周末快要结束了 
+我的无聊也快要结束
+写完这一段文字 
+我可能会躺在床上 缩成一团 看着投影的内容 发发呆
+周末 再见 
+下次见你 
+我会不会就知道自己要做什么了呢`,
+        footer:
+          localStorage.getItem(`FORM_DATA_FOOTER_${Theme.THEME_1}`) ||
+          "文 / 顾飞飞",
         pic: "",
       },
       formData2: {
-        title: "广播剧 |《默读》骆闻舟&费渡｜关键剧情",
-        location: "",
-        tagsOfRed:
-          "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
-        tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
+        title:
+          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_2}`) || "总结",
+        location: "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_2}`) ||
-          `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
-        footer: "- 粮票号码 【1】-",
+          `-地铁人很多时候，先把无线耳机摘下来握在手里再下车。
+
+因为有一次下车的时候不知道被什么撞了一下，然后我的耳机就掉了，不知道是掉在车厢内、还是车厢外、或是别人的背包里。
+
+损失 ¥500。`,
+        footer:
+          localStorage.getItem(`FORM_DATA_FOOTER_${Theme.THEME_2}`) ||
+          "文 / 顾飞飞",
         pic: "",
       },
       formData3: {
         title:
-          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_3}`) || "@顾飞飞",
+          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_3}`) || "顾飞飞",
         location: "In GuangZhou, China",
-        tagsOfRed:
-          "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
-        tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_3}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
         footer:
           localStorage.getItem(`FORM_DATA_FOOTER_${Theme.THEME_3}`) ||
-          "Episode",
+          "文 / 顾飞飞",
         pic: "",
       },
       formData4: {
         title:
-          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_4}`) || "@顾飞飞",
-        location: "",
-        tagsOfRed:
-          "#情绪[话题]# #文字[话题]# #文字的力量[话题]# #关注自我感受[话题]# #自我觉察和探索[话题]# #自我成长[话题]# # #生活[话题]# #成长[话题]#",
-        tagsOfDou: "#随记 #觉察 #成长 #生活 #文字",
+          localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_4}`) || "打怪",
+        location: "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_4}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
         footer:
           localStorage.getItem(`FORM_DATA_FOOTER_${Theme.THEME_4}`) ||
-          "Episode",
+          "文 / 顾飞飞",
         pic: "",
       },
     };

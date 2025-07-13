@@ -1,45 +1,22 @@
 <template>
-  <div class="theme_box flex">
+  <div class="theme_box flex f-sb">
     <template
       v-for="(item, idx) in formData.content.split('\n\n\n')"
       :key="idx"
     >
-      <div :id="`pic_${idx}`" class="pic_box flex f-x-c f-y-c">
-        <div class="main">
+      <div :id="`pic_${idx}`" class="pic_box">
+        <div
+          v-for="(text, idx2) in item.split('\n')"
+          :key="idx2"
+          :class="['content_box']"
+        >
           <div
-            class="decorate1"
-            :style="
-              formData.pic
-                ? {
-                    backgroundImage: `url(${formData.pic})`,
-                  }
-                : {}
-            "
-          ></div>
-
-          <div class="decorate2 font_1">JOURNAL</div>
-
-          <div class="decorate3"></div>
-          <div class="decorate4"></div>
-          <div class="decorate5">---------------------------</div>
-
-          <div class="decorate6 en_6">
-            Do not go gentle into that good night
-            <br />
-            ———————————————————————————————————————————
-            <br />
-            Now this is my world.
-          </div>
-          <div class="content_box flex-y f-x-c">
-            <div
-              v-for="(text, idx2) in item.split('\n')"
-              :key="idx2"
-              :class="['content']"
-            >
-              <div v-if="text" v-html="text"></div>
-              <div v-else>&nbsp;</div>
-            </div>
-          </div>
+            class="title"
+            v-if="text.indexOf('-') != -1"
+            v-html="text.replace('-', '')"
+          />
+          <div class="content" v-else-if="text" v-html="text" />
+          <div class="block" v-else>&nbsp;</div>
         </div>
       </div>
     </template>
@@ -56,107 +33,38 @@ const formData = computed(() => store.formData1);
 
 <style lang="less" scoped>
 .theme_box {
-  width: 1850px;
+  width: 13846px;
   flex-wrap: wrap;
   overflow: hidden;
-  transform: scale(0.19);
+  transform: scale(0.104);
   transform-origin: 0px 0px;
   .pic_box {
-    width: 1440px;
-    height: 1920px;
-    background: url("@/assets/background/theme_bg2.jpg");
+    width: 3750px;
+    height: 5000px;
     position: relative;
-    overflow: hidden;
-    .main {
-      width: 1200px;
-      height: 1700px;
-      background: url("@/assets/background/theme_bg9.jpg");
-      position: relative;
-      border-radius: 70px;
-      box-sizing: border-box;
-      color: #2b2b2b;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      .decorate1 {
-        left: 0;
-        right: 0;
-        margin: 0 auto;
-        border-radius: 60px;
-        width: 1088px;
-        height: 612px;
-        overflow: hidden;
-        line-height: 60px;
-        margin-top: 60px;
-        background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
-      }
-      .decorate2 {
-        color: #fff;
-        font-size: 220px;
-        font-weight: 900;
-        right: 0;
-        padding: 0 50px 22px 120px;
-        line-height: 220px;
-        position: absolute;
-        top: 480px;
-      }
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 
-      .decorate3,
-      .decorate4 {
-        width: 50px;
-        height: 100px;
-        background-color: #000;
-        position: absolute;
-        top: 700px;
-      }
-      .decorate3 {
-        border-radius: 0 50px 50px 0;
-        left: -1px;
-      }
-      .decorate4 {
-        border-radius: 50px 0 0 50px;
-        right: -1px;
-      }
-      .decorate5 {
-        font-size: 60px;
-        color: #000;
-        margin-top: 50px;
-        text-align: center;
-      }
-
-      .decorate7 {
-        width: 1000px;
-        color: #000;
-        font-size: 55px;
-        font-weight: 900;
-        margin: 20px auto;
-        line-height: 85px;
-        text-decoration: underline;
-        text-underline-offset: 10px;
-        font-weight: 900;
-      }
-
-      .decorate6 {
-        font-size: 30px;
-        left: 0;
-        right: 0;
-        line-height: 36px;
-        position: absolute;
-        bottom: 40px;
-        text-align: center;
-      }
-
-      .content_box {
-        width: 1000px;
-        height: 760px;
-        margin: 0 auto;
-      }
-      .content {
-        text-align: justify;
-        font-size: 50px;
-        line-height: 100px;
-      }
+    text-align: justify;
+    background-color: rgba(255, 251, 240, 0.5);
+    padding: 0 320px;
+    box-sizing: border-box;
+    font-family: "font_6";
+    color: #252525;
+    line-height: 230px;
+    font-size: 130px;
+    .title {
+      font-size: 190px;
+      line-height: 360px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 0 500px;
+      // font-size: 150px;
+    }
+    .block {
+      // font-size: 150px;
     }
   }
 }

@@ -102,7 +102,7 @@
             ></div>
           </div>
 
-          <!-- <div class="flex f-y-c f-sb">
+          <div class="flex f-y-c f-sb">
             <div class="flex f-y-c icon_box">
               <div class="flex f-y-c f-x-c" style="width: 240px; height: 240px">
                 <svg
@@ -195,12 +195,12 @@
                 ></polygon>
               </svg>
             </div>
-          </div> -->
+          </div>
           <!-- <div class="flex f-sb f-y-c">
             <div class="like_num">{{ randomLike }} 次赞</div>
             <div class="comment_num">全部 {{ randomComment }}条评论</div>
           </div> -->
-          <!-- <div class="say_box flex f-y-c">
+          <div class="say_box flex f-y-c">
             <div class="name">{{ formData.title }}</div>
             <svg
               aria-label="已验证"
@@ -218,18 +218,17 @@
               ></path>
             </svg>
             <div class="say">{{ formData.content }}</div>
-          </div> -->
-          <!-- <div class="tag flex f-y-c">
+          </div>
+          <div class="tag flex f-y-c">
             <div v-for="tag in formData.footer.split(' ')">
               #{{ tag }}&nbsp;
             </div>
             <div class="more">更多</div>
-          </div> -->
-          <!-- <div class="time flex g-y-c">
-            {{ formattedDate }}
-            &nbsp;&nbsp;·&nbsp;&nbsp;
+          </div>
+          <div class="time flex g-y-c">
+            {{ formattedDate }}&nbsp;&nbsp;·&nbsp;&nbsp;
             <div class="check">查看翻译</div>
-          </div> -->
+          </div>
         </div>
         <!-- <div class="home flex f-y-c f-sb">
           <svg
@@ -372,27 +371,27 @@ import { useStore } from "@/store";
 
 const store = useStore();
 const formData = computed(() => store.formData3);
-// const date = new Date();
-// const year = date.getFullYear();
-// const month = String(date.getMonth() + 1);
-// const day = String(date.getDate());
+const date = new Date();
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1);
+const day = String(date.getDate());
 
-// const formattedDate = `${year}年${month}月${day}日`;
+const formattedDate = `${year}年${month}月${day}日`;
 
-// const randomLike = computed(() => {
-//   return Math.floor(Math.random() * 10000);
-// });
-// const randomComment = computed(() => {
-//   return Math.floor(Math.random() * 10000);
-// });
+const randomLike = computed(() => {
+  return Math.floor(Math.random() * 10000);
+});
+const randomComment = computed(() => {
+  return Math.floor(Math.random() * 10000);
+});
 </script>
 
 <style lang="less" scoped>
 .theme_box {
-  width: 18000px;
+  width: 13846px;
   flex-wrap: wrap;
   overflow: hidden;
-  transform: scale(0.08);
+  transform: scale(0.104);
   transform-origin: 0px 0px;
   .pic_box {
     width: 3750px;
@@ -400,15 +399,14 @@ const formData = computed(() => store.formData3);
     position: relative;
     background-color: #000;
     .head {
-      height: 400px;
+      height: 300px;
       padding: 125px 120px;
       .avatar {
         width: 320px;
         height: 320px;
         border-radius: 50%;
         margin-right: 120px;
-        background: url("@/assets/images/theme_pic2.jpeg") center/cover
-          no-repeat;
+        background: url("@/assets/images/theme_pic1.jpg") center/cover no-repeat;
       }
       .name {
         font-size: 140px;
@@ -447,11 +445,11 @@ const formData = computed(() => store.formData3);
     }
     .content_main {
       width: 3750px;
-      height: 3950px;
+      height: 3150px;
       font-family: "font_8_3";
       font-size: 140px;
       line-height: 1.7em;
-      padding: 0 710px;
+      padding: 0 200px;
       box-sizing: border-box;
       color: #252525;
       background-color: #fff;
@@ -469,7 +467,7 @@ const formData = computed(() => store.formData3);
       padding: 0 160px;
       box-sizing: border-box;
       .dot_box {
-        margin: 120px 0 120px;
+        margin: 80px 0 16px;
         .dot {
           width: 60px;
           height: 60px;

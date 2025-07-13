@@ -5,13 +5,13 @@
       <!-- 选择主题 -->
       <el-form-item label="主题" @change="handleChangeTheme">
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_1">
-          觉察
+          小诗
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_2">
-          剧情
+          总结
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_3">
-          语录
+          媒体
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
           打怪
@@ -113,8 +113,8 @@ const handleChange: UploadProps["onChange"] = async (uploadFile) => {
 
 <style lang="less">
 .Page {
-  padding: 5px 20px;
-  background-color: rgba(250, 235, 215, 0.5);
+  padding: 10px 0;
+  background-color: white;
   .el-form-item {
     margin-bottom: 8px;
   }
