@@ -6,17 +6,11 @@
     >
       <div :id="`pic_${idx}`" class="pic_box">
         <div
-          v-for="(text, idx2) in item.split('\n')"
+          v-for="(text, idx2) in item.replace(/\. /g, '\.. ').split('\. ')"
           :key="idx2"
-          :class="['content_box']"
         >
-          <div
-            class="title"
-            v-if="text.indexOf('-') != -1"
-            v-html="text.replace('-', '')"
-          />
-          <div class="content" v-else-if="text" v-html="text" />
-          <div class="block" v-else>&nbsp;</div>
+          <div class="content" v-if="text" v-html="text" />
+          <div class="block">&nbsp;</div>
         </div>
       </div>
     </template>
@@ -46,25 +40,21 @@ const formData = computed(() => store.formData1);
     justify-content: center;
     flex-direction: column;
 
-    text-align: justify;
-    background-color: rgba(255, 251, 240, 0.5);
+    // text-align: justify;
+    background-color: #fefbf2;
     padding: 0 320px;
     box-sizing: border-box;
-    font-family: "font_6";
-    color: #252525;
-    line-height: 230px;
-    font-size: 130px;
-    .title {
-      font-size: 190px;
-      line-height: 360px;
-      font-weight: 600;
-    }
     .content {
-      padding: 0 500px;
-      // font-size: 150px;
+      padding: 0 100px;
+      color: #252525;
+      font-family: "font_4";
+      // text-align: center;
+      font-size: 230px;
+      line-height: 260px;
+      white-space: pre-wrap;
     }
     .block {
-      // font-size: 150px;
+      line-height: 230px;
     }
   }
 }
