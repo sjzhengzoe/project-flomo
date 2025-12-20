@@ -9,6 +9,10 @@ const router: Router = createRouter({
       component: () => import("@/pages/home.vue"),
     },
     {
+      path: "/auto-publish",
+      component: () => import("@/pages/auto-publish.vue"),
+    },
+    {
       path: "/:pathMatch(.*)",
       redirect: "/",
     },

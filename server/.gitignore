@@ -1,0 +1,6 @@
+node_modules/
+cookies/
+uploads/
+*.log
+.DS_Store
+
