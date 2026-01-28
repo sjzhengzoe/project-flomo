@@ -5,11 +5,7 @@
       :key="idx"
     >
       <div :id="`pic_${idx}`" class="pic_box">
-        <div
-          v-for="(text, idx2) in item.split('\n')"
-          :key="idx2"
-          :class="['content_box']"
-        >
+        <div v-for="(text, idx2) in item.split('\n')" :key="idx2">
           <div
             class="title"
             v-if="text.indexOf('-') != -1"
@@ -47,24 +43,26 @@ const formData = computed(() => store.formData2);
     flex-direction: column;
 
     text-align: justify;
-    // color: #fff;
-    // background-color: #000;
-    background-color: rgba(255, 251, 240, 0.5);
-    padding: 0 320px;
+    background-color: #fefbf2;
+
     box-sizing: border-box;
-    font-family: "font_7";
-    color: #252525;
-    line-height: 230px;
-    font-size: 160px;
+    font-family: "font_6";
+    line-height: 250px;
+    font-size: 136px;
     .title {
-      font-size: 260px;
-      line-height: 320px;
-      font-weight: 600;
+      padding: 0 520px 140px;
+      font-size: 190px;
+      line-height: 300px;
+      font-weight: 900;
+      // text-align: center;
+      color: #000;
     }
     .content {
-      // font-size: 150px;
+      padding: 0 520px;
+      color: #252525;
     }
     .block {
+      line-height: 90px;
       // font-size: 150px;
     }
   }
