@@ -16,6 +16,9 @@
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_4">
           打怪
         </el-radio>
+        <el-radio v-model="store.nowTheme" :label="Theme.THEME_5">
+          意义感
+        </el-radio>
       </el-form-item>
     </el-form>
     <el-form label-position="right" label-width="60px" :model="formData">
@@ -71,6 +74,9 @@ const formData = computed(() => {
   }
   if (store.nowTheme == Theme.THEME_4) {
     return store.formData4;
+  }
+  if (store.nowTheme == Theme.THEME_5) {
+    return store.formData5;
   }
 
   return store.formData1;

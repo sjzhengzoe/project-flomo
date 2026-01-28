@@ -10,4 +10,5 @@ export enum Theme {
   THEME_2 = "THEME_2",
   THEME_3 = "THEME_3",
   THEME_4 = "THEME_4",
+  THEME_5 = "THEME_5",
 }
