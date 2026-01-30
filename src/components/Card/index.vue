@@ -51,8 +51,8 @@ const handleToDownload = async () => {
     const node = document.getElementById(`${name}${index}`);
     loading.value = true;
     const blob = await domtoimage.toBlob(node, {
-      width: 3750,
-      height: 5000,
+      width: 9000,
+      height: 15000,
     });
     downloadBlob(blob, `${name}${index + 1}.png`);
     loading.value = false;
@@ -68,6 +68,7 @@ const handleToDownload = async () => {
   .btn_box {
     margin: 10px 0 15px 60px;
   }
+
   .preview_box {
     height: 520px;
     overflow-x: hidden;

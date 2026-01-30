@@ -17,7 +17,7 @@
           打怪
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_5">
-          意义感
+          冒险者
         </el-radio>
       </el-form-item>
     </el-form>
@@ -35,12 +35,7 @@
         </el-upload>
       </el-form-item>
       <el-form-item label="内容">
-        <el-input
-          @input="handleChangeContent"
-          v-model="formData.content"
-          autosize
-          type="textarea"
-        />
+        <el-input @input="handleChangeContent" v-model="formData.content" autosize type="textarea" />
       </el-form-item>
       <el-form-item label="页脚">
         <el-input @input="handleChangeFooter" v-model="formData.footer" />
@@ -121,16 +116,20 @@ const handleChange: UploadProps["onChange"] = async (uploadFile) => {
 .Page {
   padding: 10px 0;
   background-color: white;
+
   .el-form-item {
     margin-bottom: 8px;
   }
+
   .el-radio {
     margin-right: 5px;
   }
+
   .icp {
     font-size: 12px;
     color: #000;
     text-decoration: none;
+
     &:hover {
       text-decoration: underline;
     }
