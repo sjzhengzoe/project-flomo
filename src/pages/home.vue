@@ -27,7 +27,7 @@
         <el-input @input="handleChangeTitle" v-model="formData.title" />
       </el-form-item>
       <el-form-item label="位置">
-        <el-input v-model="formData.location" />
+        <el-input @input="handleChangeLocation" v-model="formData.location" />
       </el-form-item>
       <el-form-item label="封面">
         <el-upload v-model="formData.pic" :on-change="handleChange">
@@ -35,7 +35,12 @@
         </el-upload>
       </el-form-item>
       <el-form-item label="内容">
-        <el-input @input="handleChangeContent" v-model="formData.content" autosize type="textarea" />
+        <el-input
+          @input="handleChangeContent"
+          v-model="formData.content"
+          autosize
+          type="textarea"
+        />
       </el-form-item>
       <el-form-item label="页脚">
         <el-input @input="handleChangeFooter" v-model="formData.footer" />
@@ -87,6 +92,14 @@ const handleChangeTitle = () => {
     formData.value.title
   );
 };
+
+const handleChangeLocation = () => {
+  localStorage.setItem(
+    `FORM_DATA_LOCATION_${store.nowTheme}`,
+    formData.value.location
+  );
+};
+
 const handleChangeContent = () => {
   localStorage.setItem(
     `FORM_DATA_CONTENT_${store.nowTheme}`,

@@ -14,7 +14,7 @@ interface State {
 export const useStore = defineStore("store", {
   state: () => {
     const themeHistory = localStorage.getItem(`FORM_DATA_THEME`);
-    let nowTheme = Theme.THEME_1;
+    let nowTheme = Theme.THEME_5;
     switch (themeHistory) {
       case Theme.THEME_1:
         nowTheme = Theme.THEME_1;
@@ -37,7 +37,9 @@ export const useStore = defineStore("store", {
       formData1: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_1}`) || "小诗",
-        location: "In GuangZhou, China",
+        location:
+          localStorage.getItem(`FORM_DATA_LOCATION_${Theme.THEME_1}`) ||
+          "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_1}`) ||
           `-01
@@ -57,7 +59,9 @@ export const useStore = defineStore("store", {
       formData2: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_2}`) || "总结",
-        location: "In GuangZhou, China",
+        location:
+          localStorage.getItem(`FORM_DATA_LOCATION_${Theme.THEME_2}`) ||
+          "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_2}`) ||
           `-地铁人很多时候，先把无线耳机摘下来握在手里再下车。
@@ -73,7 +77,9 @@ export const useStore = defineStore("store", {
       formData3: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_3}`) || "顾飞飞",
-        location: "In GuangZhou, China",
+        location:
+          localStorage.getItem(`FORM_DATA_LOCATION_${Theme.THEME_3}`) ||
+          "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_3}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
@@ -85,7 +91,9 @@ export const useStore = defineStore("store", {
       formData4: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_4}`) || "打怪",
-        location: "In GuangZhou, China",
+        location:
+          localStorage.getItem(`FORM_DATA_LOCATION_${Theme.THEME_4}`) ||
+          "In GuangZhou, China",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_4}`) ||
           `首先要去尝试，等受挫时再想这种事也不迟，而到受挫时，你要想的不应该是自己没能力做好，而应该去想怎样才能做好。 你今后要注意的就是，在这种艰难时刻，要去依靠他人，有可以依靠的人，可是一大慰藉。`,
@@ -97,7 +105,9 @@ export const useStore = defineStore("store", {
       formData5: {
         title:
           localStorage.getItem(`FORM_DATA_TITLE_${Theme.THEME_5}`) || "意义感",
-        location: "",
+        location:
+          localStorage.getItem(`FORM_DATA_LOCATION_${Theme.THEME_5}`) ||
+          "2026.01.24 周六 ☀️",
         content:
           localStorage.getItem(`FORM_DATA_CONTENT_${Theme.THEME_5}`) ||
           `#匿名留言板
