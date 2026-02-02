@@ -52,7 +52,7 @@ const handleToDownload = async () => {
     loading.value = true;
     const blob = await domtoimage.toBlob(node, {
       width: 9000,
-      height: 15000,
+      height: 12000,
     });
     downloadBlob(blob, `${name}${index + 1}.png`);
     loading.value = false;

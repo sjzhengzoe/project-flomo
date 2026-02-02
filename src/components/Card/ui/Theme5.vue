@@ -75,7 +75,7 @@ const formData = computed(() => store.formData5);
 
   .pic_box {
     width: 9000px;
-    height: 15000px;
+    height: 12000px;
     position: relative;
     display: flex;
     justify-content: center;
