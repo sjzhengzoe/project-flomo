@@ -121,11 +121,77 @@ const handleToDownload = async () => {
     const node = document.getElementById(`${name}${index}`);
     if (!node) break;
     downloadLoading.value = true;
-    const blob = await domtoimage.toBlob(node, {
-      width: 9000,
-      height: 12000,
-    });
-    downloadBlob(blob, `${name}${index + 1}.png`);
+
+    // 获取节点的实际尺寸
+    const scale = 10; // 放大倍数
+    const originalWidth = node.offsetWidth;
+    const originalHeight = node.offsetHeight;
+    const width = originalWidth * scale;
+    const height = originalHeight * scale;
+
+    // 找到包含 theme_box 的父容器，保持完整的上下文
+    let containerNode = node.parentElement; // theme_box
+    while (containerNode && !containerNode.classList.contains("theme_box")) {
+      containerNode = containerNode.parentElement;
+    }
+
+    if (!containerNode) {
+      containerNode = node;
+    }
+
+    // 保存原始位置信息
+    const parent = containerNode.parentElement;
+    const nextSibling = containerNode.nextSibling;
+
+    // 创建包装容器
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "0";
+    container.style.top = "0";
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
+    container.style.overflow = "hidden";
+    container.style.backgroundColor = "transparent";
+    container.style.zIndex = "999999";
+
+    // 将整个容器节点移动到包装容器中
+    container.appendChild(containerNode);
+    document.body.appendChild(container);
+
+    // 设置放大样式（应用到容器节点）
+    (containerNode as HTMLElement).style.transform = `scale(${scale})`;
+    (containerNode as HTMLElement).style.transformOrigin = "top left";
+    (containerNode as HTMLElement).style.width = `${originalWidth}px`;
+    (containerNode as HTMLElement).style.height = `${originalHeight}px`;
+
+    try {
+      // 等待渲染完成
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 200)); // 等待资源加载
+
+      const blob = await domtoimage.toBlob(container, {
+        width: width,
+        height: height,
+      });
+      downloadBlob(blob, `${name}${index + 1}.png`);
+    } finally {
+      // 恢复节点到原始位置
+      container.removeChild(containerNode);
+      if (nextSibling) {
+        parent?.insertBefore(containerNode, nextSibling);
+      } else {
+        parent?.appendChild(containerNode);
+      }
+      document.body.removeChild(container);
+
+      // 恢复节点样式
+      (containerNode as HTMLElement).style.transform = "";
+      (containerNode as HTMLElement).style.transformOrigin = "";
+      (containerNode as HTMLElement).style.width = "";
+      (containerNode as HTMLElement).style.height = "";
+    }
+
     downloadLoading.value = false;
     index++;
   }
@@ -141,10 +207,72 @@ const handleShareToXiaohongshu = async () => {
   shareLoading.value = true;
   shareToast.value = "";
   try {
-    const blob = await domtoimage.toBlob(node, {
-      width: 9000,
-      height: 12000,
+    // 获取节点的实际尺寸
+    const scale = 10; // 放大倍数
+    const originalWidth = node.offsetWidth;
+    const originalHeight = node.offsetHeight;
+    const width = originalWidth * scale;
+    const height = originalHeight * scale;
+
+    // 找到包含 theme_box 的父容器，保持完整的上下文
+    let containerNode = node.parentElement; // theme_box
+    while (containerNode && !containerNode.classList.contains("theme_box")) {
+      containerNode = containerNode.parentElement;
+    }
+
+    if (!containerNode) {
+      containerNode = node;
+    }
+
+    // 保存原始位置信息
+    const parent = containerNode.parentElement;
+    const nextSibling = containerNode.nextSibling;
+
+    // 创建包装容器
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "0";
+    container.style.top = "0";
+    container.style.width = `${width}px`;
+    container.style.height = `${height}px`;
+    container.style.overflow = "hidden";
+    container.style.backgroundColor = "transparent";
+    container.style.zIndex = "999999";
+
+    // 将整个容器节点移动到包装容器中
+    container.appendChild(containerNode);
+    document.body.appendChild(container);
+
+    // 设置放大样式（应用到容器节点）
+    (containerNode as HTMLElement).style.transform = `scale(${scale})`;
+    (containerNode as HTMLElement).style.transformOrigin = "top left";
+    (containerNode as HTMLElement).style.width = `${originalWidth}px`;
+    (containerNode as HTMLElement).style.height = `${originalHeight}px`;
+
+    // 等待渲染完成
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => setTimeout(resolve, 200)); // 等待资源加载
+
+    const blob = await domtoimage.toBlob(container, {
+      width: width,
+      height: height,
     });
+
+    // 恢复节点到原始位置
+    container.removeChild(containerNode);
+    if (nextSibling) {
+      parent?.insertBefore(containerNode, nextSibling);
+    } else {
+      parent?.appendChild(containerNode);
+    }
+    document.body.removeChild(container);
+
+    // 恢复节点样式
+    (containerNode as HTMLElement).style.transform = "";
+    (containerNode as HTMLElement).style.transformOrigin = "";
+    (containerNode as HTMLElement).style.width = "";
+    (containerNode as HTMLElement).style.height = "";
     let copied = false;
     if (navigator.clipboard?.write && window.isSecureContext) {
       try {

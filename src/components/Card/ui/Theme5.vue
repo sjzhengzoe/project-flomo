@@ -131,12 +131,11 @@ const onSwiper = (_swiper: unknown) => {
   --fc_3: #5d5d5d;
   --fc_2: #111111;
 
-  width: 9000px;
-  transform: scale(0.03);
+  width: 270px;
 
   .pic_box {
-    width: 9000px;
-    height: 12000px;
+    width: 270px;
+    height: 360px;
     position: relative;
     display: flex;
     justify-content: center;
@@ -144,12 +143,12 @@ const onSwiper = (_swiper: unknown) => {
 
     text-align: justify;
     background-color: rgba(255, 251, 240, 0.5);
-    padding: 750px 500px;
+    padding: 23px 15px;
     box-sizing: border-box;
 
     color: #252525;
     line-height: 1.75;
-    font-size: 360px;
+    font-size: 11px;
     background: url("@/assets/background/theme_bg22.jpg") top/cover no-repeat;
     font-family: "font_03";
 
@@ -157,40 +156,40 @@ const onSwiper = (_swiper: unknown) => {
       display: flex;
       justify-content: flex-end;
       align-items: flex-start;
-      width: 8000px;
-      height: 6000px;
+      width: 240px;
+      height: 180px;
       color: #1c1c1c;
-      margin-top: 1000px;
+      margin-top: 30px;
 
       .title_text {
-        height: 6730px;
-        font-size: 1120px;
+        height: 202px;
+        font-size: 34px;
         line-height: 1.16;
-        margin-left: 500px;
+        margin-left: 15px;
         writing-mode: vertical-lr;
         text-orientation: upright;
       }
     }
     .time_text {
-      margin: 100px 0 520px;
+      margin: 3px 0 16px;
     }
 
     .location_text {
-      margin: 0 0 520px;
-      font-size: 320px;
+      margin: 0 0 16px;
+      font-size: 10px;
       color: var(--fc_3);
     }
 
     .sub_title {
-      margin-bottom: 120px;
+      margin-bottom: 4px;
     }
 
     .content {
-      font-size: 370px;
+      font-size: 11px;
       line-height: 1.75;
       color: #111111;
       .block {
-        height: 210px;
+        height: 6px;
       }
     }
   }
