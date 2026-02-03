@@ -17,7 +17,7 @@
           打怪
         </el-radio>
         <el-radio v-model="store.nowTheme" :label="Theme.THEME_5">
-          冒险者
+          小红书
         </el-radio>
       </el-form-item>
     </el-form>
