@@ -133,7 +133,6 @@ import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import Card from "@/components/Card/index.vue";
 import {
-  downloadBlob,
   convertBackgroundImagesToBase64,
   replaceSVGCSSVariables,
 } from "@/utils";
