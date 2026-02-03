@@ -1,6 +1,6 @@
 <template>
   <div class="theme_box flex f-sb">
-    <template v-for="(item, idx) in formData.content.split('\/')" :key="idx">
+    <template v-for="(item, idx) in formData.content.split('\/\n')" :key="idx">
       <div :id="`pic_${idx}`" class="pic_box">
         <!-- 第一页：显示标题区域 -->
         <div v-if="idx === 0" class="title">
@@ -30,7 +30,7 @@
           <div>{{ formData.location }}</div>
         </div>
 
-        <div class="sub_title">/ 0{{ idx + 1 }} /</div>
+        <div v-if="idx != 0" class="sub_title">/ 0{{ idx }} /</div>
         <div
           v-for="(text, idx2) in item.split('\n\n')"
           :key="idx2"
