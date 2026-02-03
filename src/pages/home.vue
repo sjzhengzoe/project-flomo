@@ -42,7 +42,16 @@
             />
           </div>
           <div class="form-item">
-            <label class="form-label">内容</label>
+            <div class="form-label-row">
+              <label class="form-label">内容</label>
+              <button
+                type="button"
+                class="btn btn-text"
+                @click="handleClearContent"
+              >
+                清空
+              </button>
+            </div>
             <textarea
               class="form-textarea"
               :value="formData.content"
@@ -62,10 +71,21 @@
             >
               {{ downloadLoading ? "下载中..." : "下载图片" }}
             </button>
+            <button
+              type="button"
+              class="btn btn-xhs"
+              :disabled="shareLoading"
+              @click="handleShareToXiaohongshu"
+            >
+              {{ shareLoading ? "准备中..." : "分享到小红书" }}
+            </button>
           </div>
         </form>
       </div>
     </aside>
+
+    <!-- 分享提示（移动端） -->
+    <div v-if="shareToast" class="share-toast">{{ shareToast }}</div>
 
     <!-- 主内容区：预览 + 下载 -->
     <main class="page__main">
@@ -89,6 +109,10 @@ import domtoimage from "dom-to-image";
 const store = useStore();
 const formData = computed(() => store.formData5);
 const downloadLoading = ref(false);
+const shareLoading = ref(false);
+const shareToast = ref("");
+
+const XHS_SCHEME = "xhsdiscover://post_note/";
 
 const handleToDownload = async () => {
   const name = "pic_";
@@ -104,6 +128,47 @@ const handleToDownload = async () => {
     downloadBlob(blob, `${name}${index + 1}.png`);
     downloadLoading.value = false;
     index++;
+  }
+};
+
+const handleShareToXiaohongshu = async () => {
+  const node = document.getElementById("pic_0");
+  if (!node) {
+    shareToast.value = "暂无可分享的图片";
+    setTimeout(() => (shareToast.value = ""), 2000);
+    return;
+  }
+  shareLoading.value = true;
+  shareToast.value = "";
+  try {
+    const blob = await domtoimage.toBlob(node, {
+      width: 9000,
+      height: 12000,
+    });
+    let copied = false;
+    if (navigator.clipboard?.write && window.isSecureContext) {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        copied = true;
+      } catch {
+        copied = false;
+      }
+    }
+    if (copied) {
+      shareToast.value = "图片已复制，请在小红书发布页长按粘贴";
+    } else {
+      downloadBlob(blob, "pic_1.png");
+      shareToast.value = "图片已保存，请打开小红书从相册选择刚保存的图片";
+    }
+    setTimeout(() => (shareToast.value = ""), 4000);
+    window.location.href = XHS_SCHEME;
+  } catch (e) {
+    shareToast.value = "生成图片失败，请重试";
+    setTimeout(() => (shareToast.value = ""), 2000);
+  } finally {
+    shareLoading.value = false;
   }
 };
 
@@ -201,6 +266,11 @@ function persistContent() {
     formData.value.content
   );
 }
+
+const handleClearContent = () => {
+  store.formData5.content = "";
+  persistContent();
+};
 </script>
 
 <style lang="less" scoped>
@@ -270,12 +340,23 @@ function persistContent() {
   margin-bottom: 14px;
 }
 
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
 .form-label {
   display: block;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
   margin-bottom: 6px;
+
+  .form-label-row & {
+    margin-bottom: 0;
+  }
 }
 
 .form-input,
@@ -310,6 +391,15 @@ function persistContent() {
 .form-item--action {
   margin-top: 4px;
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .btn-xhs {
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
 }
 
 .btn {
@@ -335,6 +425,61 @@ function persistContent() {
       opacity: 0.7;
       cursor: not-allowed;
     }
+  }
+
+  &.btn-xhs {
+    width: 100%;
+    color: #fff;
+    background: linear-gradient(135deg, #ff2442 0%, #ff6b6b 100%);
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  &.btn-text {
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+
+    &:hover {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+.share-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translateX(-50%);
+  max-width: 90%;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 14px;
+  border-radius: 8px;
+  z-index: 1000;
+  text-align: center;
+  animation: fade-in 0.2s ease;
+
+  @media (min-width: 768px) {
+    bottom: 24px;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
