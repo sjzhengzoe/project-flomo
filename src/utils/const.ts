@@ -1,14 +1,10 @@
 export interface FormData {
-  content: string; // 内容
+  content: string; // 正文（按 /\n 分页）
   title: string; // 标题
-  location: string; // 坐标
-  footer: string; // 底部
+  location: string; // 日期/心情
+  preface: string; // 前言
   pic: string;
 }
 export enum Theme {
-  THEME_1 = "THEME_1",
-  THEME_2 = "THEME_2",
-  THEME_3 = "THEME_3",
-  THEME_4 = "THEME_4",
   THEME_5 = "THEME_5",
 }
