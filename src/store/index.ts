@@ -1,5 +1,5 @@
 import { defineStore, createPinia } from "pinia";
-import { FormData, Theme } from "@/utils/const";
+import { Theme } from "@/utils/const";
 
 export default createPinia();
 
