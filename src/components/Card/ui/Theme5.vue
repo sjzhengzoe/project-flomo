@@ -22,8 +22,8 @@
               <svg
                 data-v-4b2ced3a=""
                 data-v-27b680e4-s=""
-                width="970"
-                height="5450"
+                width="29.1"
+                height="163.5"
                 viewBox="0 0 97 545"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -37,7 +37,15 @@
                   fill="var(--fc_1)"
                 ></path>
               </svg>
-              <div class="title_text">{{ formData.title }}</div>
+              <div class="title_text">
+                <span
+                  v-for="(char, idx) in formData.title.split('')"
+                  :key="idx"
+                  class="title_char"
+                >
+                  {{ char }}
+                </span>
+              </div>
             </div>
             <div v-if="formData.location && idx == 0" class="time_text">
               <div>{{ formData.location }}</div>
@@ -52,7 +60,7 @@
 
           <div
             v-if="idx != 0"
-            v-for="(text, idx2) in item.split('\n\n')"
+            v-for="(text, idx2) in item.split('\n')"
             :key="idx2"
             :class="['content_box']"
           >
@@ -131,24 +139,23 @@ const onSwiper = (_swiper: unknown) => {
   --fc_3: #5d5d5d;
   --fc_2: #111111;
 
-  width: 270px;
+  width: 300px;
 
   .pic_box {
-    width: 270px;
-    height: 360px;
+    width: 300px;
+    height: 400px;
     position: relative;
     display: flex;
-    justify-content: center;
     flex-direction: column;
 
     text-align: justify;
     background-color: rgba(255, 251, 240, 0.5);
-    padding: 23px 15px;
+    padding: 25px 17px;
     box-sizing: border-box;
 
     color: #252525;
     line-height: 1.75;
-    font-size: 11px;
+    font-size: 12px;
     background: url("@/assets/background/theme_bg22.jpg") top/cover no-repeat;
     font-family: "font_03";
 
@@ -156,27 +163,38 @@ const onSwiper = (_swiper: unknown) => {
       display: flex;
       justify-content: flex-end;
       align-items: flex-start;
-      width: 240px;
-      height: 180px;
+      width: 267px;
+      height: 200px;
       color: #1c1c1c;
-      margin-top: 30px;
+      margin-top: 33px;
 
       .title_text {
-        height: 202px;
-        font-size: 34px;
+        height: 224px;
+        font-size: 37px;
         line-height: 1.16;
-        margin-left: 15px;
-        writing-mode: vertical-lr;
-        text-orientation: upright;
+        margin-left: 17px;
+        // margin-right: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0;
+      }
+
+      .title_char {
+        display: inline-block;
+        transform: rotate(0deg);
+        transform-origin: center;
+        white-space: nowrap;
       }
     }
     .time_text {
-      margin: 3px 0 16px;
+      margin: 3px 0 17px;
     }
 
     .location_text {
-      margin: 0 0 16px;
-      font-size: 10px;
+      margin: 0 0 17px;
+      font-size: 11px;
       color: var(--fc_3);
     }
 
@@ -185,11 +203,11 @@ const onSwiper = (_swiper: unknown) => {
     }
 
     .content {
-      font-size: 11px;
+      font-size: 12px;
       line-height: 1.75;
       color: #111111;
       .block {
-        height: 6px;
+        height: 7px;
       }
     }
   }

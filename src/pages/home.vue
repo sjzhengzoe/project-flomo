@@ -69,7 +69,7 @@
               :disabled="downloadLoading"
               @click="handleToDownload"
             >
-              {{ downloadLoading ? "下载中..." : "下载图片" }}
+              {{ downloadLoading ? "生成中..." : "预览图片" }}
             </button>
             <button
               type="button"
@@ -96,6 +96,28 @@
         </a>
       </footer>
     </main>
+
+    <!-- 图片预览弹窗 -->
+    <div v-if="showPreview" class="preview-modal" @click="closePreview">
+      <div class="preview-modal__content" @click.stop>
+        <button class="preview-modal__close" @click="closePreview">×</button>
+        <Swiper
+          :modules="previewModules"
+          :slides-per-view="1"
+          :space-between="20"
+          :speed="300"
+          :touch-ratio="1"
+          class="preview-swiper"
+          @swiper="onPreviewSwiper"
+        >
+          <SwiperSlide v-for="(imageUrl, idx) in previewImages" :key="idx">
+            <div class="preview-slide">
+              <img :src="imageUrl" :alt="`预览图片 ${idx + 1}`" />
+            </div>
+          </SwiperSlide>
+        </Swiper>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -103,97 +125,196 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import Card from "@/components/Card/index.vue";
-import { downloadBlob } from "@/utils";
+import {
+  downloadBlob,
+  convertBackgroundImagesToBase64,
+  replaceSVGCSSVariables,
+} from "@/utils";
 import domtoimage from "dom-to-image";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 const store = useStore();
 const formData = computed(() => store.formData5);
 const downloadLoading = ref(false);
 const shareLoading = ref(false);
 const shareToast = ref("");
+const showPreview = ref(false);
+const previewImages = ref<string[]>([]);
+const previewSwiper = ref<any>(null);
+
+const previewModules = [Pagination];
 
 const XHS_SCHEME = "xhsdiscover://post_note/";
+
+const onPreviewSwiper = (swiper: any) => {
+  previewSwiper.value = swiper;
+};
+
+const closePreview = () => {
+  // 清理 URL 对象，避免内存泄漏
+  previewImages.value.forEach((url) => {
+    URL.revokeObjectURL(url);
+  });
+  showPreview.value = false;
+  previewImages.value = [];
+};
 
 const handleToDownload = async () => {
   const name = "pic_";
   let index = 0;
-  while (document.getElementById(`${name}${index}`)) {
-    const node = document.getElementById(`${name}${index}`);
-    if (!node) break;
-    downloadLoading.value = true;
+  const images: string[] = [];
+  downloadLoading.value = true;
 
-    // 获取节点的实际尺寸
-    const scale = 10; // 放大倍数
-    const originalWidth = node.offsetWidth;
-    const originalHeight = node.offsetHeight;
-    const width = originalWidth * scale;
-    const height = originalHeight * scale;
+  try {
+    while (document.getElementById(`${name}${index}`)) {
+      const node = document.getElementById(`${name}${index}`);
+      if (!node) break;
 
-    // 找到包含 theme_box 的父容器，保持完整的上下文
-    let containerNode = node.parentElement; // theme_box
-    while (containerNode && !containerNode.classList.contains("theme_box")) {
-      containerNode = containerNode.parentElement;
-    }
+      // 获取节点的实际尺寸
+      const scale = 10; // 放大倍数
+      const originalWidth = node.offsetWidth;
+      const originalHeight = node.offsetHeight;
+      const width = originalWidth * scale;
+      const height = originalHeight * scale;
 
-    if (!containerNode) {
-      containerNode = node;
-    }
-
-    // 保存原始位置信息
-    const parent = containerNode.parentElement;
-    const nextSibling = containerNode.nextSibling;
-
-    // 创建包装容器
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
-    container.style.overflow = "hidden";
-    container.style.backgroundColor = "transparent";
-    container.style.zIndex = "999999";
-
-    // 将整个容器节点移动到包装容器中
-    container.appendChild(containerNode);
-    document.body.appendChild(container);
-
-    // 设置放大样式（应用到容器节点）
-    (containerNode as HTMLElement).style.transform = `scale(${scale})`;
-    (containerNode as HTMLElement).style.transformOrigin = "top left";
-    (containerNode as HTMLElement).style.width = `${originalWidth}px`;
-    (containerNode as HTMLElement).style.height = `${originalHeight}px`;
-
-    try {
-      // 等待渲染完成
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await new Promise((resolve) => setTimeout(resolve, 200)); // 等待资源加载
-
-      const blob = await domtoimage.toBlob(container, {
-        width: width,
-        height: height,
-      });
-      downloadBlob(blob, `${name}${index + 1}.png`);
-    } finally {
-      // 恢复节点到原始位置
-      container.removeChild(containerNode);
-      if (nextSibling) {
-        parent?.insertBefore(containerNode, nextSibling);
-      } else {
-        parent?.appendChild(containerNode);
+      // 找到包含 theme_box 的父容器，保持完整的上下文
+      let containerNode = node.parentElement; // theme_box
+      while (containerNode && !containerNode.classList.contains("theme_box")) {
+        containerNode = containerNode.parentElement;
       }
-      document.body.removeChild(container);
 
-      // 恢复节点样式
-      (containerNode as HTMLElement).style.transform = "";
-      (containerNode as HTMLElement).style.transformOrigin = "";
-      (containerNode as HTMLElement).style.width = "";
-      (containerNode as HTMLElement).style.height = "";
+      if (!containerNode) {
+        containerNode = node;
+      }
+
+      // 保存原始位置信息
+      const parent = containerNode.parentElement;
+      const nextSibling = containerNode.nextSibling;
+
+      // 在移动节点之前将背景图片转换为 base64，确保在 Safari 中也能正确显示
+      await convertBackgroundImagesToBase64(containerNode as HTMLElement);
+
+      // 创建包装容器
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "0";
+      container.style.top = "0";
+      container.style.width = `${width}px`;
+      container.style.height = `${height}px`;
+      container.style.overflow = "hidden";
+      container.style.backgroundColor = "transparent";
+      container.style.zIndex = "999999";
+
+      // 将整个容器节点移动到包装容器中
+      container.appendChild(containerNode);
+      document.body.appendChild(container);
+
+      // 设置放大样式（应用到容器节点）
+      (containerNode as HTMLElement).style.transform = `scale(${scale})`;
+      (containerNode as HTMLElement).style.transformOrigin = "top left";
+      (containerNode as HTMLElement).style.width = `${originalWidth}px`;
+      (containerNode as HTMLElement).style.height = `${originalHeight}px`;
+
+      try {
+        // 等待渲染完成
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+
+        // 移动节点后再次转换背景图片，确保 base64 格式正确应用
+        await convertBackgroundImagesToBase64(container);
+
+        // 替换 SVG 中的 CSS 变量为实际颜色值，确保 SVG 能正确显示
+        replaceSVGCSSVariables(container);
+
+        await new Promise((resolve) => setTimeout(resolve, 300)); // 额外等待确保渲染完成
+
+        // 检测是否为 Safari 浏览器
+        const isSafari = /^((?!chrome|android).)*safari/i.test(
+          navigator.userAgent
+        );
+
+        let blob: Blob;
+        if (isSafari) {
+          // Safari 使用 html2canvas，对背景图片支持更好
+          try {
+            const html2canvas = (await import("html2canvas")).default;
+            const canvas = await html2canvas(container, {
+              width: width,
+              height: height,
+              useCORS: true,
+              allowTaint: false,
+              scale: 1,
+              logging: false,
+            });
+            blob = await new Promise<Blob>((resolve, reject) => {
+              canvas.toBlob((blob: Blob | null) => {
+                if (blob) {
+                  resolve(blob);
+                } else {
+                  reject(new Error("无法生成 blob"));
+                }
+              }, "image/png");
+            });
+          } catch (error) {
+            console.error("html2canvas 失败，回退到 dom-to-image:", error);
+            // 回退到 dom-to-image
+            blob = await domtoimage.toBlob(container, {
+              width: width,
+              height: height,
+              useCORS: true,
+              cacheBust: true,
+              filter: (_node: Node) => {
+                return true;
+              },
+            });
+          }
+        } else {
+          // 其他浏览器使用 dom-to-image
+          blob = await domtoimage.toBlob(container, {
+            width: width,
+            height: height,
+            useCORS: true,
+            cacheBust: true,
+            filter: (_node: Node) => {
+              // 确保所有节点都被包含
+              return true;
+            },
+          });
+        }
+
+        // 将 blob 转换为 data URL，用于预览
+        const imageUrl = URL.createObjectURL(blob);
+        images.push(imageUrl);
+      } finally {
+        // 恢复节点到原始位置
+        container.removeChild(containerNode);
+        if (nextSibling) {
+          parent?.insertBefore(containerNode, nextSibling);
+        } else {
+          parent?.appendChild(containerNode);
+        }
+        document.body.removeChild(container);
+
+        // 恢复节点样式
+        (containerNode as HTMLElement).style.transform = "";
+        (containerNode as HTMLElement).style.transformOrigin = "";
+        (containerNode as HTMLElement).style.width = "";
+        (containerNode as HTMLElement).style.height = "";
+      }
+
+      index++;
     }
 
+    // 显示预览弹窗
+    if (images.length > 0) {
+      previewImages.value = images;
+      showPreview.value = true;
+    }
+  } finally {
     downloadLoading.value = false;
-    index++;
   }
 };
 
@@ -228,6 +349,9 @@ const handleShareToXiaohongshu = async () => {
     const parent = containerNode.parentElement;
     const nextSibling = containerNode.nextSibling;
 
+    // 在移动节点之前将背景图片转换为 base64，确保在 Safari 中也能正确显示
+    await convertBackgroundImagesToBase64(containerNode as HTMLElement);
+
     // 创建包装容器
     const container = document.createElement("div");
     container.style.position = "fixed";
@@ -252,12 +376,66 @@ const handleShareToXiaohongshu = async () => {
     // 等待渲染完成
     await new Promise((resolve) => requestAnimationFrame(resolve));
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    await new Promise((resolve) => setTimeout(resolve, 200)); // 等待资源加载
 
-    const blob = await domtoimage.toBlob(container, {
-      width: width,
-      height: height,
-    });
+    // 移动节点后再次转换背景图片，确保 base64 格式正确应用
+    await convertBackgroundImagesToBase64(container);
+
+    // 替换 SVG 中的 CSS 变量为实际颜色值，确保 SVG 能正确显示
+    replaceSVGCSSVariables(container);
+
+    await new Promise((resolve) => setTimeout(resolve, 300)); // 额外等待确保渲染完成
+
+    // 检测是否为 Safari 浏览器
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    let blob: Blob;
+    if (isSafari) {
+      // Safari 使用 html2canvas，对背景图片支持更好
+      try {
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(container, {
+          width: width,
+          height: height,
+          useCORS: true,
+          allowTaint: false,
+          scale: 1,
+          logging: false,
+        });
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob: Blob | null) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("无法生成 blob"));
+            }
+          }, "image/png");
+        });
+      } catch (error) {
+        console.error("html2canvas 失败，回退到 dom-to-image:", error);
+        // 回退到 dom-to-image
+        blob = await domtoimage.toBlob(container, {
+          width: width,
+          height: height,
+          useCORS: true,
+          cacheBust: true,
+          filter: (_node: Node) => {
+            return true;
+          },
+        });
+      }
+    } else {
+      // 其他浏览器使用 dom-to-image
+      blob = await domtoimage.toBlob(container, {
+        width: width,
+        height: height,
+        useCORS: true,
+        cacheBust: true,
+        filter: (_node: Node) => {
+          // 确保所有节点都被包含
+          return true;
+        },
+      });
+    }
 
     // 恢复节点到原始位置
     container.removeChild(containerNode);
@@ -620,5 +798,98 @@ const handleClearContent = () => {
 .icp:hover {
   color: var(--text-secondary);
   text-decoration: underline;
+}
+
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: fade-in 0.2s ease;
+}
+
+.preview-modal__content {
+  position: relative;
+  width: 100%;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-modal__close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.preview-swiper {
+  width: 100%;
+  height: 100%;
+  max-height: 90vh;
+}
+
+.preview-slide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+}
+
+:deep(.swiper-button-next),
+:deep(.swiper-button-prev) {
+  color: rgba(255, 255, 255, 0.8);
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+:deep(.swiper-pagination) {
+  bottom: 10px;
+}
+
+:deep(.swiper-pagination-bullet) {
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 1;
+}
+
+:deep(.swiper-pagination-bullet-active) {
+  background: var(--accent, #6366f1);
 }
 </style>

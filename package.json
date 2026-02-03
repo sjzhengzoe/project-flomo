@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "dom-to-image": "^2.6.0",
+    "html2canvas": "^1.4.1",
     "pinia": "^2.1.7",
     "swiper": "^11.1.14",
     "vue": "^3.4.21",
