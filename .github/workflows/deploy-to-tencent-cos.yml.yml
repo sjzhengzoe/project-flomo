@@ -28,5 +28,6 @@ jobs:
           script: |
             cd /home/ubuntu/project-flomo
             git pull
+            sudo pnpm i
             sudo pnpm run build
             sudo nginx -s reload
