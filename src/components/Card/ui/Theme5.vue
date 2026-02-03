@@ -90,7 +90,6 @@ const formData = computed(() => store.formData5);
     line-height: 1.75;
     font-size: 360px;
     background: url("@/assets/background/theme_bg22.jpg") top/cover no-repeat;
-
     font-family: "font_03";
 
     .title {
@@ -127,7 +126,6 @@ const formData = computed(() => store.formData5);
     }
 
     .content {
-      font-family: "font_03";
       font-size: 370px;
       line-height: 1.75;
       color: #111111;
