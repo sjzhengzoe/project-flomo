@@ -79,6 +79,13 @@
             >
               {{ shareLoading ? "准备中..." : "分享到小红书" }}
             </button>
+            <button
+              type="button"
+              class="btn btn-douyin"
+              @click="handleShareToDouyin"
+            >
+              分享到抖音
+            </button>
           </div>
         </form>
       </div>
@@ -148,6 +155,7 @@ const previewSwiper = ref<any>(null);
 const previewModules = [Pagination];
 
 const XHS_SCHEME = "xhsdiscover://post_note/";
+const DOUYIN_SCHEME = "snssdk1128://";
 
 const onPreviewSwiper = (swiper: any) => {
   previewSwiper.value = swiper;
@@ -318,164 +326,14 @@ const handleToDownload = async () => {
   }
 };
 
-const handleShareToXiaohongshu = async () => {
-  const node = document.getElementById("pic_0");
-  if (!node) {
-    shareToast.value = "暂无可分享的图片";
-    setTimeout(() => (shareToast.value = ""), 2000);
-    return;
-  }
-  shareLoading.value = true;
-  shareToast.value = "";
-  try {
-    // 获取节点的实际尺寸
-    const scale = 10; // 放大倍数
-    const originalWidth = node.offsetWidth;
-    const originalHeight = node.offsetHeight;
-    const width = originalWidth * scale;
-    const height = originalHeight * scale;
+const handleShareToXiaohongshu = () => {
+  // 直接跳转到小红书发布页面
+  window.location.href = XHS_SCHEME;
+};
 
-    // 找到包含 theme_box 的父容器，保持完整的上下文
-    let containerNode = node.parentElement; // theme_box
-    while (containerNode && !containerNode.classList.contains("theme_box")) {
-      containerNode = containerNode.parentElement;
-    }
-
-    if (!containerNode) {
-      containerNode = node;
-    }
-
-    // 保存原始位置信息
-    const parent = containerNode.parentElement;
-    const nextSibling = containerNode.nextSibling;
-
-    // 在移动节点之前将背景图片转换为 base64，确保在 Safari 中也能正确显示
-    await convertBackgroundImagesToBase64(containerNode as HTMLElement);
-
-    // 创建包装容器
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
-    container.style.overflow = "hidden";
-    container.style.backgroundColor = "transparent";
-    container.style.zIndex = "999999";
-
-    // 将整个容器节点移动到包装容器中
-    container.appendChild(containerNode);
-    document.body.appendChild(container);
-
-    // 设置放大样式（应用到容器节点）
-    (containerNode as HTMLElement).style.transform = `scale(${scale})`;
-    (containerNode as HTMLElement).style.transformOrigin = "top left";
-    (containerNode as HTMLElement).style.width = `${originalWidth}px`;
-    (containerNode as HTMLElement).style.height = `${originalHeight}px`;
-
-    // 等待渲染完成
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-
-    // 移动节点后再次转换背景图片，确保 base64 格式正确应用
-    await convertBackgroundImagesToBase64(container);
-
-    // 替换 SVG 中的 CSS 变量为实际颜色值，确保 SVG 能正确显示
-    replaceSVGCSSVariables(container);
-
-    await new Promise((resolve) => setTimeout(resolve, 300)); // 额外等待确保渲染完成
-
-    // 检测是否为 Safari 浏览器
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    let blob: Blob;
-    if (isSafari) {
-      // Safari 使用 html2canvas，对背景图片支持更好
-      try {
-        const html2canvas = (await import("html2canvas")).default;
-        const canvas = await html2canvas(container, {
-          width: width,
-          height: height,
-          useCORS: true,
-          allowTaint: false,
-          scale: 1,
-          logging: false,
-        });
-        blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((blob: Blob | null) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error("无法生成 blob"));
-            }
-          }, "image/png");
-        });
-      } catch (error) {
-        console.error("html2canvas 失败，回退到 dom-to-image:", error);
-        // 回退到 dom-to-image
-        blob = await domtoimage.toBlob(container, {
-          width: width,
-          height: height,
-          useCORS: true,
-          cacheBust: true,
-          filter: (_node: Node) => {
-            return true;
-          },
-        });
-      }
-    } else {
-      // 其他浏览器使用 dom-to-image
-      blob = await domtoimage.toBlob(container, {
-        width: width,
-        height: height,
-        useCORS: true,
-        cacheBust: true,
-        filter: (_node: Node) => {
-          // 确保所有节点都被包含
-          return true;
-        },
-      });
-    }
-
-    // 恢复节点到原始位置
-    container.removeChild(containerNode);
-    if (nextSibling) {
-      parent?.insertBefore(containerNode, nextSibling);
-    } else {
-      parent?.appendChild(containerNode);
-    }
-    document.body.removeChild(container);
-
-    // 恢复节点样式
-    (containerNode as HTMLElement).style.transform = "";
-    (containerNode as HTMLElement).style.transformOrigin = "";
-    (containerNode as HTMLElement).style.width = "";
-    (containerNode as HTMLElement).style.height = "";
-    let copied = false;
-    if (navigator.clipboard?.write && window.isSecureContext) {
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({ "image/png": blob }),
-        ]);
-        copied = true;
-      } catch {
-        copied = false;
-      }
-    }
-    if (copied) {
-      shareToast.value = "图片已复制，请在小红书发布页长按粘贴";
-    } else {
-      downloadBlob(blob, "pic_1.png");
-      shareToast.value = "图片已保存，请打开小红书从相册选择刚保存的图片";
-    }
-    setTimeout(() => (shareToast.value = ""), 4000);
-    window.location.href = XHS_SCHEME;
-  } catch (e) {
-    shareToast.value = "生成图片失败，请重试";
-    setTimeout(() => (shareToast.value = ""), 2000);
-  } finally {
-    shareLoading.value = false;
-  }
+const handleShareToDouyin = () => {
+  // 直接跳转到抖音发布页面
+  window.location.href = DOUYIN_SCHEME;
 };
 
 const handleChangeTitle = () => {
@@ -701,7 +559,8 @@ const handleClearContent = () => {
   flex-direction: column;
   gap: 10px;
 
-  .btn-xhs {
+  .btn-xhs,
+  .btn-douyin {
     @media (min-width: 768px) {
       display: none;
     }
@@ -745,6 +604,17 @@ const handleClearContent = () => {
     &:disabled {
       opacity: 0.7;
       cursor: not-allowed;
+    }
+  }
+
+  &.btn-douyin {
+    width: 100%;
+    color: #fff;
+    background: linear-gradient(135deg, #00c0e0 0%, #0077a0 100%);
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+      background: linear-gradient(135deg, #00b1d9 0%, #0088b3 100%);
     }
   }
 
