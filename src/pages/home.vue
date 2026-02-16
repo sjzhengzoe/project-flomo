@@ -176,6 +176,7 @@ const handleToDownload = async () => {
   downloadLoading.value = true;
 
   try {
+    await document.fonts.ready;
     while (document.getElementById(`${name}${index}`)) {
       const node = document.getElementById(`${name}${index}`);
       if (!node) break;
@@ -272,7 +273,7 @@ const handleToDownload = async () => {
               width: width,
               height: height,
               useCORS: true,
-              cacheBust: true,
+              cacheBust: false,
               filter: (_node: Node) => {
                 return true;
               },
@@ -284,7 +285,7 @@ const handleToDownload = async () => {
             width: width,
             height: height,
             useCORS: true,
-            cacheBust: true,
+            cacheBust: false,
             filter: (_node: Node) => {
               // 确保所有节点都被包含
               return true;
