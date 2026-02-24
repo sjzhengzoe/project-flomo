@@ -30,7 +30,7 @@
             />
           </div>
           <div class="form-item">
-            <label class="form-label">前言</label>
+            <label class="form-label">关键词</label>
             <input
               class="form-input"
               type="text"
@@ -241,7 +241,7 @@ const handleToDownload = async () => {
 
         // 检测是否为 Safari 浏览器
         const isSafari = /^((?!chrome|android).)*safari/i.test(
-          navigator.userAgent
+          navigator.userAgent,
         );
 
         let blob: Blob;
@@ -339,14 +339,14 @@ const handleShareToDouyin = () => {
 const handleChangeTitle = () => {
   localStorage.setItem(
     `FORM_DATA_TITLE_${store.nowTheme}`,
-    formData.value.title
+    formData.value.title,
   );
 };
 
 const handleChangeLocation = () => {
   localStorage.setItem(
     `FORM_DATA_LOCATION_${store.nowTheme}`,
-    formData.value.location
+    formData.value.location,
   );
 };
 
@@ -355,7 +355,7 @@ const handleChangeContent = () => {
   if (
     text.includes("标题：") &&
     text.includes("日期：") &&
-    text.includes("前言：")
+    text.includes("关键词：")
   ) {
     const parsed = parseFullContent(text);
     store.formData5.title = parsed.title;
@@ -371,7 +371,7 @@ const handleChangeContent = () => {
 const handleChangePreface = () => {
   localStorage.setItem(
     `FORM_DATA_PREFACE_${store.nowTheme}`,
-    formData.value.preface
+    formData.value.preface,
   );
 };
 
@@ -380,7 +380,7 @@ function parseFullContent(text: string) {
   const dateMatch = text.match(/日期[：:]\s*([^\n]+)/);
   const moodMatch = text.match(/心情[：:]\s*([^\n]+)/);
   const prefaceMatch = text.match(
-    /前言[：:]\s*([\s\S]+?)(?=\n\s*\/\s*\n|\n\n\s*\/\s*\n)/
+    /关键词[：:]\s*([\s\S]+?)(?=\n\s*\/\s*\n|\n\n\s*\/\s*\n)/,
   );
   const title = titleMatch ? titleMatch[1].trim() : "";
   const date = dateMatch ? dateMatch[1].trim() : "";
@@ -408,26 +408,26 @@ function parseFullContent(text: string) {
 function persistAll() {
   localStorage.setItem(
     `FORM_DATA_TITLE_${store.nowTheme}`,
-    formData.value.title
+    formData.value.title,
   );
   localStorage.setItem(
     `FORM_DATA_LOCATION_${store.nowTheme}`,
-    formData.value.location
+    formData.value.location,
   );
   localStorage.setItem(
     `FORM_DATA_PREFACE_${store.nowTheme}`,
-    formData.value.preface
+    formData.value.preface,
   );
   localStorage.setItem(
     `FORM_DATA_CONTENT_${store.nowTheme}`,
-    formData.value.content
+    formData.value.content,
   );
 }
 
 function persistContent() {
   localStorage.setItem(
     `FORM_DATA_CONTENT_${store.nowTheme}`,
-    formData.value.content
+    formData.value.content,
   );
 }
 
@@ -575,7 +575,9 @@ const handleClearContent = () => {
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
 
   &.btn-primary {
     width: 100%;
