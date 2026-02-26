@@ -66,8 +66,8 @@
           >
             <div v-if="text" class="content">
               {{ text }}
-              <div class="block"></div>
             </div>
+            <div v-else>&nbsp;</div>
           </div>
         </div>
       </div>
@@ -204,11 +204,8 @@ const onSwiper = (_swiper: unknown) => {
 
     .content {
       font-size: 12px;
-      line-height: 1.75;
+      line-height: 2;
       color: #111111;
-      .block {
-        height: 7px;
-      }
     }
   }
 }
