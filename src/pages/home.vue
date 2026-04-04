@@ -71,28 +71,10 @@
             >
               {{ downloadLoading ? "生成中..." : "预览图片" }}
             </button>
-            <button
-              type="button"
-              class="btn btn-xhs"
-              :disabled="shareLoading"
-              @click="handleShareToXiaohongshu"
-            >
-              {{ shareLoading ? "准备中..." : "分享到小红书" }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-douyin"
-              @click="handleShareToDouyin"
-            >
-              分享到抖音
-            </button>
           </div>
         </form>
       </div>
     </aside>
-
-    <!-- 分享提示（移动端） -->
-    <div v-if="shareToast" class="share-toast">{{ shareToast }}</div>
 
     <!-- 主内容区：预览 + 下载 -->
     <main class="page__main">
@@ -145,16 +127,12 @@ import "swiper/css/pagination";
 const store = useStore();
 const formData = computed(() => store.formData5);
 const downloadLoading = ref(false);
-const shareLoading = ref(false);
-const shareToast = ref("");
 const showPreview = ref(false);
 const previewImages = ref<string[]>([]);
 const previewSwiper = ref<any>(null);
 
 const previewModules = [Pagination];
 
-const XHS_SCHEME = "xhsdiscover://post_note/";
-const DOUYIN_SCHEME = "snssdk1128://";
 
 const onPreviewSwiper = (swiper: any) => {
   previewSwiper.value = swiper;
@@ -324,16 +302,6 @@ const handleToDownload = async () => {
   } finally {
     downloadLoading.value = false;
   }
-};
-
-const handleShareToXiaohongshu = () => {
-  // 直接跳转到小红书发布页面
-  window.location.href = XHS_SCHEME;
-};
-
-const handleShareToDouyin = () => {
-  // 直接跳转到抖音发布页面
-  window.location.href = DOUYIN_SCHEME;
 };
 
 const handleChangeTitle = () => {
