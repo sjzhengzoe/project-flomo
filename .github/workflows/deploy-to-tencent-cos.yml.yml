@@ -28,6 +28,7 @@ jobs:
           script: |
             cd /home/ubuntu/project-flomo
             git pull
-            sudo pnpm i
-            sudo pnpm run build
+            npm install -g pnpm
+            pnpm install --no-frozen-lockfile
+            pnpm run build
             sudo nginx -s reload
