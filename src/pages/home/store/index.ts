@@ -1,4 +1,4 @@
-import { defineStore, createPinia } from "pinia";
+import { defineStore } from "pinia";
 
 const useStore = defineStore("store", {
   state: () => ({

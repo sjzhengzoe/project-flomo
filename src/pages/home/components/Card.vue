@@ -81,7 +81,6 @@
 import { computed } from "vue";
 import { useStore } from "../store";
 import { Swiper, SwiperSlide } from "swiper/vue";
-import { Pagination } from "swiper/modules";
 import "swiper/css";
 
 const store = useStore();
@@ -89,7 +88,7 @@ const formData = computed(() => store.formData);
 const slides = computed(() => ["", ...formData.value.content.split("/\n")]);
 
 
-const modules = [];
+const modules: any[] = [];
 const breakpoints = {
   320: { slidesPerView: 1 },
   480: { slidesPerView: 1 },
