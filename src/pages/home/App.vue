@@ -285,7 +285,12 @@ function parseFullContent(text: string) {
   const get = (key: string) =>
     text.match(new RegExp(`${key}[：:]\\s*([^\\n]+)`))?.[1]?.trim() || "";
   const dateStr = [get("日期"), get("心情")].filter(Boolean).join(" ");
-  const body = text.replace(/^[^/]*\/\s*/, "").trim();
+
+  // 移除开头到第一个 / 的部分作为 body
+  const slashIdx = text.indexOf("/");
+  let body = slashIdx >= 0 ? text.slice(slashIdx + 1).trim() : text;
+
+  // 按 / 分段处理
   const content = body
     .split(/\n\s*\/\s*\n/)
     .map((s) => s.trim())

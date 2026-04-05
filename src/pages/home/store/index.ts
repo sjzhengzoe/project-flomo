@@ -5,16 +5,10 @@ const useStore = defineStore("store", {
     formData: {
       title: localStorage.getItem(`FORM_DATA_TITLE`) || "未命名",
       date: localStorage.getItem(`FORM_DATA_DATE`) || "2026.01.24 周六 ☀️",
-      keyValue: localStorage.getItem(`FORM_DATA_KEY_VALUE`) || "",
+      keyValue: localStorage.getItem(`FORM_DATA_KEY_VALUE`) || "关键词",
       content:
         localStorage.getItem(`FORM_DATA_CONTENT`) ||
-        `#吾日三省吾身/本周
-标题：周二杂记
-日期：2026.03.31
-心情：🙂
-关键词：关键词一
-/
-内容片段 一
+        `内容片段 一
 
 内容片段 二
 /
