@@ -126,7 +126,7 @@ const breakpoints = {
 
 .card-slide {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
 }
