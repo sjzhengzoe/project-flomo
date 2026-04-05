@@ -15,7 +15,6 @@
     "html2canvas": "^1.4.1",
     "jszip": "^3.10.1",
     "lucide-vue-next": "^1.0.0",
-    "piexifjs": "^1.0.6",
     "pinia": "^2.1.7",
     "swiper": "^11.1.14",
     "vue": "^3.4.21",
