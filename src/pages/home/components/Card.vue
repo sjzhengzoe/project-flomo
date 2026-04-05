@@ -111,11 +111,6 @@ const breakpoints = {
   overflow: hidden;
   height: 420px;
   box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
-
-  @media (min-width: 768px) {
-    height: 520px;
-    border-radius: 24px;
-  }
 }
 
 .card-swiper {

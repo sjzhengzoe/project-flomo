@@ -106,10 +106,6 @@ const handleMenuClick = (item: { key: string }) => {
   background: rgba(5, 5, 8, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-
-  @media (min-width: 768px) {
-    padding: 12px 24px;
-  }
 }
 
 .header__left,
