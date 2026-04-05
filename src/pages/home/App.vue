@@ -324,11 +324,7 @@ function persistAll() {
 }
 
 .page__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: self-start;
-  justify-content: center;
+  margin-top: 20px;
 }
 
 .floating-actions {
