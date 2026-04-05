@@ -6,7 +6,11 @@ const router: Router = createRouter({
   routes: [
     {
       path: "/",
-      component: () => import("@/pages/home.vue"),
+      component: () => import("@/pages/home/App.vue"),
+    },
+    {
+      path: "/settings",
+      component: () => import("@/pages/settings.vue"),
     },
     {
       path: "/:pathMatch(.*)",

@@ -1,0 +1,653 @@
+<template>
+  <div class="page">
+    <!-- 顶部导航 -->
+    <Header />
+
+    <!-- 主内容区：预览 + 下载 -->
+    <main class="page__main">
+      <Card />
+    </main>
+
+    <!-- 底部悬浮按钮 -->
+    <div class="floating-actions">
+      <button
+        type="button"
+        class="action-btn action-btn--paste"
+        @click="handlePasteContent"
+        title="粘贴文案"
+      >
+        <Clipboard class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn action-btn--edit"
+        @click="openEditModal"
+        title="编辑文案"
+      >
+        <Pencil class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn action-btn--download"
+        @click="handleToDownload"
+        :disabled="isDownloading"
+        title="下载图片"
+      >
+        <Download class="action-btn__icon" :size="22" />
+      </button>
+    </div>
+
+    <!-- 编辑文案弹窗 -->
+    <div v-if="showEditModal" class="edit-modal" @click="closeEditModal">
+      <div class="edit-modal__content" @click.stop>
+        <div class="edit-modal__header">
+          <h3 class="edit-modal__title">编辑文案</h3>
+          <button class="edit-modal__close" @click="closeEditModal">×</button>
+        </div>
+        <form class="edit-form" @submit.prevent>
+          <div class="form-item">
+            <label class="form-label">标题</label>
+            <input
+              class="form-input"
+              type="text"
+              v-model="editFormData.title"
+            />
+          </div>
+          <div class="form-item">
+            <label class="form-label">日期/心情</label>
+            <input class="form-input" type="text" v-model="editFormData.date" />
+          </div>
+          <div class="form-item">
+            <label class="form-label">关键词</label>
+            <input
+              class="form-input"
+              type="text"
+              v-model="editFormData.keyValue"
+            />
+          </div>
+          <div class="form-item">
+            <div class="form-label-row">
+              <label class="form-label">内容</label>
+              <button
+                type="button"
+                class="btn btn-text"
+                @click="editFormData.content = ''"
+              >
+                清空
+              </button>
+            </div>
+            <textarea
+              class="form-textarea"
+              v-model="editFormData.content"
+              rows="6"
+            />
+          </div>
+          <div class="form-item form-item--action">
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="handleSaveEdit"
+            >
+              保存
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, reactive } from "vue";
+import { useStore } from "./store";
+import { useCommonStore } from "@/store/commonStore";
+import Header from "@/components/Header.vue";
+import Card from "./components/Card.vue";
+import { Clipboard, Pencil, Download } from "lucide-vue-next";
+import {
+  convertBackgroundImagesToBase64,
+  replaceSVGCSSVariables,
+} from "@/utils/dataToImages";
+import domtoimage from "dom-to-image";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+
+const store = useStore();
+const loadingStore = useCommonStore();
+const formData = computed(() => store.formData);
+const showEditModal = ref(false);
+const isDownloading = ref(false);
+
+const editFormData = reactive({
+  title: "",
+  date: "",
+  keyValue: "",
+  content: "",
+});
+
+const openEditModal = () => {
+  editFormData.title = formData.value.title;
+  editFormData.date = formData.value.date;
+  editFormData.keyValue = formData.value.keyValue;
+  editFormData.content = formData.value.content;
+  showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+};
+
+const handleSaveEdit = () => {
+  store.formData.title = editFormData.title;
+  store.formData.date = editFormData.date;
+  store.formData.keyValue = editFormData.keyValue;
+  store.formData.content = editFormData.content;
+  persistAll();
+  closeEditModal();
+};
+
+const handlePasteContent = async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      if (
+        text.includes("标题：") &&
+        text.includes("日期：") &&
+        text.includes("关键词：")
+      ) {
+        const parsed = parseFullContent(text);
+        store.formData.title = parsed.title;
+        store.formData.date = parsed.date;
+        store.formData.keyValue = parsed.keyValue;
+        store.formData.content = parsed.content;
+      } else {
+        store.formData.content = text;
+      }
+      persistAll();
+    }
+  } catch (err) {
+    console.error("读取剪贴板失败:", err);
+  }
+};
+
+const handleToDownload = async () => {
+  if (isDownloading.value) return;
+
+  const name = "pic_";
+  let index = 0;
+  const zip = new JSZip();
+
+  loadingStore.showLoading("正在生成图片...");
+
+  try {
+    await document.fonts.ready;
+    while (document.getElementById(`${name}${index}`)) {
+      const node = document.getElementById(`${name}${index}`);
+      if (!node) break;
+
+      loadingStore.showLoading(`正在生成第 ${index + 1} 张...`);
+
+      const scale = 10;
+      const originalWidth = node.offsetWidth;
+      const originalHeight = node.offsetHeight;
+      const width = originalWidth * scale;
+      const height = originalHeight * scale;
+
+      let containerNode = node.parentElement;
+      while (containerNode && !containerNode.classList.contains("theme_box")) {
+        containerNode = containerNode.parentElement;
+      }
+
+      if (!containerNode) {
+        containerNode = node;
+      }
+
+      const parent = containerNode.parentElement;
+      const nextSibling = containerNode.nextSibling;
+
+      await convertBackgroundImagesToBase64(containerNode as HTMLElement);
+
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.left = "0";
+      container.style.top = "0";
+      container.style.width = `${width}px`;
+      container.style.height = `${height}px`;
+      container.style.overflow = "hidden";
+      container.style.backgroundColor = "transparent";
+      container.style.zIndex = "999";
+
+      container.appendChild(containerNode);
+      document.body.appendChild(container);
+
+      (containerNode as HTMLElement).style.transform = `scale(${scale})`;
+      (containerNode as HTMLElement).style.transformOrigin = "top left";
+      (containerNode as HTMLElement).style.width = `${originalWidth}px`;
+      (containerNode as HTMLElement).style.height = `${originalHeight}px`;
+
+      try {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+
+        await convertBackgroundImagesToBase64(container);
+        replaceSVGCSSVariables(container);
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        const isSafari = /^((?!chrome|android).)*safari/i.test(
+          navigator.userAgent,
+        );
+
+        let blob: Blob;
+        if (isSafari) {
+          try {
+            const html2canvas = (await import("html2canvas")).default;
+            const canvas = await html2canvas(container, {
+              width: width,
+              height: height,
+              useCORS: true,
+              allowTaint: false,
+              scale: 1,
+              logging: false,
+            });
+            blob = await new Promise<Blob>((resolve, reject) => {
+              canvas.toBlob((blob: Blob | null) => {
+                if (blob) {
+                  resolve(blob);
+                } else {
+                  reject(new Error("无法生成 blob"));
+                }
+              }, "image/png");
+            });
+          } catch (error) {
+            console.error("html2canvas 失败，回退到 dom-to-image:", error);
+            blob = await domtoimage.toBlob(container, {
+              width: width,
+              height: height,
+              useCORS: true,
+              cacheBust: false,
+              filter: (_node: Node) => true,
+            });
+          }
+        } else {
+          blob = await domtoimage.toBlob(container, {
+            width: width,
+            height: height,
+            useCORS: true,
+            cacheBust: false,
+            filter: (_node: Node) => true,
+          });
+        }
+
+        const now = new Date();
+        const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+        zip.file(`flomo_${String(index + 1).padStart(2, "0")}.png`, blob, {
+          date: localDate,
+        });
+      } finally {
+        container.removeChild(containerNode);
+        if (nextSibling) {
+          parent?.insertBefore(containerNode, nextSibling);
+        } else {
+          parent?.appendChild(containerNode);
+        }
+        document.body.removeChild(container);
+
+        (containerNode as HTMLElement).style.transform = "";
+        (containerNode as HTMLElement).style.transformOrigin = "";
+        (containerNode as HTMLElement).style.width = "";
+        (containerNode as HTMLElement).style.height = "";
+      }
+
+      index++;
+    }
+
+    if (index > 0) {
+      loadingStore.showLoading("正在打包...");
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const date = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Shanghai",
+      });
+      saveAs(zipBlob, `flomo_${date}.zip`);
+    }
+  } catch (err) {
+    console.error("下载失败:", err);
+  } finally {
+    loadingStore.hideLoading();
+    isDownloading.value = false;
+  }
+};
+
+function parseFullContent(text: string) {
+  const titleMatch = text.match(/标题[：:]\s*([^\n]+)/);
+  const dateMatch = text.match(/日期[：:]\s*([^\n]+)/);
+  const moodMatch = text.match(/心情[：:]\s*([^\n]+)/);
+  const keyValueMatch = text.match(
+    /关键词[：:]\s*([\s\S]+?)(?=\n\s*\/\s*\n|\n\n\s*\/\s*\n)/,
+  );
+  const title = titleMatch ? titleMatch[1].trim() : "";
+  const parsedDate = dateMatch ? dateMatch[1].trim() : "";
+  const mood = moodMatch ? moodMatch[1].trim() : "";
+  const keyValue = keyValueMatch
+    ? keyValueMatch[1].trim().replace(/\n+$/, "")
+    : "";
+  const date = [parsedDate, mood].filter(Boolean).join(" ");
+  const slashMatch = text.match(/\n\s*\/\s*\n/);
+  let body = text;
+  if (slashMatch && slashMatch.index != null) {
+    body = text
+      .slice(slashMatch.index)
+      .replace(/^\s*\/\s*\n*/, "")
+      .trim();
+  }
+  const parts = body
+    .split(/\n\s*\/\s*\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const content = parts.join("/\n");
+  return { title, date, keyValue, content };
+}
+
+function persistAll() {
+  localStorage.setItem(`FORM_DATA_TITLE`, formData.value.title);
+  localStorage.setItem(`FORM_DATA_DATE`, formData.value.date);
+  localStorage.setItem(`FORM_DATA_KEY_VALUE`, formData.value.keyValue);
+  localStorage.setItem(`FORM_DATA_CONTENT`, formData.value.content);
+}
+</script>
+
+<style lang="less" scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 60px 16px 84px;
+  box-sizing: border-box;
+
+  @media (min-width: 768px) {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 24px 24px;
+  }
+}
+
+.page__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: self-start;
+}
+
+// 底部悬浮按钮
+.floating-actions {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 100;
+  padding: 8px;
+  background: rgba(17, 19, 31, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 40px;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  @media (min-width: 768px) {
+    bottom: 28px;
+    gap: 16px;
+    padding: 10px;
+  }
+}
+
+.action-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &__icon {
+    color: var(--text-primary);
+    line-height: 1;
+    transition: color 0.15s;
+  }
+}
+
+.action-btn--paste,
+.action-btn--edit {
+  &:active {
+    background: rgba(99, 102, 241, 0.15);
+
+    .action-btn__icon {
+      color: var(--accent);
+    }
+  }
+}
+
+.action-btn--download {
+  &:active {
+    background: rgba(99, 102, 241, 0.15);
+
+    .action-btn__icon {
+      color: var(--accent);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:active {
+      transform: none;
+      background: transparent;
+    }
+  }
+}
+
+// 编辑弹窗
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #050508;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in 0.2s ease;
+
+  @media (min-width: 768px) {
+    align-items: center;
+  }
+}
+
+.edit-modal__content {
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  background: #11131f;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  animation: slide-up 0.3s ease;
+
+  @media (min-width: 768px) {
+    border-radius: 20px;
+    max-height: 80vh;
+  }
+}
+
+.edit-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.edit-modal__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.edit-modal__close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  font-size: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--input-border);
+    color: var(--text-primary);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// 表单样式
+.form-item {
+  margin-bottom: 14px;
+}
+
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+
+  .form-label-row & {
+    margin-bottom: 0;
+  }
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: inherit;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.form-item--action {
+  margin-top: 8px;
+  margin-bottom: 0;
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+
+  &.btn-primary {
+    color: #fff;
+    background: var(--accent);
+
+    &:hover {
+      background: var(--accent-hover);
+    }
+  }
+
+  &.btn-text {
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+
+    &:hover {
+      color: var(--text-secondary);
+    }
+  }
+}
+
+.icp {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+</style>
