@@ -323,9 +323,12 @@ function persistAll() {
 .page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh; /* 动态视口高度，解决 iOS 键盘弹出问题 */
   padding: 60px 16px 84px;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .page__main {
