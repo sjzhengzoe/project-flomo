@@ -280,7 +280,9 @@ const handleToDownload = async () => {
         }
 
         const now = new Date();
-        const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+        const localDate = new Date(
+          now.getTime() - now.getTimezoneOffset() * 60000,
+        );
         zip.file(`flomo_${String(index + 1).padStart(2, "0")}.png`, blob, {
           date: localDate,
         });
@@ -376,6 +378,7 @@ function persistAll() {
   display: flex;
   flex-direction: column;
   align-items: self-start;
+  justify-content: center;
 }
 
 // 底部悬浮按钮
