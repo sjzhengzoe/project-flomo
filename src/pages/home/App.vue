@@ -324,7 +324,11 @@ function persistAll() {
 .page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 60px 16px 84px;
   padding-bottom: calc(84px + env(safe-area-inset-bottom));
   box-sizing: border-box;
