@@ -183,9 +183,7 @@ const handleToDownload = async () => {
 
     if (index > 0) {
       const zipBlob = await zip.generateAsync({ type: "blob" });
-      const date = new Date().toLocaleDateString("en-CA", {
-        timeZone: "Asia/Shanghai",
-      });
+      const date = formData.value.date.replace(/[^\d]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       saveAs(zipBlob, `flomo_${date}.zip`);
     }
   } catch (err) {
