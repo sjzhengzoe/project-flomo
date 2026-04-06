@@ -286,8 +286,9 @@ function parseFullContent(text: string) {
     text.match(new RegExp(`${key}[：:]\\s*([^\\n]+)`))?.[1]?.trim() || "";
   const dateStr = [get("日期"), get("心情")].filter(Boolean).join(" ");
 
-  // 移除开头到第一个 / 的部分作为 body
-  const slashIdx = text.indexOf("/");
+  // 找到第一个单独出现的 / 作为分隔符（/ 在行首或前面只有空白）
+  const match = text.match(/\n\s*\/\s*\n/);
+  const slashIdx = match ? match.index! + match[0].indexOf("/") : -1;
   let body = slashIdx >= 0 ? text.slice(slashIdx + 1).trim() : text;
 
   // 按 / 分段处理
@@ -324,7 +325,6 @@ function persistAll() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* 动态视口高度，解决 iOS 键盘弹出问题 */
   padding: 60px 16px 84px;
   padding-bottom: calc(84px + env(safe-area-inset-bottom));
   box-sizing: border-box;
@@ -332,12 +332,15 @@ function persistAll() {
 }
 
 .page__main {
+  flex: 1;
   margin-top: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .floating-actions {
   position: fixed;
-  bottom: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
