@@ -52,7 +52,7 @@
                 <div class="meta-area">
                   <div class="meta-row">{{ formData.date }}</div>
                   <div class="meta-row">#吾日三省吾身</div>
-                  <div class="meta-row">{{ formData.keyValue }}</div>
+                  <div class="meta-row" v-html:="formData.keyValue" />
                 </div>
               </template>
 
@@ -60,11 +60,19 @@
               <template v-else>
                 <div class="sub-title">/ 0{{ idx }} /</div>
                 <div
-                  v-for="(text, i) in item.split('\n')"
+                  v-for="(text, i) in formatSlideText(item).split('\n')"
                   :key="i"
                   class="content-row"
                 >
-                  <div v-if="text" class="content-text">{{ text }}</div>
+                  <div
+                    v-if="text"
+                    :class="[
+                      'content-text',
+                      { 'content-text--summary': isSummaryLine(text) },
+                    ]"
+                  >
+                    {{ text }}
+                  </div>
                   <div v-else class="content-blank">&nbsp;</div>
                 </div>
               </template>
@@ -72,7 +80,6 @@
           </div>
         </SwiperSlide>
       </Swiper>
-
     </div>
   </div>
 </template>
@@ -86,7 +93,8 @@ import "swiper/css";
 const store = useStore();
 const formData = computed(() => store.formData);
 const slides = computed(() => ["", ...formData.value.content.split("/\n")]);
-
+const formatSlideText = (text: string) => text.replace(/。/g, "\n\n");
+const isSummaryLine = (text: string) => text.trim().startsWith("总结：");
 
 const modules: any[] = [];
 const breakpoints = {
@@ -196,6 +204,11 @@ const breakpoints = {
   font-size: 12px;
   line-height: 2;
   color: #111111;
+}
+
+.content-text--summary {
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 .content-blank {

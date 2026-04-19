@@ -49,7 +49,7 @@
             />
           </div>
           <div class="form-item">
-            <label class="form-label">日期/心情</label>
+            <label class="form-label">日期</label>
             <input class="form-input" type="text" v-model="editFormData.date" />
           </div>
           <div class="form-item">
@@ -141,14 +141,13 @@ const handlePasteContent = async () => {
     if (!text) return;
 
     if (
-      text.includes("标题：") &&
-      text.includes("日期：") &&
-      text.includes("关键词：")
+      (text.includes("标题：") || text.includes("本周标题：")) &&
+      text.includes("日期：")
     ) {
       const parsed = parseFullContent(text);
       Object.assign(store.formData, parsed);
     } else {
-      store.formData.content = text;
+      store.formData.content = text.trim();
     }
     persistAll();
   } catch (err) {
@@ -183,7 +182,10 @@ const handleToDownload = async () => {
 
     if (index > 0) {
       const zipBlob = await zip.generateAsync({ type: "blob" });
-      const date = formData.value.date.replace(/[^\d]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+      const date = formData.value.date
+        .replace(/[^\d]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
       saveAs(zipBlob, `flomo_${date}.zip`);
     }
   } catch (err) {
@@ -280,26 +282,39 @@ async function generateImage(node: HTMLElement): Promise<Blob> {
 }
 
 function parseFullContent(text: string) {
-  const get = (key: string) =>
-    text.match(new RegExp(`${key}[：:]\\s*([^\\n]+)`))?.[1]?.trim() || "";
-  const dateStr = [get("日期"), get("心情")].filter(Boolean).join(" ");
+  const normalizedText = text
+    .replace(/^#吾日三省吾身\s*\/\s*/, "")
+    .replace(/本周标题(?=[：:])/g, "标题");
+  const headerMatch = normalizedText.match(
+    /标题[：:]\s*([\s\S]*?)日期[：:]\s*([\s\S]*?)关键词[：:]\s*([\s\S]*?)\s*\//i,
+  );
+  const title = headerMatch?.[1]?.trim() || "";
+  const dateStr = headerMatch?.[2]?.trim() || "";
+  const keyValue = headerMatch?.[3]?.trim() || "";
 
   // 找到第一个单独出现的 / 作为分隔符（/ 在行首或前面只有空白）
-  const match = text.match(/\n\s*\/\s*\n/);
+  const match = normalizedText.match(/\n\s*\/\s*\n/);
   const slashIdx = match ? match.index! + match[0].indexOf("/") : -1;
-  let body = slashIdx >= 0 ? text.slice(slashIdx + 1).trim() : text;
+  let body =
+    slashIdx >= 0 ? normalizedText.slice(slashIdx + 1).trim() : normalizedText;
+
+  if (slashIdx < 0 && headerMatch?.index != null) {
+    body = normalizedText
+      .slice(headerMatch.index + headerMatch[0].length)
+      .trim();
+  }
 
   // 按 / 分段处理
   const content = body
-    .split(/\n\s*\/\s*\n/)
+    .split(slashIdx >= 0 ? /\n\s*\/\s*\n/ : /\s*\/\s*/)
     .map((s) => s.trim())
     .filter(Boolean)
     .join("/\n");
 
   return {
-    title: get("标题"),
+    title,
     date: dateStr,
-    keyValue: get("关键词").replace(/\n+$/, ""),
+    keyValue,
     content,
   };
 }
