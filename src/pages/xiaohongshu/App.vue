@@ -2,6 +2,10 @@
   <div class="page">
     <Header />
     <main class="page__main">
+      <section class="workspace-panel">
+        <div class="workspace-panel__meta">当前功能区</div>
+        <h1 class="workspace-panel__title">小红书模板</h1>
+      </section>
       <Card />
     </main>
 
@@ -40,26 +44,6 @@
           <button class="edit-modal__close" @click="closeEditModal">×</button>
         </div>
         <form class="edit-form" @submit.prevent>
-          <div class="form-item">
-            <label class="form-label">标题</label>
-            <input
-              class="form-input"
-              type="text"
-              v-model="editFormData.title"
-            />
-          </div>
-          <div class="form-item">
-            <label class="form-label">日期</label>
-            <input class="form-input" type="text" v-model="editFormData.date" />
-          </div>
-          <div class="form-item">
-            <label class="form-label">关键词</label>
-            <input
-              class="form-input"
-              type="text"
-              v-model="editFormData.keyValue"
-            />
-          </div>
           <div class="form-item">
             <div class="form-label-row">
               <label class="form-label">内容</label>
@@ -103,7 +87,7 @@ import {
   convertBackgroundImagesToBase64,
   replaceSVGCSSVariables,
 } from "@/utils/dataToImages";
-import domtoimage from "dom-to-image";
+import html2canvas from "html2canvas";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
@@ -112,16 +96,14 @@ const loadingStore = useCommonStore();
 const formData = computed(() => store.formData);
 const showEditModal = ref(false);
 const isDownloading = ref(false);
+const IMAGE_EXPORT_WIDTH = 2160;
 
 const editFormData = reactive({
-  title: "",
-  date: "",
-  keyValue: "",
   content: "",
 });
 
 const openEditModal = () => {
-  Object.assign(editFormData, formData.value);
+  editFormData.content = formData.value.content;
   showEditModal.value = true;
 };
 
@@ -130,7 +112,7 @@ const closeEditModal = () => {
 };
 
 const handleSaveEdit = () => {
-  Object.assign(store.formData, editFormData);
+  store.formData.content = editFormData.content.trim();
   persistAll();
   closeEditModal();
 };
@@ -140,15 +122,7 @@ const handlePasteContent = async () => {
     const text = await navigator.clipboard.readText();
     if (!text) return;
 
-    if (
-      (text.includes("标题：") || text.includes("本周标题：")) &&
-      text.includes("日期：")
-    ) {
-      const parsed = parseFullContent(text);
-      Object.assign(store.formData, parsed);
-    } else {
-      store.formData.content = text.trim();
-    }
+    store.formData.content = text.trim();
     persistAll();
   } catch (err) {
     console.error("读取剪贴板失败:", err);
@@ -174,19 +148,23 @@ const handleToDownload = async () => {
       const localDate = new Date(
         now.getTime() - now.getTimezoneOffset() * 60000,
       );
-      zip.file(`flomo_${String(index + 1).padStart(2, "0")}.png`, blob, {
-        date: localDate,
-      });
+      zip.file(
+        `xiaohongshu_${String(index + 1).padStart(2, "0")}.png`,
+        blob,
+        {
+          date: localDate,
+        },
+      );
       index++;
     }
 
     if (index > 0) {
       const zipBlob = await zip.generateAsync({ type: "blob" });
-      const date = formData.value.date
+      const date = getContentDate(formData.value.content)
         .replace(/[^\d]/g, "-")
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "");
-      saveAs(zipBlob, `flomo_${date}.zip`);
+      saveAs(zipBlob, `xiaohongshu_${date}.zip`);
     }
   } catch (err) {
     console.error("下载失败:", err);
@@ -197,139 +175,43 @@ const handleToDownload = async () => {
 };
 
 async function generateImage(node: HTMLElement): Promise<Blob> {
-  const scale = 10;
-  const width = node.offsetWidth * scale;
-  const height = node.offsetHeight * scale;
+  await convertBackgroundImagesToBase64(node);
+  replaceSVGCSSVariables(node);
+  await new Promise((r) => requestAnimationFrame(r));
+  await new Promise((r) => requestAnimationFrame(r));
 
-  let containerNode = node.parentElement;
-  while (containerNode && !containerNode.classList.contains("theme_box")) {
-    containerNode = containerNode.parentElement;
-  }
-  if (!containerNode) containerNode = node;
+  const rect = node.getBoundingClientRect();
+  const scale = IMAGE_EXPORT_WIDTH / rect.width;
+  const canvas = await html2canvas(node, {
+    width: rect.width,
+    height: rect.height,
+    useCORS: true,
+    scale,
+    logging: false,
+    backgroundColor: null,
+  });
 
-  const parent = containerNode.parentElement;
-  const nextSibling = containerNode.nextSibling;
-
-  await convertBackgroundImagesToBase64(containerNode as HTMLElement);
-
-  const container = document.createElement("div");
-  container.style.cssText = `position:fixed;left:0;top:0;width:${width}px;height:${height}px;overflow:hidden;background:transparent;z-index:999;`;
-  container.appendChild(containerNode);
-  document.body.appendChild(container);
-
-  const el = containerNode as HTMLElement;
-  el.style.transform = `scale(${scale})`;
-  el.style.transformOrigin = "top left";
-  el.style.width = `${node.offsetWidth}px`;
-  el.style.height = `${node.offsetHeight}px`;
-
-  try {
-    await new Promise((r) => requestAnimationFrame(r));
-    await new Promise((r) => requestAnimationFrame(r));
-    await convertBackgroundImagesToBase64(container);
-    replaceSVGCSSVariables(container);
-    await new Promise((r) => setTimeout(r, 300));
-
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-    if (isSafari) {
-      try {
-        const html2canvas = (await import("html2canvas")).default;
-        const canvas = await html2canvas(container, {
-          width,
-          height,
-          useCORS: true,
-          scale: 1,
-          logging: false,
-        });
-        return new Promise((resolve, reject) => {
-          canvas.toBlob(
-            (blob: Blob | null) =>
-              blob ? resolve(blob) : reject(new Error("无法生成 blob")),
-            "image/png",
-          );
-        });
-      } catch {
-        return domtoimage.toBlob(container, {
-          width,
-          height,
-          useCORS: true,
-          cacheBust: false,
-          filter: () => true,
-        });
-      }
-    }
-    return domtoimage.toBlob(container, {
-      width,
-      height,
-      useCORS: true,
-      cacheBust: false,
-      filter: () => true,
-    });
-  } finally {
-    container.removeChild(containerNode);
-    if (nextSibling) {
-      parent?.insertBefore(containerNode, nextSibling);
-    } else {
-      parent?.appendChild(containerNode);
-    }
-    document.body.removeChild(container);
-    el.style.transform = "";
-    el.style.transformOrigin = "";
-    el.style.width = "";
-    el.style.height = "";
-  }
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob: Blob | null) =>
+        blob ? resolve(blob) : reject(new Error("无法生成 blob")),
+      "image/png",
+    );
+  });
 }
 
-function parseFullContent(text: string) {
-  const normalizedText = text
-    .replace(/^#吾日三省吾身\s*\/\s*/, "")
-    .replace(/本周标题(?=[：:])/g, "标题");
-  const headerMatch = normalizedText.match(
-    /标题[：:]\s*([\s\S]*?)日期[：:]\s*([\s\S]*?)关键词[：:]\s*([\s\S]*?)\s*\//i,
+function getContentDate(content: string) {
+  return (
+    content
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => /^\d{4}\.\d{2}\.\d{2}/.test(line)) || "flomo"
   );
-  const title = headerMatch?.[1]?.trim() || "";
-  const dateStr = headerMatch?.[2]?.trim() || "";
-  const keyValue = headerMatch?.[3]?.trim() || "";
-
-  // 找到第一个单独出现的 / 作为分隔符（/ 在行首或前面只有空白）
-  const match = normalizedText.match(/\n\s*\/\s*\n/);
-  const slashIdx = match ? match.index! + match[0].indexOf("/") : -1;
-  let body =
-    slashIdx >= 0 ? normalizedText.slice(slashIdx + 1).trim() : normalizedText;
-
-  if (slashIdx < 0 && headerMatch?.index != null) {
-    body = normalizedText
-      .slice(headerMatch.index + headerMatch[0].length)
-      .trim();
-  }
-
-  // 按 / 分段处理
-  const content = body
-    .split(slashIdx >= 0 ? /\n\s*\/\s*\n/ : /\s*\/\s*/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .join("/\n");
-
-  return {
-    title,
-    date: dateStr,
-    keyValue,
-    content,
-  };
 }
 
 function persistAll() {
-  const keys = [
-    "FORM_DATA_TITLE",
-    "FORM_DATA_DATE",
-    "FORM_DATA_KEY_VALUE",
-    "FORM_DATA_CONTENT",
-  ];
-  keys.forEach((key) => {
-    const k = key.replace("FORM_DATA_", "").toLowerCase();
-    localStorage.setItem(key, (formData.value as any)[k]);
-  });
+  localStorage.setItem("XIAOHONGSHU_FORM_DATA_CONTENT", formData.value.content);
 }
 </script>
 
@@ -353,6 +235,26 @@ function persistAll() {
   margin-top: 20px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.workspace-panel {
+  width: min(300px, 100%);
+  margin: 0 auto 14px;
+}
+
+.workspace-panel__meta {
+  margin-bottom: 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.workspace-panel__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .floating-actions {

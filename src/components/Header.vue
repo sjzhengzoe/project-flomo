@@ -5,7 +5,7 @@
         <button
           type="button"
           class="header__btn"
-          @click="showTabPanel = !showTabPanel"
+          @click="toggleTabPanel"
           title="选项"
         >
           <PanelLeft class="header__btn-icon" :size="18" />
@@ -28,7 +28,7 @@
       <div
         v-if="showTabPanel"
         class="sidebar-overlay"
-        @click="showTabPanel = false"
+        @click="closeTabPanel"
       ></div>
     </Transition>
 
@@ -37,20 +37,20 @@
       <div v-if="showTabPanel" class="sidebar-panel">
         <div class="sidebar-panel__header">
           <span class="sidebar-panel__title">功能区</span>
-          <button class="sidebar-panel__close" @click="showTabPanel = false">
+          <button class="sidebar-panel__close" @click="closeTabPanel">
             <X class="sidebar-panel__close-icon" :size="18" />
           </button>
         </div>
         <div class="sidebar-panel__content">
           <div class="sidebar-menu">
             <button
-              v-for="(item, index) in menuItems"
-              :key="item.key"
+              v-for="item in menuItems"
+              :key="item.path"
               :class="[
                 'sidebar-menu__item',
-                { 'sidebar-menu__item--active': activeMenu === index },
+                { 'sidebar-menu__item--active': route.path === item.path },
               ]"
-              @click="handleMenuClick(item)"
+              @click="selectFeature(item.path)"
             >
               <component
                 :is="item.icon"
@@ -69,26 +69,39 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   PanelLeft,
   Settings,
   X,
   ChevronRight,
   BookHeart,
+  Video,
 } from "lucide-vue-next";
 
 const router = useRouter();
+const route = useRoute();
 
 const showTabPanel = ref(false);
-const activeMenu = ref(0);
 
-const menuItems = [{ key: "diary", label: "日记模板", icon: BookHeart }];
+const menuItems: { path: string; label: string; icon: unknown }[] = [
+  { path: "/douyin", label: "抖音模板", icon: Video },
+  { path: "/xiaohongshu", label: "小红书模板", icon: BookHeart },
+];
 
-const handleMenuClick = (item: { key: string }) => {
-  if (item.key === "diary") {
-    showTabPanel.value = false;
+const toggleTabPanel = () => {
+  showTabPanel.value = !showTabPanel.value;
+};
+
+const closeTabPanel = () => {
+  showTabPanel.value = false;
+};
+
+const selectFeature = (path: string) => {
+  if (route.path !== path) {
+    router.push(path);
   }
+  closeTabPanel();
 };
 </script>
 
