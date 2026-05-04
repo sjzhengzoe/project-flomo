@@ -166,7 +166,7 @@ const breakpoints = {
   padding: 38px 43px 40px 22px;
   background: url("@/assets/background/theme_bg22.jpg") top/cover no-repeat;
   background-color: rgba(255, 251, 240, 0.5);
-  font-family: "font_03";
+  font-family: "font_03_subset", "font_03_full", "font_6", serif;
   color: #252525;
   box-sizing: border-box;
 }
