@@ -13,6 +13,14 @@
       <button
         type="button"
         class="action-btn"
+        @click="handleCopyContent"
+        title="复制抖音文案"
+      >
+        <Copy class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn"
         @click="handlePasteContent"
         title="粘贴文案"
       >
@@ -99,7 +107,7 @@ import { useStore } from "./store";
 import { useCommonStore } from "@/store/commonStore";
 import Header from "@/components/Header.vue";
 import Card from "./components/Card.vue";
-import { Clipboard, Pencil, Download } from "lucide-vue-next";
+import { Clipboard, Copy, Pencil, Download } from "lucide-vue-next";
 import {
   convertBackgroundImagesToBase64,
   replaceSVGCSSVariables,
@@ -113,6 +121,7 @@ const showEditModal = ref(false);
 const isDownloading = ref(false);
 const imagePreviewUrl = ref("");
 const IMAGE_EXPORT_WIDTH = 2160;
+const DOUYIN_TAGS = "#文字的力量 #记录真是生活 #思考 #讨论";
 
 const editFormData = reactive({
   content: "",
@@ -143,6 +152,32 @@ const handlePasteContent = async () => {
   } catch (err) {
     console.error("读取剪贴板失败:", err);
   }
+};
+
+const handleCopyContent = async () => {
+  try {
+    const text = getCopyableContent(formData.value.content);
+    if (!text) return;
+
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error("写入剪贴板失败:", err);
+  }
+};
+
+const getCopyableContent = (content: string) => {
+  const lines = content
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+
+  if (!lines.length) return "";
+
+  const bodyLines = lines.slice(1);
+  if (!bodyLines.length) return DOUYIN_TAGS;
+
+  return [bodyLines.join("\n\n"), DOUYIN_TAGS].join("\n\n");
 };
 
 const closeImagePreview = () => {
