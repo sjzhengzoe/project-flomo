@@ -13,18 +13,18 @@
       <button
         type="button"
         class="action-btn"
-        @click="handleCopyContent"
-        title="复制小红书文案"
-      >
-        <Copy class="action-btn__icon" :size="22" />
-      </button>
-      <button
-        type="button"
-        class="action-btn"
         @click="handlePasteContent"
         title="粘贴文案"
       >
         <Clipboard class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn"
+        @click="handleCopyContent"
+        title="复制小红书文案"
+      >
+        <Copy class="action-btn__icon" :size="22" />
       </button>
       <button
         type="button"
@@ -44,6 +44,8 @@
         <Download class="action-btn__icon" :size="22" />
       </button>
     </div>
+
+    <div v-if="copyToastVisible" class="copy-toast">复制成功</div>
 
     <div
       v-if="imagePreviewUrls.length"
@@ -141,6 +143,8 @@ const formData = computed(() => store.formData);
 const showEditModal = ref(false);
 const isDownloading = ref(false);
 const imagePreviewUrls = ref<string[]>([]);
+const copyToastVisible = ref(false);
+let copyToastTimer: ReturnType<typeof window.setTimeout> | undefined;
 const IMAGE_EXPORT_WIDTH = 2160;
 const XIAOHONGSHU_BLANK_LINE = "\u2800";
 const XIAOHONGSHU_TAGS =
@@ -184,6 +188,7 @@ const handleCopyContent = async () => {
     if (!text) return;
 
     await navigator.clipboard.writeText(text);
+    showCopyToast();
   } catch (err) {
     console.error("写入剪贴板失败:", err);
   }
@@ -211,12 +216,29 @@ const getCopyableContent = (content: string) => {
   return [body, XIAOHONGSHU_BLANK_LINE, XIAOHONGSHU_TAGS].join("\n");
 };
 
+const showCopyToast = () => {
+  copyToastVisible.value = true;
+  if (copyToastTimer) {
+    window.clearTimeout(copyToastTimer);
+  }
+
+  copyToastTimer = window.setTimeout(() => {
+    copyToastVisible.value = false;
+    copyToastTimer = undefined;
+  }, 1600);
+};
+
 const closeImagePreview = () => {
   imagePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url));
   imagePreviewUrls.value = [];
 };
 
-onBeforeUnmount(closeImagePreview);
+onBeforeUnmount(() => {
+  closeImagePreview();
+  if (copyToastTimer) {
+    window.clearTimeout(copyToastTimer);
+  }
+});
 
 const handlePreviewImage = async () => {
   if (isDownloading.value) return;
@@ -371,6 +393,24 @@ function persistAll() {
     color: var(--text-primary);
     line-height: 1;
   }
+}
+
+.copy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 120;
+  transform: translateX(-50%);
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(17, 19, 31, 0.92);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.36);
+  pointer-events: none;
 }
 
 .image-preview {
