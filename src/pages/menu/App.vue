@@ -21,8 +21,18 @@
             :aria-selected="activePageIndex === index"
             @click="setActivePage(index)"
           >
-            {{ getPageTabLabel(page, index) }}
+            <span class="layout-tabs__label">
+              {{ getPageTabLabel(page, index) }}
+            </span>
           </button>
+        </div>
+
+        <div
+          v-if="activeA4Page?.key === 'a6-landscape-single-image'"
+          class="style-current"
+          aria-label="当前菜单风格"
+        >
+          {{ activeA6Style.name }}
         </div>
 
         <div
@@ -42,7 +52,7 @@
             :aria-label="activeA4Page.label"
           >
             <article
-              v-for="(item, index) in activeA4Page.items"
+              v-for="item in activeA4Page.items"
               :key="item.key"
               class="menu-card menu-card--a4"
               :style="{
@@ -53,13 +63,14 @@
                 '--card-width-mm': item.width,
                 '--card-height-mm': item.height,
                 '--image-ratio': item.imageRatio,
+                '--a6-background-image': activeA6BackgroundCss,
                 ...getCardFrameStyle(item, activeA4Page.cardOrientation),
               }"
               :data-orientation="activeA4Page.cardOrientation"
               :data-page-key="activeA4Page.key"
-              :data-grid-style="
-                activeA4Page.key === 'instax-mini-landscape-grid'
-                  ? index + 1
+              :data-a6-background-mode="
+                activeA4Page.key === 'a6-landscape-single-image'
+                  ? activeA6BackgroundMode
                   : undefined
               "
             >
@@ -72,20 +83,39 @@
                 @keydown.enter.prevent="triggerImageUpload(item.cardIndex)"
                 @keydown.space.prevent="triggerImageUpload(item.cardIndex)"
               >
-                <img :src="item.card.imageUrl" :alt="item.card.dishName" />
+                <img
+                  v-if="item.card.imageUrl"
+                  :src="item.card.imageUrl"
+                  :alt="item.card.dishName"
+                />
               </div>
-              <div
-                class="menu-card__caption"
-                role="button"
-                tabindex="0"
-                title="编辑菜名和主要食材"
-                @click="openEditModal(item.cardIndex)"
-                @keydown.enter.prevent="openEditModal(item.cardIndex)"
-                @keydown.space.prevent="openEditModal(item.cardIndex)"
-              >
-                <h2 class="dish-name">{{ item.card.dishName || "菜名" }}</h2>
+              <div class="menu-card__caption">
+                <template v-if="activeA4Page.key === 'a6-landscape-single-image'">
+                  <div class="menu-card__text">
+                    <div class="menu-card__eyebrow">TODAY'S PICK</div>
+                    <h2 class="dish-name">
+                      {{ getDishParts(item.card.dishName).name || "菜名" }}
+                    </h2>
+                    <div class="menu-card__meta">
+                      {{ getDishParts(item.card.dishName).category }} · MENU IDEA
+                    </div>
+                  </div>
+                </template>
+                <h2 v-else class="dish-name">
+                  {{ item.card.dishName || "菜名" }}
+                </h2>
               </div>
             </article>
+            <span
+              v-for="mark in activeCutMarks"
+              :key="mark.key"
+              class="cut-mark"
+              :class="`cut-mark--${mark.side}`"
+              :style="{
+                left: mark.left,
+                top: mark.top,
+              }"
+            />
           </div>
         </div>
 
@@ -103,6 +133,24 @@
       <button
         type="button"
         class="action-btn"
+        title="选择菜品"
+        aria-label="选择菜品"
+        @click="openFoodPickerModal"
+      >
+        <Utensils class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn"
+        :title="`切换风格：${activeA6Style.name}`"
+        :aria-label="`切换风格，当前 ${activeA6Style.name}`"
+        @click="cycleA6Style"
+      >
+        <Images class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn"
         title="预览图片"
         aria-label="预览图片"
         :disabled="isGeneratingPreview"
@@ -113,8 +161,8 @@
       <button
         type="button"
         class="action-btn"
-        title="打印 A4 拼版"
-        aria-label="打印 A4 拼版"
+        title="打印 A6 菜单"
+        aria-label="打印 A6 菜单"
         @click="handlePrint"
       >
         <Printer class="action-btn__icon" :size="22" />
@@ -138,46 +186,71 @@
       </div>
     </div>
 
-    <div v-if="showEditModal" class="edit-modal" @click="closeEditModal">
+    <div
+      v-if="showFoodPickerModal"
+      class="edit-modal"
+      @click="closeFoodPickerModal"
+    >
       <div class="edit-modal__content" @click.stop>
         <div class="edit-modal__header">
-          <h3 class="edit-modal__title">编辑菜单</h3>
+          <h3 class="edit-modal__title">选择菜品</h3>
           <button
             type="button"
             class="edit-modal__close"
-            @click="closeEditModal"
+            @click="closeFoodPickerModal"
           >
             ×
           </button>
         </div>
 
-        <form class="edit-form" @submit.prevent="handleSaveEdit">
-          <div class="form-item">
-            <label class="form-label" for="menu-dish-name">菜名</label>
-            <input
-              id="menu-dish-name"
-              v-model="editForm.dishName"
-              class="form-input"
-              type="text"
-              maxlength="16"
-            />
-          </div>
+        <div class="food-picker-tabs" role="tablist" aria-label="菜品状态切换">
+          <button
+            v-for="tab in foodPickerTabs"
+            :key="tab.key"
+            type="button"
+            class="food-picker-tabs__item"
+            :class="{
+              'food-picker-tabs__item--active': activeFoodPickerTab === tab.key,
+            }"
+            role="tab"
+            :aria-selected="activeFoodPickerTab === tab.key"
+            @click="activeFoodPickerTab = tab.key"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
 
-          <div class="form-item">
-            <label class="form-label" for="menu-ingredients">主要食材</label>
-            <input
-              id="menu-ingredients"
-              v-model="editForm.ingredients"
-              class="form-input"
-              type="text"
-              maxlength="36"
+        <div class="food-picker-list">
+          <button
+            v-for="item in activeFoodItems"
+            :key="item.imageUrl"
+            type="button"
+            class="food-picker-card"
+            :class="{
+              'food-picker-card--active':
+                currentCard?.imageUrl === item.imageUrl,
+            }"
+            @click="selectFoodItem(item)"
+          >
+            <img
+              class="food-picker-card__image"
+              :src="item.imageUrl"
+              :alt="item.dishName"
             />
-          </div>
+            <span class="food-picker-card__text">
+              <span class="food-picker-card__category">
+                {{ item.category }}
+              </span>
+              <span class="food-picker-card__name">
+                {{ item.name }}
+              </span>
+            </span>
+          </button>
 
-          <div class="form-item form-item--action">
-            <button type="submit" class="btn btn-primary">保存</button>
+          <div v-if="activeFoodItems.length === 0" class="food-picker-empty">
+            暂无图片
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
@@ -189,25 +262,40 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
-  reactive,
   ref,
   watch,
 } from "vue";
 import Header from "@/components/Header.vue";
 import { useStore, type MenuCardData } from "./store";
 import { useCommonStore } from "@/store/commonStore";
-import { Download, Printer } from "lucide-vue-next";
+import { Download, Images, Printer, Utensils } from "lucide-vue-next";
 import {
   convertBackgroundImagesToBase64,
   replaceSVGCSSVariables,
 } from "@/utils/dataToImages";
 import html2canvas from "html2canvas";
 
-const A4_PORTRAIT_WIDTH_MM = 210;
-const A4_PORTRAIT_HEIGHT_MM = 297;
+const A6_PORTRAIT_WIDTH_MM = 105;
+const A6_PORTRAIT_HEIGHT_MM = 148;
 const PREVIEW_PX_PER_MM = 4;
 const SCREEN_PREVIEW_SCALE = 0.9;
 const IMAGE_EXPORT_WIDTH = 3000;
+const PRINT_PAGE_STYLE_ID = "menu-print-page-style";
+const A6_STYLE_INDEX_STORAGE_KEY = "MENU_A6_STYLE_INDEX";
+const a6BackgroundImages = [
+  { name: "基础极简01", src: encodeURI("/菜谱背景图/基础极简01.png") },
+  { name: "复古咖啡厅03", src: encodeURI("/菜谱背景图/复古咖啡厅03.png") },
+];
+const dishCategories = [
+  "荤菜",
+  "半荤",
+  "素菜",
+  "主食",
+  "水果",
+  "外食",
+  "甜品",
+  "饮品",
+];
 
 type A4LayoutSpec = {
   key: string;
@@ -228,6 +316,7 @@ type A4LayoutItem = A4LayoutSpec & {
 type A4Page = {
   key: string;
   label: string;
+  paperSize: "A4" | "A6";
   cardOrientation: "landscape" | "portrait";
   paperOrientation: "landscape" | "portrait";
   width: number;
@@ -239,30 +328,96 @@ type A4PageView = Omit<A4Page, "specs"> & {
   items: A4LayoutItem[];
 };
 
+type CutMark = {
+  key: string;
+  side: "top" | "bottom" | "left" | "right";
+  left: string;
+  top: string;
+};
+
+type FoodPickerTabKey = "pending" | "printed";
+
+type FoodPickerItem = MenuCardData & {
+  key: string;
+  status: FoodPickerTabKey;
+  category: string;
+  name: string;
+};
+
+const foodPickerTabs: { key: FoodPickerTabKey; label: string }[] = [
+  { key: "pending", label: "待打印" },
+  { key: "printed", label: "已打印" },
+];
+
+function getFoodNameParts(filename: string) {
+  const nameWithoutExtension = filename.replace(/\.[^.]+$/, "");
+  const [category, ...nameParts] = nameWithoutExtension.split("·");
+  const name = nameParts.join("·").trim();
+
+  return {
+    category: category.trim() || "菜单",
+    name: name || nameWithoutExtension.trim(),
+  };
+}
+
+function createFoodItem(status: FoodPickerTabKey, directory: string, filename: string) {
+  const { category, name } = getFoodNameParts(filename);
+
+  return {
+    key: `${status}-${filename}`,
+    status,
+    category,
+    name,
+    dishName: `${category}·${name}`,
+    imageUrl: encodeURI(`/${directory}/${filename}`),
+  };
+}
+
+const foodPickerItems: FoodPickerItem[] = [
+  createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋.png"),
+  createFoodItem("pending", "食物待打印", "荤菜 · 香辣虾.PNG"),
+  createFoodItem("pending", "食物待打印", "荤菜 · 煎牛排.PNG"),
+  createFoodItem("pending", "食物待打印", "素菜 · 炒番薯叶.PNG"),
+  createFoodItem("pending", "食物待打印", "荤菜 · 煎三文鱼扒.PNG"),
+  createFoodItem("pending", "食物待打印", "半荤 · 菠萝炒牛肉.PNG"),
+  createFoodItem("pending", "食物待打印", "主食 · 烤贝贝南瓜.PNG"),
+  createFoodItem("pending", "食物待打印", "素菜 · 炒花菜.PNG"),
+  createFoodItem("pending", "食物待打印", "荤菜 · 九层塔炒鸡.PNG"),
+  createFoodItem("pending", "食物待打印", "荤菜 · 炒花甲.PNG"),
+];
+
+function loadA6StyleIndex() {
+  const storedIndex = Number(localStorage.getItem(A6_STYLE_INDEX_STORAGE_KEY));
+
+  if (Number.isInteger(storedIndex) && a6BackgroundImages[storedIndex]) {
+    return storedIndex;
+  }
+
+  return 0;
+}
+
 const a4PageSpecs: A4Page[] = [
   {
-    key: "instax-mini-landscape-grid",
-    label: "A4 Instax Mini 横版满铺",
+    key: "a6-landscape-single-image",
+    label: "A6 横版单图",
+    paperSize: "A6",
     cardOrientation: "landscape",
-    paperOrientation: "portrait",
-    width: A4_PORTRAIT_WIDTH_MM,
-    height: A4_PORTRAIT_HEIGHT_MM,
-    specs: Array.from({ length: 10 }, (_, index) => {
-      const row = index % 5;
-      const column = Math.floor(index / 5);
-
-      return {
-        key: `instax-mini-landscape-grid-${index}`,
-        name: "Instax Mini横版 86×54mm",
-        width: 86,
-        height: 54,
-        x: column * 86,
-        y: row * 54,
-        cardIndex: index,
-        imageRatio: "62 / 46",
-        imageRatioLabel: "4:3",
-      };
-    }),
+    paperOrientation: "landscape",
+    width: A6_PORTRAIT_HEIGHT_MM,
+    height: A6_PORTRAIT_WIDTH_MM,
+    specs: [
+      {
+        key: "a6-landscape-single-image-0",
+        name: "A6横版单图 148×105mm",
+        width: A6_PORTRAIT_HEIGHT_MM,
+        height: A6_PORTRAIT_WIDTH_MM,
+        x: 0,
+        y: 0,
+        cardIndex: 0,
+        imageRatio: "148 / 105",
+        imageRatioLabel: "A6横版",
+      },
+    ],
   },
 ];
 
@@ -283,23 +438,77 @@ const a4Pages = computed<A4PageView[]>(() =>
   })),
 );
 const activeImageIndex = ref<number | null>(null);
-const activeEditIndex = ref<number | null>(null);
-const showEditModal = ref(false);
-const activePageIndex = ref(0);
+const showFoodPickerModal = ref(false);
+const activeFoodPickerTab = ref<FoodPickerTabKey>("pending");
+const activePageIndex = ref(a4PageSpecs.length - 1);
 const imagePreviewUrl = ref("");
 const isGeneratingPreview = ref(false);
+const activeA6StyleIndex = ref(loadA6StyleIndex());
 const touchStartX = ref(0);
 const touchStartY = ref(0);
 const previewScale = ref(1);
 let workspaceResizeObserver: ResizeObserver | null = null;
 
 const activeA4Page = computed(() => a4Pages.value[activePageIndex.value]);
+const currentCard = computed(() => activeA4Page.value?.items[0]?.card);
+const activeFoodItems = computed(() =>
+  foodPickerItems.filter((item) => item.status === activeFoodPickerTab.value),
+);
+const activeA6Style = computed(
+  () => a6BackgroundImages[activeA6StyleIndex.value] || a6BackgroundImages[0],
+);
+const activeA6BackgroundCss = computed(() =>
+  activeA6Style.value.src ? `url(${activeA6Style.value.src})` : "none",
+);
+const activeA6BackgroundMode = computed(() =>
+  activeA6Style.value.src ? "image" : "plain",
+);
+const activeCutMarks = computed<CutMark[]>(() => {
+  const page = activeA4Page.value;
+  if (!page) return [];
+  if (page.key === "a6-landscape-single-image") return [];
+
+  const xPositions = Array.from(
+    new Set(page.items.flatMap((item) => [item.x, item.x + item.width])),
+  )
+    .filter((x) => x >= 0 && x <= page.width)
+    .sort((a, b) => a - b);
+  const yPositions = Array.from(
+    new Set(page.items.flatMap((item) => [item.y, item.y + item.height])),
+  )
+    .filter((y) => y >= 0 && y <= page.height)
+    .sort((a, b) => a - b);
+  const gridTop = yPositions[0] || 0;
+  const topMarkTop = Math.max(0, gridTop - 4);
+
+  return [
+    ...xPositions.flatMap((x) => {
+      const left = `${(x / page.width) * 100}%`;
+      return [
+        {
+          key: `top-${x}`,
+          side: "top" as const,
+          left,
+          top: `${(topMarkTop / page.height) * 100}%`,
+        },
+        { key: `bottom-${x}`, side: "bottom" as const, left, top: "100%" },
+      ];
+    }),
+    ...yPositions.flatMap((y) => {
+      const top = `${(y / page.height) * 100}%`;
+      return [
+        { key: `left-${y}`, side: "left" as const, left: "0", top },
+        { key: `right-${y}`, side: "right" as const, left: "100%", top },
+      ];
+    }),
+  ];
+});
 const activeA4BaseWidth = computed(
-  () => (activeA4Page.value?.width || A4_PORTRAIT_WIDTH_MM) * PREVIEW_PX_PER_MM,
+  () => (activeA4Page.value?.width || A6_PORTRAIT_HEIGHT_MM) * PREVIEW_PX_PER_MM,
 );
 const activeA4BaseHeight = computed(
   () =>
-    (activeA4Page.value?.height || A4_PORTRAIT_HEIGHT_MM) * PREVIEW_PX_PER_MM,
+    (activeA4Page.value?.height || A6_PORTRAIT_WIDTH_MM) * PREVIEW_PX_PER_MM,
 );
 const a4PreviewFrameStyle = computed(() => ({
   width: `${activeA4BaseWidth.value * previewScale.value}px`,
@@ -311,7 +520,19 @@ const a4PreviewSheetStyle = computed(() => ({
   transform: `scale(${previewScale.value})`,
 }));
 const getPageTabLabel = (page: A4PageView, index: number) =>
-  `${index + 1}/${a4Pages.value.length} ${page.cardOrientation === "landscape" ? "横版" : "竖版"}`;
+  page.key === "a6-landscape-single-image"
+    ? "A6 横版"
+    : `${index + 1}/${a4Pages.value.length} ${page.cardOrientation === "landscape" ? "横版" : "竖版"}`;
+
+const getDishParts = (dishName: string) => {
+  const [category, ...nameParts] = dishName.split("·");
+  const name = nameParts.join("·").trim();
+
+  return {
+    category: dishCategories.includes(category) ? category : "菜单",
+    name: name || dishName,
+  };
+};
 
 const mainstreamImageRatios = [
   9 / 16,
@@ -369,11 +590,6 @@ const getCardFrameStyle = (
   };
 };
 
-const editForm = reactive({
-  dishName: "",
-  ingredients: "",
-});
-
 const triggerImageUpload = (index: number) => {
   activeImageIndex.value = index;
   fileInputRef.value?.click();
@@ -399,33 +615,59 @@ const handleImageChange = (event: Event) => {
   reader.readAsDataURL(file);
 };
 
-const openEditModal = (index: number) => {
-  const card = cards.value[index];
-  if (!card) return;
-
-  activeEditIndex.value = index;
-  editForm.dishName = card.dishName;
-  editForm.ingredients = card.ingredients;
-  showEditModal.value = true;
+const openFoodPickerModal = () => {
+  showFoodPickerModal.value = true;
 };
 
-const closeEditModal = () => {
-  showEditModal.value = false;
-  activeEditIndex.value = null;
+const closeFoodPickerModal = () => {
+  showFoodPickerModal.value = false;
 };
 
-const handleSaveEdit = () => {
-  if (activeEditIndex.value === null) return;
+const selectFoodItem = (item: FoodPickerItem) => {
+  const page = activeA4Page.value;
+  const cardIndex = page?.items[0]?.cardIndex ?? 0;
+  store.setCardSelection(cardIndex, {
+    imageUrl: item.imageUrl,
+    dishName: item.dishName,
+  });
+  closeFoodPickerModal();
+};
 
-  store.setCardText(
-    activeEditIndex.value,
-    editForm.dishName,
-    editForm.ingredients,
+const applyPrintPageStyle = () => {
+  const page = activeA4Page.value;
+  if (!page) return;
+
+  let style = document.getElementById(
+    PRINT_PAGE_STYLE_ID,
+  ) as HTMLStyleElement | null;
+
+  if (!style) {
+    style = document.createElement("style");
+    style.id = PRINT_PAGE_STYLE_ID;
+    document.head.appendChild(style);
+  }
+
+  style.textContent = `
+    @media print {
+      @page {
+        size: ${page.width}mm ${page.height}mm;
+        margin: 0;
+      }
+    }
+  `;
+
+  document.documentElement.style.setProperty(
+    "--menu-print-width",
+    `${page.width}mm`,
   );
-  closeEditModal();
+  document.documentElement.style.setProperty(
+    "--menu-print-height",
+    `${page.height}mm`,
+  );
 };
 
 const handlePrint = () => {
+  applyPrintPageStyle();
   window.print();
 };
 
@@ -521,6 +763,17 @@ const showNextPage = () => {
 
 const setActivePage = (index: number) => {
   activePageIndex.value = index;
+};
+
+const setA6Style = (index: number) => {
+  if (!a6BackgroundImages[index]) return;
+  activeA6StyleIndex.value = index;
+  localStorage.setItem(A6_STYLE_INDEX_STORAGE_KEY, String(index));
+};
+
+const cycleA6Style = () => {
+  const nextIndex = (activeA6StyleIndex.value + 1) % a6BackgroundImages.length;
+  setA6Style(nextIndex);
 };
 
 const handleTouchStart = (event: TouchEvent) => {
@@ -677,9 +930,13 @@ onBeforeUnmount(() => {
 }
 
 .usePx .layout-tabs__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-width: 74px;
-  height: 30px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 5px 12px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -687,14 +944,38 @@ onBeforeUnmount(() => {
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  line-height: 30px;
+  line-height: 1.1;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.usePx .layout-tabs__label {
+  line-height: 1.1;
 }
 
 .usePx .layout-tabs__item--active {
   background: #ffffff;
   color: #11131f;
+}
+
+.usePx .style-current {
+  position: relative;
+  z-index: 20;
+  flex: 0 0 auto;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 26px;
+  white-space: nowrap;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .usePx .menu-a4-preview-frame {
@@ -724,6 +1005,42 @@ onBeforeUnmount(() => {
 
 .usePx.menu-a4-sheet--portrait {
   aspect-ratio: 210 / 297;
+}
+
+.usePx .cut-mark {
+  position: absolute;
+  z-index: 30;
+  display: block;
+  background: rgba(48, 39, 32, 0.72);
+  pointer-events: none;
+}
+
+.usePx .cut-mark--top,
+.usePx .cut-mark--bottom {
+  width: 0.25mm;
+  height: 4mm;
+}
+
+.usePx .cut-mark--top {
+  transform: translateX(-0.125mm);
+}
+
+.usePx .cut-mark--bottom {
+  transform: translate(-0.125mm, -4mm);
+}
+
+.usePx .cut-mark--left,
+.usePx .cut-mark--right {
+  width: 4mm;
+  height: 0.25mm;
+}
+
+.usePx .cut-mark--left {
+  transform: translateY(-0.125mm);
+}
+
+.usePx .cut-mark--right {
+  transform: translate(-4mm, -0.125mm);
 }
 
 .usePx.menu-sheet {
@@ -916,8 +1233,7 @@ onBeforeUnmount(() => {
   background: var(--paper);
 }
 
-.usePx .menu-card__image,
-.usePx .menu-card__caption {
+.usePx .menu-card__image {
   min-width: 0;
   border: 0;
   cursor: pointer;
@@ -949,14 +1265,17 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   gap: 7px;
   padding: 8px 10px;
+  border: 0;
   isolation: isolate;
+  outline: none;
   background: var(--paper);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.usePx .menu-card__image:focus-visible,
-.usePx .menu-card__caption:focus-visible {
+.usePx .menu-card__image:focus-visible {
   box-shadow: inset 0 0 0 2px rgba(242, 163, 58, 0.8);
 }
 
@@ -974,21 +1293,6 @@ onBeforeUnmount(() => {
   font-weight: 400;
   line-height: 1.2;
   letter-spacing: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.usePx .ingredients {
-  position: relative;
-  z-index: 3;
-  max-width: 100%;
-  margin: 0;
-  color: var(--muted);
-  // font-family: "font_6";
-  font-size: clamp(7px, 2.35vw, 9px);
-  line-height: 1;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1079,16 +1383,21 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding-top: 0;
   box-sizing: border-box;
+  text-align: center;
 }
 
-.usePx
-  .menu-card--a4[data-page-key="instax-mini-landscape-grid"]
-  .dish-name {
+.usePx .menu-card--a4[data-page-key="instax-mini-landscape-grid"] .dish-name {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   max-width: none;
   max-height: 100%;
   font-size: 14px;
   line-height: 1;
+  text-align: center;
   white-space: normal;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -1096,6 +1405,117 @@ onBeforeUnmount(() => {
 
 .usePx .menu-card--a4[data-grid-style] .menu-card__caption {
   border-left: 0.25mm solid rgba(48, 39, 32, 0.18);
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"] {
+  outline: none;
+  background:
+    var(--a6-background-image) center / 100% 100% no-repeat,
+    #ead7b4;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .menu-card__image {
+  left: calc((43 / 148) * 100%);
+  top: calc((13 / 105) * 100%);
+  width: calc((78 / 148) * 100%);
+  height: calc((52 / 105) * 100%);
+  border-radius: 1mm;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .menu-card__caption {
+  left: calc((43 / 148) * 100%);
+  top: calc((70 / 105) * 100%);
+  width: calc((78 / 148) * 100%);
+  height: calc((26 / 105) * 100%);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .menu-card__text {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .menu-card__eyebrow {
+  margin-bottom: 1.8mm;
+  color: rgba(48, 39, 32, 0.54);
+  font-family: "MenuText";
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.18em;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .menu-card__meta {
+  margin-top: 2mm;
+  color: rgba(48, 39, 32, 0.56);
+  font-family: "MenuText";
+  font-size: 8px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.1em;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="landscape"][data-page-key="a6-landscape-single-image"]
+  .dish-name {
+  width: 100%;
+  max-width: 100%;
+  color: #302720;
+  font-size: 19px;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="portrait"][data-page-key="instax-mini-portrait-grid"]
+  .menu-card__image {
+  left: calc((4 / 54) * 100%);
+  top: calc((4 / 86) * 100%);
+  width: calc((46 / 54) * 100%);
+  height: calc((62 / 86) * 100%);
+}
+
+.usePx
+  .menu-card--a4[data-orientation="portrait"][data-page-key="instax-mini-portrait-grid"]
+  .menu-card__caption {
+  left: calc((4 / 54) * 100%);
+  top: calc((70 / 86) * 100%);
+  width: calc((46 / 54) * 100%);
+  height: calc((12 / 86) * 100%);
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  border-top: 0.25mm solid rgba(48, 39, 32, 0.18);
+  padding-top: 6mm;
+  text-align: center;
+}
+
+.usePx
+  .menu-card--a4[data-orientation="portrait"][data-page-key="instax-mini-portrait-grid"]
+  .dish-name {
+  max-width: 100%;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .usePx .menu-card--a4[data-orientation="portrait"] {
@@ -1161,12 +1581,6 @@ onBeforeUnmount(() => {
 .usePx.menu-sheet--six .dish-name,
 .usePx.menu-sheet--sixPortrait .dish-name {
   font-size: clamp(9px, 2.1vw, 11px);
-  line-height: 1.35;
-}
-
-.usePx.menu-sheet--six .ingredients,
-.usePx.menu-sheet--sixPortrait .ingredients {
-  font-size: clamp(6px, 1.65vw, 8px);
   line-height: 1.35;
 }
 
@@ -1260,22 +1674,6 @@ onBeforeUnmount(() => {
 .usePx.menu-sheet--sixInchLandscape .dish-name {
   font-size: clamp(8px, 2vw, 11px);
   line-height: 1.3;
-}
-
-.usePx.menu-sheet--four .ingredients,
-.usePx.menu-sheet--instaxWidePortrait .ingredients,
-.usePx.menu-sheet--instaxMini .ingredients,
-.usePx.menu-sheet--instaxMiniLandscape .ingredients,
-.usePx.menu-sheet--threeInch .ingredients,
-.usePx.menu-sheet--threeInchLandscape .ingredients,
-.usePx.menu-sheet--fourInch .ingredients,
-.usePx.menu-sheet--fourInchLandscape .ingredients,
-.usePx.menu-sheet--fiveInch .ingredients,
-.usePx.menu-sheet--fiveInchLandscape .ingredients,
-.usePx.menu-sheet--sixInch .ingredients,
-.usePx.menu-sheet--sixInchLandscape .ingredients {
-  font-size: clamp(5px, 1.45vw, 7px);
-  line-height: 1.35;
 }
 
 .usePx .file-input {
@@ -1459,6 +1857,110 @@ onBeforeUnmount(() => {
   }
 }
 
+.usePx .food-picker-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.usePx .food-picker-tabs__item {
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.usePx .food-picker-tabs__item--active {
+  background: #ffffff;
+  color: #11131f;
+}
+
+.usePx .food-picker-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.usePx .food-picker-card {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 7px;
+  overflow: hidden;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.usePx .food-picker-card--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.24);
+}
+
+.usePx .food-picker-card__image {
+  display: block;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffffff;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.usePx .food-picker-card__text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.usePx .food-picker-card__category {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usePx .food-picker-card__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usePx .food-picker-empty {
+  grid-column: 1 / -1;
+  padding: 28px 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
 .usePx .form-item {
   margin-bottom: 14px;
 }
@@ -1471,7 +1973,21 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.usePx .form-input {
+.usePx .dish-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.usePx .dish-edit-row {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.usePx .form-input,
+.usePx .form-select,
+.usePx .form-textarea {
   width: 100%;
   padding: 12px 14px;
   box-sizing: border-box;
@@ -1481,12 +1997,22 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
   font-family: inherit;
   font-size: 14px;
+  line-height: 1.45;
 
   &:focus {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
   }
+}
+
+.usePx .form-select {
+  appearance: auto;
+}
+
+.usePx .form-textarea {
+  min-height: 210px;
+  resize: vertical;
 }
 
 .usePx .form-item--action {
@@ -1546,8 +2072,8 @@ onBeforeUnmount(() => {
   :global(html),
   :global(body),
   :global(#app) {
-    width: 210mm !important;
-    height: 297mm !important;
+    width: var(--menu-print-width, 210mm) !important;
+    height: var(--menu-print-height, 297mm) !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
@@ -1572,8 +2098,8 @@ onBeforeUnmount(() => {
     position: fixed;
     inset: 0 auto auto 0;
     display: block;
-    width: 210mm !important;
-    height: 297mm !important;
+    width: var(--menu-print-width, 210mm) !important;
+    height: var(--menu-print-height, 297mm) !important;
     padding: 0;
     overflow: hidden;
     background: #ffffff;
@@ -1582,8 +2108,8 @@ onBeforeUnmount(() => {
   .usePx .menu-page__main,
   .usePx .menu-workspace {
     display: block;
-    width: 210mm !important;
-    height: 297mm !important;
+    width: var(--menu-print-width, 210mm) !important;
+    height: var(--menu-print-height, 297mm) !important;
     margin: 0;
     overflow: hidden;
   }
@@ -1600,8 +2126,8 @@ onBeforeUnmount(() => {
     position: fixed;
     top: 0;
     left: 0;
-    width: 210mm !important;
-    height: 297mm !important;
+    width: var(--menu-print-width, 210mm) !important;
+    height: var(--menu-print-height, 297mm) !important;
   }
 
   .usePx.menu-a4-sheet {
@@ -1618,8 +2144,8 @@ onBeforeUnmount(() => {
 
   .usePx.menu-a4-sheet--landscape,
   .usePx.menu-a4-sheet--portrait {
-    width: 210mm !important;
-    height: 297mm !important;
+    width: var(--menu-print-width, 210mm) !important;
+    height: var(--menu-print-height, 297mm) !important;
   }
 
   .usePx .menu-card--a4 .dish-name {
@@ -1630,12 +2156,28 @@ onBeforeUnmount(() => {
     font-size: 2.5mm;
   }
 
-  .usePx
-    .menu-card--a4[data-page-key="instax-mini-landscape-grid"]
-    .dish-name {
+  .usePx .menu-card--a4[data-page-key="instax-mini-landscape-grid"] .dish-name {
     font-size: 3.5mm;
   }
 
+  .usePx .menu-card--a4[data-page-key="a6-landscape-single-image"] .dish-name {
+    font-size: 4.4mm;
+    line-height: 1.15;
+  }
+
+  .usePx
+    .menu-card--a4[data-page-key="a6-landscape-single-image"]
+    .menu-card__eyebrow {
+    margin-bottom: 1.8mm;
+    font-size: 1.8mm;
+  }
+
+  .usePx
+    .menu-card--a4[data-page-key="a6-landscape-single-image"]
+    .menu-card__meta {
+    margin-top: 2mm;
+    font-size: 2mm;
+  }
 }
 
 @media (min-width: 768px) {

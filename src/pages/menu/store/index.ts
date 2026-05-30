@@ -1,22 +1,20 @@
 import { defineStore } from "pinia";
 
-const DEFAULT_IMAGE_URL = "/img/食物默认图.png";
+const DEFAULT_IMAGE_URL = encodeURI("/食物待打印/半荤 · 番茄炒鸡蛋.png");
 const MENU_FORM_DATA_CARDS = "MENU_FORM_DATA_CARDS";
 const MENU_LAYOUT_MODE = "MENU_LAYOUT_MODE";
 const MENU_IMAGE_DB_NAME = "MENU_IMAGE_DB";
 const MENU_IMAGE_STORE_NAME = "cardImages";
 const CARD_COUNT = 10;
 const DEFAULT_CARD_TYPES = [
-  "家常",
-  "快手",
-  "汤羹",
-  "主食",
+  "荤菜",
+  "半荤",
   "素菜",
-  "肉菜",
-  "凉菜",
-  "早餐",
+  "主食",
+  "水果",
   "外食",
-  "轻食",
+  "甜品",
+  "饮品",
 ];
 
 type MenuLayoutMode =
@@ -36,23 +34,23 @@ type MenuLayoutMode =
 type MenuCardData = {
   imageUrl: string;
   dishName: string;
-  ingredients: string;
 };
 
-type StoredMenuCardData = Pick<MenuCardData, "dishName" | "ingredients">;
+type DefaultMenuCardText = Pick<MenuCardData, "dishName">;
+type StoredMenuCardData = Partial<Pick<MenuCardData, "dishName" | "imageUrl">>;
 type StoredMenuCardImage = Pick<MenuCardData, "imageUrl"> & { index: number };
 
-const DEFAULT_CARD_TEXTS: StoredMenuCardData[] = [
-  { dishName: "家常·番茄炒鸡蛋", ingredients: "番茄、鸡蛋、小葱" },
-  { dishName: "快手·青椒肉丝", ingredients: "青椒、猪肉" },
-  { dishName: "汤羹·紫菜蛋花汤", ingredients: "紫菜、鸡蛋" },
-  { dishName: "主食·咖喱鸡饭", ingredients: "鸡肉、土豆、米饭" },
-  { dishName: "素菜·蒜蓉西兰花", ingredients: "西兰花、蒜" },
-  { dishName: "肉菜·红烧排骨", ingredients: "排骨、葱姜" },
-  { dishName: "凉菜·拍黄瓜", ingredients: "黄瓜、蒜" },
-  { dishName: "早餐·火腿煎蛋", ingredients: "火腿、鸡蛋" },
-  { dishName: "外食·寿司拼盘", ingredients: "米饭、海苔" },
-  { dishName: "轻食·鸡胸沙拉", ingredients: "鸡胸、生菜" },
+const DEFAULT_CARD_TEXTS: DefaultMenuCardText[] = [
+  { dishName: "半荤·番茄炒鸡蛋" },
+  { dishName: "荤菜·青椒肉丝" },
+  { dishName: "素菜·蒜蓉西兰花" },
+  { dishName: "主食·咖喱鸡饭" },
+  { dishName: "水果·草莓拼盘" },
+  { dishName: "外食·寿司拼盘" },
+  { dishName: "甜品·焦糖布丁" },
+  { dishName: "饮品·冰拿铁" },
+  { dishName: "半荤·火腿煎蛋" },
+  { dishName: "荤菜·红烧排骨" },
 ];
 
 function formatDishName(dishName: string, index: number) {
@@ -100,10 +98,10 @@ function loadCards(): MenuCardData[] {
       if (Array.isArray(cards)) {
         return createDefaultCards().map((card, index) => ({
           ...card,
+          imageUrl: cards[index]?.imageUrl || card.imageUrl,
           dishName: cards[index]?.dishName?.trim()
             ? formatDishName(cards[index].dishName || "", index)
             : card.dishName,
-          ingredients: cards[index]?.ingredients?.trim() || card.ingredients,
         }));
       }
     } catch (err) {
@@ -112,13 +110,11 @@ function loadCards(): MenuCardData[] {
   }
 
   const legacyDishName = localStorage.getItem("MENU_FORM_DATA_DISH_NAME");
-  const legacyIngredients = localStorage.getItem("MENU_FORM_DATA_INGREDIENTS");
 
-  if (legacyDishName || legacyIngredients) {
+  if (legacyDishName) {
     return createDefaultCards().map((card) => ({
       ...card,
-      dishName: legacyDishName ? formatDishName(legacyDishName, 0) : card.dishName,
-      ingredients: legacyIngredients || card.ingredients,
+      dishName: formatDishName(legacyDishName, 0),
     }));
   }
 
@@ -193,18 +189,29 @@ const useStore = defineStore("menuStore", {
         console.error("保存菜单图片失败:", err);
       });
     },
-    setCardText(index: number, dishName: string, ingredients: string) {
+    setCardText(index: number, dishName: string) {
       const card = this.formData.cards[index];
       if (!card) return;
 
       card.dishName = formatDishName(dishName, index) || "未分类·未命名菜单";
-      card.ingredients = ingredients.trim();
       this.persistCards();
     },
+    setCardSelection(index: number, selection: MenuCardData) {
+      const card = this.formData.cards[index];
+      if (!card) return;
+
+      card.imageUrl = selection.imageUrl;
+      card.dishName =
+        formatDishName(selection.dishName, index) || "未分类·未命名菜单";
+      this.persistCards();
+      saveCardImage(index, selection.imageUrl).catch((err) => {
+        console.error("保存菜单图片失败:", err);
+      });
+    },
     persistCards() {
-      const cards = this.formData.cards.map(({ dishName, ingredients }) => ({
+      const cards = this.formData.cards.map(({ dishName, imageUrl }) => ({
         dishName,
-        ingredients,
+        imageUrl,
       }));
       localStorage.setItem(MENU_FORM_DATA_CARDS, JSON.stringify(cards));
     },
@@ -224,5 +231,5 @@ const useStore = defineStore("menuStore", {
   },
 });
 
-export { DEFAULT_IMAGE_URL, useStore };
+export { useStore };
 export type { MenuCardData, MenuLayoutMode };
