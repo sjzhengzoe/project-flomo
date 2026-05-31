@@ -285,6 +285,10 @@ const A6_STYLE_INDEX_STORAGE_KEY = "MENU_A6_STYLE_INDEX";
 const a6BackgroundImages = [
   { name: "基础极简01", src: encodeURI("/菜谱背景图/基础极简01.png") },
   { name: "复古咖啡厅03", src: encodeURI("/菜谱背景图/复古咖啡厅03.png") },
+  { name: "家常手账01", src: encodeURI("/菜谱背景图/家常手账01.png") },
+  { name: "日式喫茶01", src: encodeURI("/菜谱背景图/日式喫茶01.png") },
+  { name: "菜市场果蔬01", src: encodeURI("/菜谱背景图/菜市场果蔬01.png") },
+  { name: "老式小餐馆01", src: encodeURI("/菜谱背景图/老式小餐馆01.png") },
 ];
 const dishCategories = [
   "荤菜",
@@ -375,6 +379,10 @@ function createFoodItem(status: FoodPickerTabKey, directory: string, filename: s
 
 const foodPickerItems: FoodPickerItem[] = [
   createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋.png"),
+  createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋-复古食谱.png"),
+  createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋-日式杂志.png"),
+  createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋-水彩手绘.png"),
+  createFoodItem("pending", "食物待打印", "半荤 · 番茄炒鸡蛋-干净实拍.png"),
   createFoodItem("pending", "食物待打印", "荤菜 · 香辣虾.PNG"),
   createFoodItem("pending", "食物待打印", "荤菜 · 煎牛排.PNG"),
   createFoodItem("pending", "食物待打印", "素菜 · 炒番薯叶.PNG"),

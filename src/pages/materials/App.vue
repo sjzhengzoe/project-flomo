@@ -3,22 +3,27 @@
     <Header />
 
     <main class="materials-main">
-      <section class="paper-stage" aria-label="A4 尺寸素材参考">
-        <div class="a4-sheet">
-          <div
-            v-for="item in materialItems"
-            :key="item.name"
-            class="size-box"
-            :class="`size-box--${item.key}`"
-            :style="{
-              left: `${item.x}mm`,
-              top: `${item.y}mm`,
-              width: `${item.displayWidth ?? item.width}mm`,
-              height: `${item.displayHeight ?? item.height}mm`,
-            }"
-          >
-            <div class="size-box__name">{{ item.name }}</div>
-            <div class="size-box__size">{{ item.width }} × {{ item.height }}mm</div>
+      <section class="paper-stage" aria-label="A6 番茄炒蛋画风打样">
+        <div class="a6-sheet">
+          <div class="a6-style-proof">
+            <img
+              class="a6-style-proof__image"
+              :src="a6StyleProofImage"
+              alt="A6 番茄炒蛋画风对比"
+            />
+            <div class="a6-style-proof__labels" aria-hidden="true">
+              <div
+                v-for="(label, index) in styleLabels"
+                :key="label"
+                class="a6-style-proof__label"
+                :style="{
+                  gridColumn: `${(index % 4) + 1}`,
+                  gridRow: `${Math.floor(index / 4) + 1}`,
+                }"
+              >
+                {{ index + 1 }}. {{ label }}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -36,59 +41,17 @@
 import Header from "@/components/Header.vue";
 import { Printer } from "lucide-vue-next";
 
-const materialItems = [
-  {
-    key: "five-inch",
-    name: "5 寸",
-    width: 89,
-    height: 127,
-    x: 0,
-    y: 0,
-  },
-  {
-    key: "instax-wide",
-    name: "Instax Wide",
-    width: 108,
-    height: 86,
-    x: 102,
-    y: 0,
-  },
-  {
-    key: "instax-square",
-    name: "Instax Square",
-    width: 86,
-    height: 72,
-    x: 124,
-    y: 86,
-  },
-  {
-    key: "three-inch",
-    name: "3 寸",
-    width: 63,
-    height: 89,
-    displayWidth: 89,
-    displayHeight: 63,
-    x: 121,
-    y: 158,
-  },
-  {
-    key: "four-inch",
-    name: "4 寸",
-    width: 76,
-    height: 102,
-    x: 0,
-    y: 127,
-  },
-  {
-    key: "instax-mini",
-    name: "Instax Mini",
-    width: 54,
-    height: 86,
-    displayWidth: 86,
-    displayHeight: 54,
-    x: 0,
-    y: 229,
-  },
+const a6StyleProofImage = encodeURI("/素材打样/A6番茄炒蛋画风对比03.png");
+
+const styleLabels = [
+  "黑色线稿小食物",
+  "手账涂鸦",
+  "儿童绘本线描",
+  "咖啡馆菜单线稿",
+  "极简日式 doodle",
+  "贴纸边框手绘",
+  "粗马克笔线稿",
+  "复古包装插画",
 ];
 
 const handlePrint = () => {
@@ -139,72 +102,54 @@ const handlePrint = () => {
   container-type: size;
 }
 
-.usePx .a4-sheet {
+.usePx .a6-sheet {
   position: relative;
-  width: min(100cqw, 210mm, calc(100cqh * 210 / 297));
-  aspect-ratio: 210 / 297;
+  width: min(100cqw, 148mm, calc(100cqh * 148 / 105));
+  aspect-ratio: 148 / 105;
   box-sizing: border-box;
   background: #ffffff;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
 }
 
-.usePx .a4-sheet::before {
-  content: "A4 210 × 297mm";
+.usePx .a6-style-proof {
   position: absolute;
-  right: 5mm;
-  bottom: 4mm;
-  color: #777;
-  font-size: 9px;
-  line-height: 1;
-}
-
-.usePx .size-box {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  inset: 0;
   box-sizing: border-box;
-  border: 0.35mm dashed #1f2937;
-  background: rgba(255, 255, 255, 0.75);
-  color: #111827;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.usePx .a6-style-proof__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.usePx .a6-style-proof__labels {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  pointer-events: none;
+}
+
+.usePx .a6-style-proof__label {
+  align-self: end;
+  justify-self: center;
+  max-width: 30mm;
+  margin-bottom: 2mm;
+  padding: 1mm 1.6mm;
+  border: 0.1mm solid rgba(17, 24, 39, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #1f2937;
+  font-size: 6px;
+  font-weight: 600;
+  line-height: 1.1;
   text-align: center;
-}
-
-.usePx .size-box__name {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.usePx .size-box__size {
-  margin-top: 1mm;
-  font-size: 8px;
-  line-height: 1.2;
-}
-
-.usePx .size-box--five-inch {
-  border-color: #dc2626;
-}
-
-.usePx .size-box--four-inch {
-  border-color: #2563eb;
-}
-
-.usePx .size-box--three-inch {
-  border-color: #16a34a;
-}
-
-.usePx .size-box--instax-wide {
-  border-color: #d97706;
-}
-
-.usePx .size-box--instax-square {
-  border-color: #db2777;
-}
-
-.usePx .size-box--instax-mini {
-  border-color: #7c3aed;
+  white-space: nowrap;
 }
 
 .usePx .floating-actions {
@@ -249,7 +194,7 @@ const handlePrint = () => {
 
 @media print {
   @page {
-    size: A4 portrait;
+    size: 148mm 105mm;
     margin: 0;
   }
 
@@ -265,8 +210,8 @@ const handlePrint = () => {
   .usePx.materials-page {
     position: static;
     display: block;
-    width: 210mm;
-    height: 297mm;
+    width: 148mm;
+    height: 105mm;
     padding: 0;
     overflow: visible;
     background: #ffffff;
@@ -275,8 +220,8 @@ const handlePrint = () => {
   .usePx .materials-main,
   .usePx .paper-stage {
     display: block;
-    width: 210mm;
-    height: 297mm;
+    width: 148mm;
+    height: 105mm;
     margin: 0;
     overflow: visible;
   }
@@ -285,9 +230,9 @@ const handlePrint = () => {
     display: none;
   }
 
-  .usePx .a4-sheet {
-    width: 210mm;
-    height: 297mm;
+  .usePx .a6-sheet {
+    width: 148mm;
+    height: 105mm;
     box-shadow: none;
   }
 }
