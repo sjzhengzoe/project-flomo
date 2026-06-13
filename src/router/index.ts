@@ -13,6 +13,10 @@ const router: Router = createRouter({
       component: () => import("@/pages/douyin/App.vue"),
     },
     {
+      path: "/douyin2",
+      component: () => import("@/pages/douyin2/App.vue"),
+    },
+    {
       path: "/xiaohongshu",
       component: () => import("@/pages/xiaohongshu/App.vue"),
     },

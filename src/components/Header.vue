@@ -89,6 +89,7 @@ const showTabPanel = ref(false);
 
 const menuItems: { path: string; label: string; icon: unknown }[] = [
   { path: "/douyin", label: "抖音模板", icon: Video },
+  { path: "/douyin2", label: "抖音模板 2", icon: Video },
   { path: "/xiaohongshu", label: "小红书模板", icon: BookHeart },
   { path: "/menu", label: "菜单", icon: Utensils },
   { path: "/materials", label: "素材", icon: Ruler },
