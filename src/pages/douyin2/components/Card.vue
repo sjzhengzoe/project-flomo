@@ -111,16 +111,19 @@ function getContentSlides(content: string) {
     .split("\n")
     .map((line) => line.trimEnd())
     .filter((line) => !line.trim().startsWith("#") && line.trim() !== "/");
-  const slides = lines.reduce<string[][]>((result, line) => {
-    const currentSlide = result[result.length - 1];
+  const slides = lines.reduce<string[][]>(
+    (result, line) => {
+      const currentSlide = result[result.length - 1];
 
-    if (pageNumberPattern.test(line.trim()) && currentSlide.some(Boolean)) {
-      result.push([]);
-    }
+      if (pageNumberPattern.test(line.trim()) && currentSlide.some(Boolean)) {
+        result.push([]);
+      }
 
-    result[result.length - 1].push(line);
-    return result;
-  }, [[]]);
+      result[result.length - 1].push(line);
+      return result;
+    },
+    [[]],
+  );
 
   return slides.map((item) => item.join("\n").trim()).filter(Boolean);
 }
@@ -219,7 +222,7 @@ const breakpoints = {
 .content-body {
   font-size: 12px;
   line-height: 1.72;
-  color: #1a1a1a;
+  color: #000;
 }
 
 .content-paragraph {
