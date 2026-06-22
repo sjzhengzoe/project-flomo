@@ -223,7 +223,7 @@ watch(
 }
 
 .content-body {
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.72;
   color: #1a1a1a;
 }
@@ -247,7 +247,7 @@ watch(
 }
 
 .content-emphasis {
-  font-size: 12px;
+  font-size: 11px;
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
