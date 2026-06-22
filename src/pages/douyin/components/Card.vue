@@ -10,6 +10,8 @@
         :touch-ratio="1"
         :breakpoints="breakpoints"
         class="card-swiper"
+        @swiper="syncActivePageIndex"
+        @slide-change="syncActivePageIndex"
       >
         <SwiperSlide v-for="(page, idx) in pages" :key="idx" class="card-slide">
           <div class="card-item">
@@ -21,19 +23,12 @@
                     class="content-spacer"
                     aria-hidden="true"
                   />
-                  <p
-                    v-else
-                    :class="[
-                      'content-paragraph',
-                      { 'content-paragraph--title': paragraph.isTitle },
-                    ]"
-                  >
+                  <p v-else class="content-paragraph">
                     <span
                       v-for="(part, partIndex) in paragraph.parts"
                       :key="partIndex"
                       :class="[
                         {
-                          'content-title-text': paragraph.isTitle,
                           'content-emphasis': part.emphasis,
                         },
                       ]"
@@ -52,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useStore } from "../store";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
@@ -63,46 +58,63 @@ type TextPart = {
 };
 type Paragraph = {
   parts: TextPart[];
-  isTitle: boolean;
   isSpacer: boolean;
 };
 
 const store = useStore();
 const formData = computed(() => store.formData);
-const paragraphs = computed<Paragraph[]>(() => {
-  let hasTitle = false;
+const pages = computed<Paragraph[][]>(() =>
+  getContentSlides(formData.value.content)
+    .map((slide) => getParagraphs(slide))
+    .filter((page) => page.some((paragraph) => !paragraph.isSpacer)),
+);
+const pageNumberPattern = /^(?:0\d|1\d)$/;
 
-  return getParagraphLines(formData.value.content).map((line) => {
+function getParagraphs(text: string) {
+  return getParagraphLines(text).map((line) => {
     const isSpacer = line === "";
-    const isTitle = !isSpacer && !hasTitle;
-
-    if (isTitle) {
-      hasTitle = true;
-    }
 
     return {
       parts: isSpacer ? [] : parseEmphasis(line),
-      isTitle,
       isSpacer,
     };
   });
-});
-const pages = computed(() =>
-  paragraphs.value.some((paragraph) => !paragraph.isSpacer)
-    ? [paragraphs.value]
-    : [],
-);
+}
 
 function getParagraphLines(text: string) {
   const lines = normalizeText(text)
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => !line.startsWith("#") && line !== "/");
+    .filter(
+      (line) =>
+        !line.startsWith("#") && line !== "/" && !pageNumberPattern.test(line),
+    );
 
   return trimEmptyLines(lines);
 }
 function normalizeText(text: string) {
   return text.replace(/\r\n/g, "\n");
+}
+function getContentSlides(content: string) {
+  const lines = normalizeText(content)
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => !line.trim().startsWith("#") && line.trim() !== "/");
+  const slides = lines.reduce<string[][]>(
+    (result, line) => {
+      const currentSlide = result[result.length - 1];
+
+      if (pageNumberPattern.test(line.trim()) && currentSlide.some(Boolean)) {
+        result.push([]);
+      }
+
+      result[result.length - 1].push(line);
+      return result;
+    },
+    [[]],
+  );
+
+  return slides.map((item) => item.join("\n").trim()).filter(Boolean);
 }
 function trimEmptyLines(lines: string[]) {
   const result = [...lines];
@@ -138,6 +150,20 @@ const breakpoints = {
   768: { slidesPerView: 2 },
   1024: { slidesPerView: 3 },
 };
+
+function syncActivePageIndex(swiper: { activeIndex?: number }) {
+  store.activePageIndex = Math.max(swiper.activeIndex ?? 0, 0);
+}
+
+watch(
+  pages,
+  (items) => {
+    if (store.activePageIndex >= items.length) {
+      store.activePageIndex = Math.max(items.length - 1, 0);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <style lang="less" scoped>
@@ -214,42 +240,10 @@ const breakpoints = {
   height: 13px;
 }
 
-.content-paragraph--title {
-  position: relative;
-  color: #111111;
-  font-weight: 700;
-  line-height: 1.5;
-  padding-left: 0;
-  padding-bottom: 9px;
-}
-
-.content-paragraph--title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 36px;
-  height: 2px;
-  background: currentColor;
-}
-
-.content-paragraph--title + .content-paragraph {
-  margin-top: 20px;
-}
-
-.content-paragraph--title + .content-spacer {
-  height: 20px;
-}
-
-.content-title-text,
 .content-emphasis {
   display: inline;
   color: #111111;
   font-weight: 700;
-}
-
-.content-title-text {
-  font-size: 14px;
 }
 
 .content-emphasis {

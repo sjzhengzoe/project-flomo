@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 
 const useStore = defineStore("douyinStore", {
   state: () => ({
+    activePageIndex: 0,
     formData: {
       content:
         localStorage.getItem(`DOUYIN_FORM_DATA_CONTENT`) ||

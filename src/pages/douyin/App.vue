@@ -44,7 +44,7 @@
     <div v-if="copyToastVisible" class="copy-toast">复制成功</div>
 
     <div
-      v-if="imagePreviewUrl"
+      v-if="imagePreviewUrls.length"
       class="image-preview"
       @click="closeImagePreview"
     >
@@ -56,7 +56,26 @@
         >
           ×
         </button>
-        <img class="image-preview__img" :src="imagePreviewUrl" alt="图片预览" />
+        <Swiper
+          :modules="previewModules"
+          :slides-per-view="1"
+          :space-between="16"
+          :speed="300"
+          :touch-ratio="1"
+          class="image-preview__swiper"
+        >
+          <SwiperSlide
+            v-for="(url, index) in imagePreviewUrls"
+            :key="url"
+            class="image-preview__slide"
+          >
+            <img
+              class="image-preview__img"
+              :src="url"
+              :alt="`图片预览 ${index + 1}`"
+            />
+          </SwiperSlide>
+        </Swiper>
       </div>
     </div>
 
@@ -106,6 +125,8 @@ import { useCommonStore } from "@/store/commonStore";
 import Header from "@/components/Header.vue";
 import Card from "./components/Card.vue";
 import { Clipboard, Copy, Pencil, Download } from "lucide-vue-next";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import "swiper/css";
 import {
   convertBackgroundImagesToBase64,
   replaceSVGCSSVariables,
@@ -117,11 +138,13 @@ const loadingStore = useCommonStore();
 const formData = computed(() => store.formData);
 const showEditModal = ref(false);
 const isDownloading = ref(false);
-const imagePreviewUrl = ref("");
+const imagePreviewUrls = ref<string[]>([]);
 const copyToastVisible = ref(false);
 let copyToastTimer: ReturnType<typeof window.setTimeout> | undefined;
 const IMAGE_EXPORT_WIDTH = 2160;
+const DOUYIN_COPY_PREFIX = "最近的一些想法：";
 const DOUYIN_TAGS = "#文字的力量 #记录真是生活 #思考 #讨论";
+const previewModules: any[] = [];
 
 const editFormData = reactive({
   content: "",
@@ -138,6 +161,7 @@ const closeEditModal = () => {
 
 const handleSaveEdit = () => {
   store.formData.content = editFormData.content.trim();
+  store.activePageIndex = 0;
   persistAll();
   closeEditModal();
 };
@@ -148,6 +172,7 @@ const handlePasteContent = async () => {
     if (!text) return;
 
     store.formData.content = text.trim();
+    store.activePageIndex = 0;
     persistAll();
   } catch (err) {
     console.error("读取剪贴板失败:", err);
@@ -167,22 +192,81 @@ const handleCopyContent = async () => {
 };
 
 const getCopyableContent = (content: string) => {
-  const lines = content
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => !line.startsWith("#") && line !== "/");
+  const contentLines = getContentLines(content);
+  const slides = getVisibleContentSlides(content);
+  if (!slides.length) return "";
+
+  const hasPageNumbers = contentLines.some((line) => isPageNumber(line.trim()));
+  const slideIndex = hasPageNumbers
+    ? Math.min(store.activePageIndex, slides.length - 1)
+    : 0;
+  const lines = getCopyableLines(slides[slideIndex]).filter(
+    (line) => !isPageNumber(line),
+  );
 
   if (!lines.length) return "";
 
-  const titleIndex = lines.findIndex(Boolean);
-  if (titleIndex < 0) return "";
-
-  const bodyLines = trimEmptyLines(lines.slice(titleIndex + 1));
+  const bodyLines = hasPageNumbers
+    ? trimEmptyLines(lines)
+    : getBodyLinesWithoutTitle(lines);
   if (!bodyLines.length) return DOUYIN_TAGS;
 
-  return [bodyLines.join("\n"), DOUYIN_TAGS].join("\n\n");
+  return [[DOUYIN_COPY_PREFIX, bodyLines.join("\n")].join("\n"), DOUYIN_TAGS].join(
+    "\n\n",
+  );
 };
+
+function getContentLines(content: string) {
+  return normalizeText(content)
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .filter((line) => !line.trim().startsWith("#") && line.trim() !== "/");
+}
+
+function getContentSlides(content: string) {
+  const lines = getContentLines(content);
+  const slides = lines.reduce<string[][]>(
+    (result, line) => {
+      const currentSlide = result[result.length - 1];
+
+      if (isPageNumber(line.trim()) && currentSlide.some(Boolean)) {
+        result.push([]);
+      }
+
+      result[result.length - 1].push(line);
+      return result;
+    },
+    [[]],
+  );
+
+  return slides.map((item) => item.join("\n").trim()).filter(Boolean);
+}
+
+function getVisibleContentSlides(content: string) {
+  return getContentSlides(content).filter((slide) =>
+    getCopyableLines(slide).some((line) => line && !isPageNumber(line)),
+  );
+}
+
+function getCopyableLines(content: string) {
+  return normalizeText(content)
+    .split("\n")
+    .map((line) => line.trim());
+}
+
+function normalizeText(text: string) {
+  return text.replace(/\r\n/g, "\n");
+}
+
+function getBodyLinesWithoutTitle(lines: string[]) {
+  const titleIndex = lines.findIndex(Boolean);
+
+  if (titleIndex < 0) {
+    return [];
+  }
+
+  return trimEmptyLines(lines.slice(titleIndex + 1));
+}
 
 function trimEmptyLines(lines: string[]) {
   const result = [...lines];
@@ -211,10 +295,8 @@ const showCopyToast = () => {
 };
 
 const closeImagePreview = () => {
-  if (imagePreviewUrl.value) {
-    URL.revokeObjectURL(imagePreviewUrl.value);
-    imagePreviewUrl.value = "";
-  }
+  imagePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url));
+  imagePreviewUrls.value = [];
 };
 
 onBeforeUnmount(() => {
@@ -230,15 +312,24 @@ const handlePreviewImage = async () => {
 
   loadingStore.showLoading();
 
+  const urls: string[] = [];
   try {
     await document.fonts.ready;
-    const node = document.getElementById("pic_0");
-    if (!node) return;
-
-    const blob = await generateImage(node);
     closeImagePreview();
-    imagePreviewUrl.value = URL.createObjectURL(blob);
+
+    let index = 0;
+    while (true) {
+      const node = document.getElementById(`pic_${index}`);
+      if (!node) break;
+
+      const blob = await generateImage(node);
+      urls.push(URL.createObjectURL(blob));
+      index++;
+    }
+
+    imagePreviewUrls.value = urls;
   } catch (err) {
+    urls.forEach((url) => URL.revokeObjectURL(url));
     console.error("生成预览失败:", err);
   } finally {
     loadingStore.hideLoading();
@@ -274,6 +365,10 @@ async function generateImage(node: HTMLElement): Promise<Blob> {
 
 function persistAll() {
   localStorage.setItem("DOUYIN_FORM_DATA_CONTENT", formData.value.content);
+}
+
+function isPageNumber(line: string) {
+  return /^(?:0\d|1\d)$/.test(line);
 }
 </script>
 
@@ -382,13 +477,24 @@ function persistAll() {
 
 .image-preview__content {
   position: relative;
+  width: min(100%, 460px);
   max-width: 100%;
-  max-height: 100%;
+}
+
+.image-preview__swiper {
+  width: 100%;
+  max-height: 84vh;
+}
+
+.image-preview__slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image-preview__img {
   display: block;
-  max-width: min(86vw, 420px);
+  width: min(100%, 420px);
   max-height: 84vh;
   border-radius: 12px;
   object-fit: contain;
