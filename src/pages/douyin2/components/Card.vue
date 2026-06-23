@@ -105,7 +105,6 @@ function getParagraphLines(text: string) {
 function normalizeText(text: string) {
   return text.replace(/\r\n/g, "\n");
 }
-const pageNumberPattern = /^(?:0\d|1\d)$/;
 function getContentSlides(content: string) {
   const lines = normalizeText(content)
     .split("\n")
@@ -115,7 +114,7 @@ function getContentSlides(content: string) {
     (result, line) => {
       const currentSlide = result[result.length - 1];
 
-      if (pageNumberPattern.test(line.trim()) && currentSlide.some(Boolean)) {
+      if (isPageBreakLine(line) && currentSlide.some(Boolean)) {
         result.push([]);
       }
 
@@ -126,6 +125,9 @@ function getContentSlides(content: string) {
   );
 
   return slides.map((item) => item.join("\n").trim()).filter(Boolean);
+}
+function isPageBreakLine(line: string) {
+  return line.trim().startsWith("[");
 }
 function trimEmptyLines(lines: string[]) {
   const result = [...lines];

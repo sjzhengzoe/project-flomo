@@ -143,7 +143,6 @@ const copyToastVisible = ref(false);
 let copyToastTimer: ReturnType<typeof window.setTimeout> | undefined;
 const IMAGE_EXPORT_WIDTH = 2160;
 const DOUYIN_TAGS = "#文字的力量 #记录真是生活 #思考 #讨论";
-const pageNumberPattern = /^(?:0\d|1\d)$/;
 const previewModules: any[] = [];
 
 const editFormData = reactive({
@@ -197,8 +196,8 @@ const getCopyableContent = (content: string) => {
     .filter(
       (line) => !line.startsWith("#") && line !== "/",
     );
-  const hasPageTitles = rawLines.some((line) => pageNumberPattern.test(line));
-  const lines = rawLines.filter((line) => !pageNumberPattern.test(line));
+  const hasPageTitles = rawLines.some(isPageBreakLine);
+  const lines = rawLines.filter((line) => !isPageBreakLine(line));
 
   if (!lines.length) return "";
 
@@ -212,6 +211,10 @@ const getCopyableContent = (content: string) => {
 
   return [bodyLines.join("\n"), DOUYIN_TAGS].join("\n\n");
 };
+
+function isPageBreakLine(line: string) {
+  return line.trim().startsWith("[");
+}
 
 function trimEmptyLines(lines: string[]) {
   const result = [...lines];
