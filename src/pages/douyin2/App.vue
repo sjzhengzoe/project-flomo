@@ -213,7 +213,7 @@ const getCopyableContent = (content: string) => {
 };
 
 function isPageBreakLine(line: string) {
-  return line.trim().startsWith("[");
+  return line.trim().startsWith("［");
 }
 
 function trimEmptyLines(lines: string[]) {

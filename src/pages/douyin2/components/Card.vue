@@ -127,7 +127,7 @@ function getContentSlides(content: string) {
   return slides.map((item) => item.join("\n").trim()).filter(Boolean);
 }
 function isPageBreakLine(line: string) {
-  return line.trim().startsWith("[");
+  return line.trim().startsWith("［");
 }
 function trimEmptyLines(lines: string[]) {
   const result = [...lines];
