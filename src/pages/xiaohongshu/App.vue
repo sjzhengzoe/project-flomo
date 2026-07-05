@@ -37,6 +37,15 @@
         :disabled="isDownloading"
         title="预览图片"
       >
+        <Eye class="action-btn__icon" :size="22" />
+      </button>
+      <button
+        type="button"
+        class="action-btn"
+        @click="handleDownloadImages"
+        :disabled="isDownloading"
+        title="下载图片"
+      >
         <Download class="action-btn__icon" :size="22" />
       </button>
     </div>
@@ -49,13 +58,6 @@
       @click="closeImagePreview"
     >
       <div class="image-preview__content" @click.stop>
-        <button
-          type="button"
-          class="image-preview__close"
-          @click="closeImagePreview"
-        >
-          ×
-        </button>
         <Swiper
           :modules="previewModules"
           :slides-per-view="1"
@@ -121,10 +123,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref } from "vue";
 import { useStore } from "./store";
+import { useStore as useDouyinStore } from "@/pages/douyin/store";
 import { useCommonStore } from "@/store/commonStore";
 import Header from "@/components/Header.vue";
 import Card from "./components/Card.vue";
-import { Clipboard, Copy, Pencil, Download } from "lucide-vue-next";
+import { Clipboard, Copy, Pencil, Download, Eye } from "lucide-vue-next";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
 import {
@@ -132,8 +135,11 @@ import {
   replaceSVGCSSVariables,
 } from "@/utils/dataToImages";
 import html2canvas from "html2canvas";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 const store = useStore();
+const douyinStore = useDouyinStore();
 const loadingStore = useCommonStore();
 const formData = computed(() => store.formData);
 const showEditModal = ref(false);
@@ -171,8 +177,7 @@ const handlePasteContent = async () => {
     const text = await navigator.clipboard.readText();
     if (!text) return;
 
-    store.formData.content = text.trim();
-    persistAll();
+    syncPastedContent(text.trim());
   } catch (err) {
     console.error("读取剪贴板失败:", err);
   }
@@ -244,18 +249,10 @@ const handlePreviewImage = async () => {
 
   const urls: string[] = [];
   try {
-    await document.fonts.ready;
     closeImagePreview();
 
-    let index = 0;
-    while (true) {
-      const node = document.getElementById(`pic_${index}`);
-      if (!node) break;
-
-      const blob = await generateImage(node);
-      urls.push(URL.createObjectURL(blob));
-      index++;
-    }
+    const blobs = await generatePreviewImageBlobs();
+    blobs.forEach((blob) => urls.push(URL.createObjectURL(blob)));
 
     imagePreviewUrls.value = urls;
   } catch (err) {
@@ -266,6 +263,58 @@ const handlePreviewImage = async () => {
     isDownloading.value = false;
   }
 };
+
+const handleDownloadImages = async () => {
+  if (isDownloading.value) return;
+  isDownloading.value = true;
+
+  loadingStore.showLoading();
+
+  try {
+    const blobs = await generatePreviewImageBlobs();
+    await saveImageBlobs(blobs);
+  } catch (err) {
+    console.error("下载失败:", err);
+  } finally {
+    loadingStore.hideLoading();
+    isDownloading.value = false;
+  }
+};
+
+async function generatePreviewImageBlobs() {
+  await document.fonts.ready;
+
+  const blobs: Blob[] = [];
+  let index = 0;
+
+  while (true) {
+    const node = document.getElementById(`pic_${index}`);
+    if (!node) break;
+
+    const blob = await generateImage(node);
+    blobs.push(blob);
+    index++;
+  }
+
+  return blobs;
+}
+
+async function saveImageBlobs(blobs: Blob[]) {
+  if (!blobs.length) return;
+
+  const zip = new JSZip();
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+  blobs.forEach((blob, index) => {
+    zip.file(`xiaohongshu_${String(index + 1).padStart(2, "0")}.png`, blob, {
+      date: localDate,
+    });
+  });
+
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  saveAs(zipBlob, getDownloadFileName());
+}
 
 async function generateImage(node: HTMLElement): Promise<Blob> {
   await convertBackgroundImagesToBase64(node);
@@ -291,6 +340,33 @@ async function generateImage(node: HTMLElement): Promise<Blob> {
       "image/png",
     );
   });
+}
+
+function getDownloadFileName() {
+  const date = getContentDate(formData.value.content)
+    .replace(/[^\d]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return `xiaohongshu_${date}.zip`;
+}
+
+function getContentDate(content: string) {
+  return (
+    content
+      .replace(/\r\n/g, "\n")
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => /^\d{4}\.\d{2}\.\d{2}/.test(line)) || "flomo"
+  );
+}
+
+function syncPastedContent(content: string) {
+  store.formData.content = content;
+  douyinStore.formData.content = content;
+  douyinStore.activePageIndex = 0;
+  persistAll();
+  localStorage.setItem("DOUYIN_FORM_DATA_CONTENT", content);
 }
 
 function persistAll() {
@@ -426,21 +502,6 @@ function persistAll() {
   object-fit: contain;
   -webkit-touch-callout: default;
   user-select: auto;
-}
-
-.image-preview__close {
-  position: absolute;
-  top: -14px;
-  right: -14px;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  color: #111111;
-  font-size: 22px;
-  line-height: 34px;
-  cursor: pointer;
 }
 
 .edit-modal {

@@ -121,6 +121,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref } from "vue";
 import { useStore } from "./store";
+import { useStore as useXiaohongshuStore } from "@/pages/xiaohongshu/store";
 import { useCommonStore } from "@/store/commonStore";
 import Header from "@/components/Header.vue";
 import Card from "./components/Card.vue";
@@ -134,6 +135,7 @@ import {
 import html2canvas from "html2canvas";
 
 const store = useStore();
+const xiaohongshuStore = useXiaohongshuStore();
 const loadingStore = useCommonStore();
 const formData = computed(() => store.formData);
 const showEditModal = ref(false);
@@ -171,9 +173,7 @@ const handlePasteContent = async () => {
     const text = await navigator.clipboard.readText();
     if (!text) return;
 
-    store.formData.content = text.trim();
-    store.activePageIndex = 0;
-    persistAll();
+    syncPastedContent(text.trim());
   } catch (err) {
     console.error("读取剪贴板失败:", err);
   }
@@ -366,6 +366,14 @@ async function generateImage(node: HTMLElement): Promise<Blob> {
 
 function persistAll() {
   localStorage.setItem("DOUYIN_FORM_DATA_CONTENT", formData.value.content);
+}
+
+function syncPastedContent(content: string) {
+  store.formData.content = content;
+  store.activePageIndex = 0;
+  xiaohongshuStore.formData.content = content;
+  persistAll();
+  localStorage.setItem("XIAOHONGSHU_FORM_DATA_CONTENT", content);
 }
 
 function isPageNumber(line: string) {
