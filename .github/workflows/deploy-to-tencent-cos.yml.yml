@@ -28,7 +28,14 @@ jobs:
           script: |
             cd /home/ubuntu/project-flomo
             git pull
+            corepack enable
+            corepack prepare pnpm@8.15.9 --activate
             pnpm install --no-frozen-lockfile
             sudo rm -rf dist
             pnpm run build
+            if systemctl list-unit-files | grep -q '^project-flomo-server.service'; then
+              sudo systemctl restart project-flomo-server
+            else
+              echo "project-flomo-server.service is not installed; skip server restart"
+            fi
             sudo nginx -s reload
