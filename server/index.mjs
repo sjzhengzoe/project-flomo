@@ -1,65 +1,412 @@
-import http from "node:http";
+import Fastify from "fastify";
+import multipart from "@fastify/multipart";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
+import { config, getMissingRuntimeConfig } from "./config.mjs";
+import {
+  loginWithWechatCode,
+  logoutSession,
+  requireAuth,
+  requireWriteAccess,
+} from "./lib/auth.mjs";
+import {
+  createDish,
+  deleteDish,
+  getDish,
+  listCategories,
+  listDishes,
+  readMultipartImage,
+  reorderDishes,
+  replaceDishImage,
+  swapDishSortOrders,
+  toDishResponse,
+  updateDish,
+  updatePrintStatus,
+} from "./lib/dishes.mjs";
+import { HttpError } from "./lib/errors.mjs";
+import {
+  createActivityItem,
+  createDiningPlace,
+  createLuggageGroup,
+  createLuggageItem,
+  createLuggageScene,
+  createMediaEntry,
+  deleteActivityItem,
+  deleteDiningPlace,
+  deleteLuggageGroup,
+  deleteLuggageItem,
+  deleteLuggageScene,
+  deleteMediaEntry,
+  getDiningPlace,
+  getMediaEntry,
+  listActivityItems,
+  listDiningPlaces,
+  listLuggageScenes,
+  listMediaEntries,
+  reorderMediaEntries,
+  swapMediaEntrySortOrders,
+  updateActivityItem,
+  updateDiningPlace,
+  updateLuggageGroup,
+  updateLuggageItem,
+  updateLuggageScene,
+  updateMediaEntry,
+} from "./lib/life-lists.mjs";
+import { getSupabaseAdmin as getDefaultSupabaseAdmin } from "./lib/supabase.mjs";
+import { readAvatarImage, updateUserAvatar } from "./lib/user-profile.mjs";
 
-const host = process.env.HOST || "127.0.0.1";
-const port = Number(process.env.PORT || 3000);
-
-function sendJson(res, statusCode, data) {
-  const body = JSON.stringify(data);
-
-  res.writeHead(statusCode, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Content-Length": Buffer.byteLength(body),
-    "Cache-Control": "no-store",
+export function buildServer(options = {}) {
+  const getSupabaseAdmin = () => options.supabase ?? getDefaultSupabaseAdmin();
+  const app = Fastify({
+    logger: options.logger ?? config.nodeEnv !== "test",
+    bodyLimit: config.maxUploadSizeMb * 1024 * 1024 + 1024 * 1024,
   });
-  res.end(body);
-}
 
-function sendNotFound(res) {
-  sendJson(res, 404, {
-    ok: false,
-    error: "Not Found",
+  app.register(multipart, {
+    limits: {
+      files: 1,
+      fileSize: config.maxUploadSizeMb * 1024 * 1024,
+      fields: 10,
+    },
   });
-}
 
-function handleApiRequest(req, res, pathname) {
-  if (req.method === "GET" && pathname === "/api/health") {
-    sendJson(res, 200, {
+  app.addHook("onSend", async (request, reply, payload) => {
+    if (request.url.startsWith("/api/")) {
+      reply.header("Cache-Control", "no-store");
+    }
+    return payload;
+  });
+
+  const authenticated = async (request) => {
+    await requireAuth(getSupabaseAdmin(), request);
+  };
+  const profileCompletionAuthenticated = async (request) => {
+    await requireAuth(getSupabaseAdmin(), request, { allowIncompleteProfile: true });
+  };
+  const writable = async (request) => {
+    await requireAuth(getSupabaseAdmin(), request);
+    requireWriteAccess(request);
+  };
+
+  app.get("/api/health", async () => ({
+    ok: true,
+    service: "project-flomo-server",
+    configured: getMissingRuntimeConfig().length === 0,
+    missing_config: getMissingRuntimeConfig(),
+    uptime: Math.round(process.uptime()),
+  }));
+
+  app.post("/api/auth/wechat", async (request) => {
+    return {
       ok: true,
-      service: "project-flomo-server",
-      uptime: Math.round(process.uptime()),
+      data: await loginWithWechatCode(getSupabaseAdmin(), request.body?.code, {
+        displayName: request.body?.display_name,
+        avatarUrl: request.body?.avatar_url,
+      }),
+    };
+  });
+
+  app.post("/api/auth/avatar", { preHandler: profileCompletionAuthenticated }, async (request) => {
+    const avatar = await readAvatarImage(request);
+    const avatarUrl = await updateUserAvatar(
+      getSupabaseAdmin(),
+      request.auth.user.id,
+      avatar,
+    );
+    return {
+      ok: true,
+      data: { user: { ...request.auth.user, avatar_url: avatarUrl } },
+    };
+  });
+
+  app.get("/api/auth/me", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { user: request.auth.user },
+  }));
+
+  app.post("/api/auth/logout", { preHandler: profileCompletionAuthenticated }, async (request) => {
+    await logoutSession(getSupabaseAdmin(), request);
+    return { ok: true };
+  });
+
+  app.get("/api/categories", { preHandler: authenticated }, async () => ({
+    ok: true,
+    data: { items: await listCategories(getSupabaseAdmin()) },
+  }));
+
+  app.get("/api/dishes", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: await listDishes(getSupabaseAdmin(), request.query || {}),
+  }));
+
+  app.get("/api/dishes/:id", { preHandler: authenticated }, async (request) => {
+    const supabase = getSupabaseAdmin();
+    return {
+      ok: true,
+      data: { dish: toDishResponse(supabase, await getDish(supabase, request.params.id)) },
+    };
+  });
+
+  app.post("/api/dishes", { preHandler: writable }, async (request, reply) => {
+    const { fields, image } = await readMultipartImage(request);
+    const dish = await createDish(getSupabaseAdmin(), fields, image);
+    return reply.code(201).send({ ok: true, data: { dish } });
+  });
+
+  app.put("/api/dishes/print-status", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await updatePrintStatus(getSupabaseAdmin(), request.body || {}),
+  }));
+
+  app.put("/api/dishes/reorder", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await reorderDishes(getSupabaseAdmin(), request.body || {}),
+  }));
+
+  app.put("/api/dishes/order/swap", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await swapDishSortOrders(getSupabaseAdmin(), request.body || {}),
+  }));
+
+  app.put("/api/dishes/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: { dish: await updateDish(getSupabaseAdmin(), request.params.id, request.body || {}) },
+  }));
+
+  app.post("/api/dishes/:id/image", { preHandler: writable }, async (request) => {
+    const { image } = await readMultipartImage(request);
+    return {
+      ok: true,
+      data: { dish: await replaceDishImage(getSupabaseAdmin(), request.params.id, image) },
+    };
+  });
+
+  app.delete("/api/dishes/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteDish(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.get("/api/media", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { items: await listMediaEntries(getSupabaseAdmin(), request.query || {}) },
+  }));
+
+  app.get("/api/media/:id", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { item: await getMediaEntry(getSupabaseAdmin(), request.params.id) },
+  }));
+
+  app.post("/api/media", { preHandler: writable }, async (request, reply) => {
+    const item = await createMediaEntry(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/media/reorder", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await reorderMediaEntries(getSupabaseAdmin(), request.body || {}),
+  }));
+
+  app.put("/api/media/order/swap", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await swapMediaEntrySortOrders(getSupabaseAdmin(), request.body || {}),
+  }));
+
+  app.put("/api/media/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateMediaEntry(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/media/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteMediaEntry(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.get("/api/activities", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { items: await listActivityItems(getSupabaseAdmin(), request.query || {}) },
+  }));
+
+  app.post("/api/activities", { preHandler: writable }, async (request, reply) => {
+    const item = await createActivityItem(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/activities/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateActivityItem(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/activities/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteActivityItem(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.get("/api/luggage", { preHandler: authenticated }, async () => ({
+    ok: true,
+    data: { items: await listLuggageScenes(getSupabaseAdmin()) },
+  }));
+
+  app.post("/api/luggage/scenes", { preHandler: writable }, async (request, reply) => {
+    const item = await createLuggageScene(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/luggage/scenes/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateLuggageScene(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/luggage/scenes/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteLuggageScene(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.post("/api/luggage/groups", { preHandler: writable }, async (request, reply) => {
+    const item = await createLuggageGroup(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/luggage/groups/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateLuggageGroup(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/luggage/groups/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteLuggageGroup(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.post("/api/luggage/items", { preHandler: writable }, async (request, reply) => {
+    const item = await createLuggageItem(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/luggage/items/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateLuggageItem(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/luggage/items/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteLuggageItem(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.get("/api/dining", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { items: await listDiningPlaces(getSupabaseAdmin(), request.query || {}) },
+  }));
+
+  app.get("/api/dining/:id", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { item: await getDiningPlace(getSupabaseAdmin(), request.params.id) },
+  }));
+
+  app.post("/api/dining", { preHandler: writable }, async (request, reply) => {
+    const item = await createDiningPlace(getSupabaseAdmin(), request.body || {});
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/dining/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateDiningPlace(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/dining/:id", { preHandler: writable }, async (request, reply) => {
+    await deleteDiningPlace(getSupabaseAdmin(), request.params.id);
+    return reply.code(204).send();
+  });
+
+  app.setNotFoundHandler((_request, reply) => {
+    reply.code(404).send({
+      ok: false,
+      error: { code: "NOT_FOUND", message: "Not Found" },
     });
-    return;
-  }
+  });
 
-  sendNotFound(res);
-}
-
-const server = http.createServer((req, res) => {
-  const requestUrl = new URL(req.url || "/", `http://${req.headers.host || host}`);
-
-  if (requestUrl.pathname.startsWith("/api/")) {
-    handleApiRequest(req, res, requestUrl.pathname);
-    return;
-  }
-
-  sendNotFound(res);
-});
-
-server.listen(port, host, () => {
-  console.log(`project-flomo server listening on http://${host}:${port}`);
-});
-
-function shutdown(signal) {
-  console.log(`received ${signal}, shutting down server`);
-  server.close((error) => {
-    if (error) {
-      console.error(error);
-      process.exit(1);
+  app.setErrorHandler((error, request, reply) => {
+    if (!(error instanceof HttpError)) {
+      request.log.error(error);
+    } else if (error.cause) {
+      request.log.error(error.cause);
     }
 
-    process.exit(0);
+    const statusCode = error instanceof HttpError ? error.statusCode : error.statusCode || 500;
+    const code = error instanceof HttpError ? error.code : error.code || "INTERNAL_ERROR";
+    const message =
+      error instanceof HttpError
+        ? error.message
+        : statusCode === 413
+          ? "上传文件过大。"
+          : "服务器暂时无法处理请求。";
+
+    reply.code(statusCode).send({
+      ok: false,
+      error: {
+        code,
+        message,
+        ...(error instanceof HttpError && error.details ? { details: error.details } : {}),
+      },
+    });
   });
+
+  return app;
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+async function start() {
+  const app = buildServer();
+  const shutdown = async (signal) => {
+    app.log.info({ signal }, "shutting down");
+    await app.close();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+
+  await app.listen({ host: config.host, port: config.port });
+}
+
+const isMainModule =
+  process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url));
+
+if (isMainModule) {
+  start().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

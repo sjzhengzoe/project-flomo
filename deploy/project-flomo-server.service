@@ -9,6 +9,7 @@ WorkingDirectory=/home/ubuntu/project-flomo
 Environment=NODE_ENV=production
 Environment=HOST=127.0.0.1
 Environment=PORT=3000
+EnvironmentFile=-/etc/project-flomo.env
 ExecStart=/usr/bin/env node server/index.mjs
 Restart=always
 RestartSec=3

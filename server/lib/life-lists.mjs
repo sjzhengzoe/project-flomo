@@ -1,0 +1,519 @@
+import { assertCondition } from "./errors.mjs";
+import { throwSupabaseError } from "./supabase.mjs";
+
+export const MEDIA_TYPES = ["电影", "电视剧", "动漫", "动画", "广播剧", "小说"];
+export const MEDIA_STATUSES = ["planned", "in_progress", "completed"];
+export const MEDIA_PLATFORMS = ["腾讯视频", "爱奇艺", "哔哩哔哩", "夸克", "优酷", "芒果 TV"];
+export const ACTIVITY_TYPES = ["室内", "户外", "居家"];
+export const DINING_MODES = ["takeout", "dine_in"];
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function requiredText(value, fieldName, maxLength = 120) {
+  assertCondition(
+    typeof value === "string" && value.trim().length > 0,
+    400,
+    "TEXT_REQUIRED",
+    `请填写${fieldName}。`,
+  );
+  const text = value.trim();
+  assertCondition(
+    text.length <= maxLength,
+    400,
+    "TEXT_TOO_LONG",
+    `${fieldName}不能超过 ${maxLength} 个字符。`,
+  );
+  return text;
+}
+
+function textArray(value, fieldName, maxItems = 30) {
+  assertCondition(Array.isArray(value), 400, "INVALID_ARRAY", `${fieldName}格式无效。`);
+  const items = [...new Set(value.map((item) => String(item).trim()).filter(Boolean))];
+  assertCondition(items.length <= maxItems, 400, "TOO_MANY_ITEMS", `${fieldName}数量过多。`);
+  assertCondition(
+    items.every((item) => item.length <= 80),
+    400,
+    "ITEM_TOO_LONG",
+    `${fieldName}中的单项不能超过 80 个字符。`,
+  );
+  return items;
+}
+
+function enumValue(value, allowed, fieldName) {
+  assertCondition(
+    typeof value === "string" && allowed.includes(value),
+    400,
+    "INVALID_ENUM_VALUE",
+    `${fieldName}无效。`,
+  );
+  return value;
+}
+
+function mediaPlatforms(value) {
+  const platforms = textArray(value, "平台", MEDIA_PLATFORMS.length);
+  assertCondition(
+    platforms.every((platform) => MEDIA_PLATFORMS.includes(platform)),
+    400,
+    "INVALID_MEDIA_PLATFORM",
+    "影视平台无效，请从给出的选项中选择。",
+  );
+  return platforms;
+}
+
+async function nextSortOrder(supabase, table, filters = {}) {
+  let query = supabase
+    .from(table)
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1);
+  Object.entries(filters).forEach(([key, value]) => {
+    query = query.eq(key, value);
+  });
+  const { data, error } = await query.maybeSingle();
+  throwSupabaseError(error, "读取排序位置失败。");
+  return Number(data?.sort_order || 0) + 1000;
+}
+
+async function requireRecord(supabase, table, id, fields = "*") {
+  const { data, error } = await supabase
+    .from(table)
+    .select(fields)
+    .eq("id", id)
+    .maybeSingle();
+  throwSupabaseError(error, "读取记录失败。");
+  assertCondition(data, 404, "RECORD_NOT_FOUND", "记录不存在。" );
+  return data;
+}
+
+export async function listMediaEntries(supabase, query) {
+  const mediaType = query.media_type
+    ? enumValue(query.media_type, MEDIA_TYPES, "影视分类")
+    : MEDIA_TYPES[0];
+  let request = supabase
+    .from("media_entries")
+    .select("*")
+    .eq("media_type", mediaType);
+
+  if (query.watch_status) {
+    request = request.eq(
+      "watch_status",
+      enumValue(query.watch_status, MEDIA_STATUSES, "观看状态"),
+    );
+  }
+  if (typeof query.keyword === "string" && query.keyword.trim()) {
+    request = request.ilike("title", `%${query.keyword.trim().slice(0, 80)}%`);
+  }
+  if (query.sort === "created_desc") {
+    request = request.order("created_at", { ascending: false });
+  } else {
+    request = request
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+  }
+
+  const { data, error } = await request;
+  throwSupabaseError(error, "读取影视清单失败。");
+  return data;
+}
+
+export async function getMediaEntry(supabase, id) {
+  assertCondition(UUID_PATTERN.test(id), 400, "INVALID_ID", "影视条目编号无效。");
+  return requireRecord(supabase, "media_entries", id);
+}
+
+export async function createMediaEntry(supabase, body) {
+  const mediaType = enumValue(body.media_type, MEDIA_TYPES, "影视分类");
+  const { data, error } = await supabase
+    .rpc("create_media_entry_at_end", {
+      p_title: requiredText(body.title, "名称"),
+      p_media_type: mediaType,
+      p_watch_status: enumValue(
+        body.watch_status || "planned",
+        MEDIA_STATUSES,
+        "观看状态",
+      ),
+      p_platforms: mediaPlatforms(body.platforms || []),
+    })
+    .single();
+  throwSupabaseError(error, "新增影视条目失败。");
+  return data;
+}
+
+export async function updateMediaEntry(supabase, id, body) {
+  await requireRecord(supabase, "media_entries", id, "id");
+  const changes = {};
+  if (body.title !== undefined) changes.title = requiredText(body.title, "名称");
+  if (body.media_type !== undefined) {
+    changes.media_type = enumValue(body.media_type, MEDIA_TYPES, "影视分类");
+  }
+  if (body.watch_status !== undefined) {
+    changes.watch_status = enumValue(body.watch_status, MEDIA_STATUSES, "观看状态");
+  }
+  if (body.platforms !== undefined) changes.platforms = mediaPlatforms(body.platforms);
+  assertCondition(Object.keys(changes).length > 0, 400, "NO_CHANGES", "没有需要更新的内容。" );
+  // Any explicit category assignment must be resolved under the destination
+  // category lock. The category may have changed after the existence check.
+  if (changes.media_type) {
+    const { data, error } = await supabase
+      .rpc("move_media_entry_to_type_at_end", {
+        p_entry_id: id,
+        p_title: changes.title ?? null,
+        p_media_type: changes.media_type,
+        p_watch_status: changes.watch_status ?? null,
+        p_platforms: changes.platforms ?? null,
+      })
+      .single();
+    throwSupabaseError(error, "更新影视条目失败。", {
+      P0002: {
+        statusCode: 404,
+        code: "MEDIA_ENTRY_NOT_FOUND",
+        message: "影视条目不存在。",
+      },
+    });
+    return data;
+  }
+
+  const { data, error } = await supabase
+    .from("media_entries")
+    .update(changes)
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新影视条目失败。");
+  return data;
+}
+
+export async function deleteMediaEntry(supabase, id) {
+  await requireRecord(supabase, "media_entries", id, "id");
+  const { error } = await supabase.from("media_entries").delete().eq("id", id);
+  throwSupabaseError(error, "删除影视条目失败。");
+}
+
+export async function reorderMediaEntries(supabase, body) {
+  const mediaType = enumValue(body.media_type, MEDIA_TYPES, "影视分类");
+  const ids = Array.isArray(body.ids) ? body.ids : [];
+  assertCondition(
+    ids.length > 0 && ids.length <= 500 && ids.every((id) => typeof id === "string"),
+    400,
+    "INVALID_IDS",
+    "排序列表无效。",
+  );
+  assertCondition(new Set(ids).size === ids.length, 400, "DUPLICATE_IDS", "排序列表包含重复条目。" );
+  const { error } = await supabase.rpc("reorder_media_entries", {
+    p_media_type: mediaType,
+    p_entry_ids: ids,
+  });
+  throwSupabaseError(error, "保存影视排序失败。", {
+    "22023": {
+      statusCode: 400,
+      code: "INVALID_MEDIA_ORDER",
+      message: "排序列表包含不存在、无效或分类不一致的影视条目。",
+    },
+  });
+  return { updated: ids.length };
+}
+
+export async function swapMediaEntrySortOrders(supabase, body) {
+  const sourceId = typeof body.source_id === "string" ? body.source_id.trim() : "";
+  const targetId = typeof body.target_id === "string" ? body.target_id.trim() : "";
+  assertCondition(
+    UUID_PATTERN.test(sourceId) && UUID_PATTERN.test(targetId),
+    400,
+    "INVALID_IDS",
+    "交换位置的影视条目无效。",
+  );
+  assertCondition(
+    sourceId !== targetId,
+    400,
+    "DUPLICATE_IDS",
+    "请选择两个不同的影视条目交换位置。",
+  );
+
+  const { error } = await supabase.rpc("swap_media_entry_sort_orders", {
+    p_source_id: sourceId,
+    p_target_id: targetId,
+  });
+  throwSupabaseError(error, "交换影视排序失败。", {
+    P0002: {
+      statusCode: 404,
+      code: "MEDIA_ENTRY_NOT_FOUND",
+      message: "交换位置的影视条目不存在。",
+    },
+    "22023": {
+      statusCode: 400,
+      code: "INVALID_MEDIA_SWAP",
+      message: "只能交换同一分类下的影视条目。",
+    },
+  });
+  return { updated: 2 };
+}
+
+export async function listActivityItems(supabase, query) {
+  const activityType = query.activity_type
+    ? enumValue(query.activity_type, ACTIVITY_TYPES, "活动分类")
+    : ACTIVITY_TYPES[0];
+  let request = supabase
+    .from("activity_items")
+    .select("*")
+    .eq("activity_type", activityType);
+  if (typeof query.keyword === "string" && query.keyword.trim()) {
+    request = request.ilike("name", `%${query.keyword.trim().slice(0, 80)}%`);
+  }
+  const { data, error } = await request
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  throwSupabaseError(error, "读取活动清单失败。");
+  return data;
+}
+
+export async function createActivityItem(supabase, body) {
+  const activityType = enumValue(body.activity_type, ACTIVITY_TYPES, "活动分类");
+  const { data, error } = await supabase
+    .from("activity_items")
+    .insert({
+      name: requiredText(body.name, "活动名称"),
+      activity_type: activityType,
+      sort_order: await nextSortOrder(supabase, "activity_items", {
+        activity_type: activityType,
+      }),
+    })
+    .select("*")
+    .single();
+  throwSupabaseError(error, "新增活动失败。");
+  return data;
+}
+
+export async function updateActivityItem(supabase, id, body) {
+  const existing = await requireRecord(
+    supabase,
+    "activity_items",
+    id,
+    "id, activity_type",
+  );
+  const changes = {};
+  if (body.name !== undefined) changes.name = requiredText(body.name, "活动名称");
+  if (body.activity_type !== undefined) {
+    changes.activity_type = enumValue(body.activity_type, ACTIVITY_TYPES, "活动分类");
+    if (changes.activity_type !== existing.activity_type) {
+      changes.sort_order = await nextSortOrder(supabase, "activity_items", {
+        activity_type: changes.activity_type,
+      });
+    }
+  }
+  assertCondition(Object.keys(changes).length > 0, 400, "NO_CHANGES", "没有需要更新的内容。" );
+  const { data, error } = await supabase
+    .from("activity_items")
+    .update(changes)
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新活动失败。");
+  return data;
+}
+
+export async function deleteActivityItem(supabase, id) {
+  await requireRecord(supabase, "activity_items", id, "id");
+  const { error } = await supabase.from("activity_items").delete().eq("id", id);
+  throwSupabaseError(error, "删除活动失败。");
+}
+
+export async function listLuggageScenes(supabase) {
+  const [sceneResult, groupResult, itemResult] = await Promise.all([
+    supabase.from("luggage_scenes").select("*").order("sort_order", { ascending: true }),
+    supabase.from("luggage_groups").select("*").order("sort_order", { ascending: true }),
+    supabase.from("luggage_items").select("*").order("sort_order", { ascending: true }),
+  ]);
+  throwSupabaseError(sceneResult.error, "读取行李场景失败。");
+  throwSupabaseError(groupResult.error, "读取行李层级失败。");
+  throwSupabaseError(itemResult.error, "读取行李物品失败。");
+
+  return sceneResult.data.map((scene) => ({
+    ...scene,
+    groups: groupResult.data
+      .filter((group) => group.scene_id === scene.id)
+      .map((group) => ({
+        ...group,
+        items: itemResult.data.filter((item) => item.group_id === group.id),
+      })),
+  }));
+}
+
+export async function createLuggageScene(supabase, body) {
+  const name = requiredText(body.name, "场景名称", 80);
+  const { data: scene, error } = await supabase
+    .from("luggage_scenes")
+    .insert({
+      name,
+      sort_order: await nextSortOrder(supabase, "luggage_scenes"),
+    })
+    .select("*")
+    .single();
+  throwSupabaseError(error, "新增行李场景失败。");
+
+  const { data: group, error: groupError } = await supabase
+    .from("luggage_groups")
+    .insert({
+      scene_id: scene.id,
+      name: "必备物品",
+      is_required: true,
+      sort_order: 1000,
+    })
+    .select("*")
+    .single();
+  if (groupError) {
+    await supabase.from("luggage_scenes").delete().eq("id", scene.id);
+    throwSupabaseError(groupError, "创建必备物品层级失败。");
+  }
+  return { ...scene, groups: [{ ...group, items: [] }] };
+}
+
+export async function updateLuggageScene(supabase, id, body) {
+  await requireRecord(supabase, "luggage_scenes", id, "id");
+  const { data, error } = await supabase
+    .from("luggage_scenes")
+    .update({ name: requiredText(body.name, "场景名称", 80) })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新行李场景失败。");
+  return data;
+}
+
+export async function deleteLuggageScene(supabase, id) {
+  await requireRecord(supabase, "luggage_scenes", id, "id");
+  const { error } = await supabase.from("luggage_scenes").delete().eq("id", id);
+  throwSupabaseError(error, "删除行李场景失败。");
+}
+
+export async function createLuggageGroup(supabase, body) {
+  const sceneId = requiredText(body.scene_id, "场景");
+  await requireRecord(supabase, "luggage_scenes", sceneId, "id");
+  const { data, error } = await supabase
+    .from("luggage_groups")
+    .insert({
+      scene_id: sceneId,
+      name: requiredText(body.name, "层级名称", 80),
+      is_required: false,
+      sort_order: await nextSortOrder(supabase, "luggage_groups", { scene_id: sceneId }),
+    })
+    .select("*")
+    .single();
+  throwSupabaseError(error, "新增行李层级失败。");
+  return { ...data, items: [] };
+}
+
+export async function updateLuggageGroup(supabase, id, body) {
+  await requireRecord(supabase, "luggage_groups", id, "id");
+  const { data, error } = await supabase
+    .from("luggage_groups")
+    .update({ name: requiredText(body.name, "层级名称", 80) })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新行李层级失败。");
+  return data;
+}
+
+export async function deleteLuggageGroup(supabase, id) {
+  const group = await requireRecord(supabase, "luggage_groups", id, "id, is_required");
+  assertCondition(!group.is_required, 400, "REQUIRED_GROUP", "必备物品层级不能删除。" );
+  const { error } = await supabase.from("luggage_groups").delete().eq("id", id);
+  throwSupabaseError(error, "删除行李层级失败。");
+}
+
+export async function createLuggageItem(supabase, body) {
+  const groupId = requiredText(body.group_id, "行李层级");
+  await requireRecord(supabase, "luggage_groups", groupId, "id");
+  const { data, error } = await supabase
+    .from("luggage_items")
+    .insert({
+      group_id: groupId,
+      name: requiredText(body.name, "物品名称"),
+      sort_order: await nextSortOrder(supabase, "luggage_items", { group_id: groupId }),
+    })
+    .select("*")
+    .single();
+  throwSupabaseError(error, "新增行李物品失败。");
+  return data;
+}
+
+export async function updateLuggageItem(supabase, id, body) {
+  await requireRecord(supabase, "luggage_items", id, "id");
+  const { data, error } = await supabase
+    .from("luggage_items")
+    .update({ name: requiredText(body.name, "物品名称") })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新行李物品失败。");
+  return data;
+}
+
+export async function deleteLuggageItem(supabase, id) {
+  await requireRecord(supabase, "luggage_items", id, "id");
+  const { error } = await supabase.from("luggage_items").delete().eq("id", id);
+  throwSupabaseError(error, "删除行李物品失败。");
+}
+
+export async function listDiningPlaces(supabase, query) {
+  let request = supabase.from("dining_places").select("*");
+  if (typeof query.keyword === "string" && query.keyword.trim()) {
+    request = request.ilike("name", `%${query.keyword.trim().slice(0, 80)}%`);
+  }
+  const { data, error } = await request
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  throwSupabaseError(error, "读取吃什么清单失败。");
+  return data;
+}
+
+export async function getDiningPlace(supabase, id) {
+  assertCondition(UUID_PATTERN.test(id), 400, "INVALID_ID", "店铺编号无效。");
+  return requireRecord(supabase, "dining_places", id);
+}
+
+function diningPayload(body) {
+  const modes = textArray(body.service_modes || [], "用餐方式", 2);
+  assertCondition(
+    modes.length > 0 && modes.every((mode) => DINING_MODES.includes(mode)),
+    400,
+    "INVALID_DINING_MODES",
+    "请至少选择一种用餐方式。",
+  );
+  return {
+    name: requiredText(body.name, "店铺名"),
+    service_modes: modes,
+    menu_items: textArray(body.menu_items || [], "菜品", 100),
+  };
+}
+
+export async function createDiningPlace(supabase, body) {
+  const { data, error } = await supabase
+    .from("dining_places")
+    .insert({
+      ...diningPayload(body),
+      sort_order: await nextSortOrder(supabase, "dining_places"),
+    })
+    .select("*")
+    .single();
+  throwSupabaseError(error, "新增店铺失败。");
+  return data;
+}
+
+export async function updateDiningPlace(supabase, id, body) {
+  await requireRecord(supabase, "dining_places", id, "id");
+  const { data, error } = await supabase
+    .from("dining_places")
+    .update(diningPayload(body))
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "更新店铺失败。");
+  return data;
+}
+
+export async function deleteDiningPlace(supabase, id) {
+  await requireRecord(supabase, "dining_places", id, "id");
+  const { error } = await supabase.from("dining_places").delete().eq("id", id);
+  throwSupabaseError(error, "删除店铺失败。");
+}
