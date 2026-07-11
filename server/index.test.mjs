@@ -27,6 +27,10 @@ function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
       return this;
     }
 
+    delete() {
+      return this;
+    }
+
     eq(field, value) {
       this.rows = this.rows.filter((row) => row[field] === value);
       return this;
@@ -39,6 +43,10 @@ function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
 
     async maybeSingle() {
       return { data: this.rows[0] || null, error: null };
+    }
+
+    then(resolve, reject) {
+      return Promise.resolve({ data: null, error: null }).then(resolve, reject);
     }
   }
 
@@ -175,6 +183,38 @@ test("media and dining detail routes load records by id", async (t) => {
   });
   assert.equal(unauthenticatedResponse.statusCode, 401);
   assert.equal(unauthenticatedResponse.json().error.code, "UNAUTHORIZED");
+});
+
+test("delete routes return a JSON success envelope", async (t) => {
+  const media = {
+    id: MEDIA_ID,
+    title: "待删除影视",
+    media_type: "电影",
+    watch_status: "planned",
+    platforms: [],
+    sort_order: 1000,
+  };
+  const dining = {
+    id: DINING_ID,
+    name: "待删除店铺",
+    service_modes: ["takeout"],
+    menu_items: [],
+    sort_order: 1000,
+  };
+  const supabase = createFakeSupabase({
+    tables: authenticatedTables({
+      media_entries: [media],
+      dining_places: [dining],
+    }),
+  });
+  const app = buildServer({ logger: false, supabase });
+  t.after(() => app.close());
+
+  for (const url of [`/api/media/${MEDIA_ID}`, `/api/dining/${DINING_ID}`]) {
+    const response = await app.inject({ method: "DELETE", url, headers: authHeaders });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.json(), { ok: true, data: { deleted: true } });
+  }
 });
 
 test("media writes validate and normalize platforms before the create RPC", async (t) => {

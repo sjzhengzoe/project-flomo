@@ -181,9 +181,9 @@ export function buildServer(options = {}) {
     };
   });
 
-  app.delete("/api/dishes/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/dishes/:id", { preHandler: writable }, async (request) => {
     await deleteDish(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.get("/api/media", { preHandler: authenticated }, async (request) => ({
@@ -222,9 +222,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/media/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/media/:id", { preHandler: writable }, async (request) => {
     await deleteMediaEntry(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.get("/api/activities", { preHandler: authenticated }, async (request) => ({
@@ -248,9 +248,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/activities/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/activities/:id", { preHandler: writable }, async (request) => {
     await deleteActivityItem(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.get("/api/luggage", { preHandler: authenticated }, async () => ({
@@ -274,9 +274,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/luggage/scenes/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/luggage/scenes/:id", { preHandler: writable }, async (request) => {
     await deleteLuggageScene(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.post("/api/luggage/groups", { preHandler: writable }, async (request, reply) => {
@@ -295,9 +295,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/luggage/groups/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/luggage/groups/:id", { preHandler: writable }, async (request) => {
     await deleteLuggageGroup(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.post("/api/luggage/items", { preHandler: writable }, async (request, reply) => {
@@ -316,9 +316,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/luggage/items/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/luggage/items/:id", { preHandler: writable }, async (request) => {
     await deleteLuggageItem(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.get("/api/dining", { preHandler: authenticated }, async (request) => ({
@@ -347,9 +347,9 @@ export function buildServer(options = {}) {
     },
   }));
 
-  app.delete("/api/dining/:id", { preHandler: writable }, async (request, reply) => {
+  app.delete("/api/dining/:id", { preHandler: writable }, async (request) => {
     await deleteDiningPlace(getSupabaseAdmin(), request.params.id);
-    return reply.code(204).send();
+    return { ok: true, data: { deleted: true } };
   });
 
   app.setNotFoundHandler((_request, reply) => {
