@@ -31,6 +31,7 @@ import {
   createLuggageItem,
   createLuggageScene,
   createMediaEntry,
+  createMediaSeason,
   createMediaCategory,
   deleteActivityItem,
   deleteDiningPlace,
@@ -38,14 +39,18 @@ import {
   deleteLuggageItem,
   deleteLuggageScene,
   deleteMediaEntry,
+  deleteMediaSeason,
   deleteMediaCategory,
   getDiningPlace,
   getMediaEntry,
+  getMediaEpisode,
   getMediaCategory,
   listActivityItems,
   listDiningPlaces,
   listLuggageScenes,
   listMediaEntries,
+  listMediaSeasons,
+  listFavoriteMediaEpisodes,
   listMediaCategories,
   reorderMediaEntries,
   swapMediaEntrySortOrders,
@@ -56,6 +61,9 @@ import {
   updateLuggageItem,
   updateLuggageScene,
   updateMediaEntry,
+  updateMediaEpisode,
+  updateMediaSeason,
+  addNextMediaEpisode,
   updateMediaCategory,
 } from "./lib/life-lists.mjs";
 import { getSupabaseAdmin as getDefaultSupabaseAdmin } from "./lib/supabase.mjs";
@@ -213,6 +221,27 @@ export function buildServer(options = {}) {
     data: { items: await listMediaEntries(getSupabaseAdmin(), request.query || {}) },
   }));
 
+  app.get("/api/media-episodes/favorites", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { items: await listFavoriteMediaEpisodes(getSupabaseAdmin(), request.query || {}) },
+  }));
+
+  app.get("/api/media-episodes/:id", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { item: await getMediaEpisode(getSupabaseAdmin(), request.params.id) },
+  }));
+
+  app.put("/api/media-episodes/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateMediaEpisode(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
   app.get("/api/media-categories", { preHandler: authenticated }, async () => ({
     ok: true,
     data: { items: await listMediaCategories(getSupabaseAdmin()) },
@@ -247,6 +276,41 @@ export function buildServer(options = {}) {
     ok: true,
     data: { item: await getMediaEntry(getSupabaseAdmin(), request.params.id) },
   }));
+
+  app.get("/api/media/:id/seasons", { preHandler: authenticated }, async (request) => ({
+    ok: true,
+    data: { items: await listMediaSeasons(getSupabaseAdmin(), request.params.id) },
+  }));
+
+  app.post("/api/media/:id/seasons", { preHandler: writable }, async (request, reply) => {
+    const item = await createMediaSeason(
+      getSupabaseAdmin(),
+      request.params.id,
+      request.body || {},
+    );
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
+
+  app.put("/api/media-seasons/:id", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await updateMediaSeason(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
+
+  app.delete("/api/media-seasons/:id", { preHandler: writable }, async (request) => {
+    await deleteMediaSeason(getSupabaseAdmin(), request.params.id);
+    return { ok: true, data: { deleted: true } };
+  });
+
+  app.post("/api/media-seasons/:id/episodes", { preHandler: writable }, async (request, reply) => {
+    const item = await addNextMediaEpisode(getSupabaseAdmin(), request.params.id);
+    return reply.code(201).send({ ok: true, data: { item } });
+  });
 
   app.post("/api/media", { preHandler: writable }, async (request, reply) => {
     const item = await createMediaEntry(getSupabaseAdmin(), request.body || {});

@@ -14,6 +14,8 @@ const MEDIA_ID = "10000000-0000-4000-8000-000000000003";
 const DINING_ID = "10000000-0000-4000-8000-000000000004";
 const SOURCE_ID = "10000000-0000-4000-8000-000000000005";
 const TARGET_ID = "10000000-0000-4000-8000-000000000006";
+const SEASON_ID = "10000000-0000-4000-8000-000000000007";
+const EPISODE_ID = "10000000-0000-4000-8000-000000000008";
 
 function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
   const rpcCalls = [];
@@ -21,6 +23,7 @@ function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
   class Query {
     constructor(table) {
       this.rows = [...(tables[table] || [])];
+      this.changes = null;
     }
 
     select() {
@@ -28,6 +31,11 @@ function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
     }
 
     delete() {
+      return this;
+    }
+
+    update(changes) {
+      this.changes = changes;
       return this;
     }
 
@@ -41,12 +49,25 @@ function createFakeSupabase({ tables = {}, rpc = {} } = {}) {
       return this;
     }
 
+    order() {
+      return this;
+    }
+
+    materialize() {
+      if (this.changes) this.rows.forEach((row) => Object.assign(row, this.changes));
+      return this.rows;
+    }
+
     async maybeSingle() {
-      return { data: this.rows[0] || null, error: null };
+      return { data: this.materialize()[0] || null, error: null };
+    }
+
+    async single() {
+      return { data: this.materialize()[0] || null, error: null };
     }
 
     then(resolve, reject) {
-      return Promise.resolve({ data: this.rows, error: null }).then(resolve, reject);
+      return Promise.resolve({ data: this.materialize(), error: null }).then(resolve, reject);
     }
   }
 
@@ -183,6 +204,107 @@ test("media and dining detail routes load records by id", async (t) => {
   });
   assert.equal(unauthenticatedResponse.statusCode, 401);
   assert.equal(unauthenticatedResponse.json().error.code, "UNAUTHORIZED");
+});
+
+test("episodic media routes expose seasons, favorites, and episode updates", async (t) => {
+  const episode = {
+    id: EPISODE_ID,
+    season_id: SEASON_ID,
+    episode_number: 2,
+    title: "重逢",
+    plot_summary: "两人在车站重逢。",
+    is_favorite: true,
+  };
+  const season = {
+    id: SEASON_ID,
+    media_entry_id: MEDIA_ID,
+    name: "第一季",
+    sort_order: 1000,
+    media_episodes: [episode],
+  };
+  const media = {
+    id: MEDIA_ID,
+    title: "测试广播剧",
+    media_type: "广播剧",
+    watch_status: "completed",
+    platforms: ["猫耳"],
+    is_revisitable: true,
+    season_count: 1,
+    episode_count: 1,
+    favorite_episode_count: 1,
+    sort_order: 1000,
+  };
+  const favorite = {
+    id: EPISODE_ID,
+    season_id: SEASON_ID,
+    media_entry_id: MEDIA_ID,
+    media_title: media.title,
+    media_type: media.media_type,
+    platforms: media.platforms,
+    season_name: season.name,
+    episode_number: episode.episode_number,
+    episode_title: episode.title,
+    plot_summary: episode.plot_summary,
+  };
+  const supabase = createFakeSupabase({
+    tables: authenticatedTables({
+      media_entries: [media],
+      media_seasons: [season],
+      media_episodes: [episode],
+    }),
+    rpc: {
+      search_favorite_media_episodes: { data: [favorite], error: null },
+      create_media_season_with_episodes: (params) => ({
+        data: {
+          id: TARGET_ID,
+          media_entry_id: params.p_media_entry_id,
+          name: params.p_name,
+          sort_order: 2000,
+        },
+        error: null,
+      }),
+    },
+  });
+  const app = buildServer({ logger: false, supabase });
+  t.after(() => app.close());
+
+  const seasonsResponse = await app.inject({
+    method: "GET",
+    url: `/api/media/${MEDIA_ID}/seasons`,
+    headers: authHeaders,
+  });
+  assert.equal(seasonsResponse.statusCode, 200);
+  assert.deepEqual(seasonsResponse.json().data.items[0].episodes, [episode]);
+
+  const favoritesResponse = await app.inject({
+    method: "GET",
+    url: "/api/media-episodes/favorites?media_type=%E5%B9%BF%E6%92%AD%E5%89%A7&keyword=%E8%BD%A6%E7%AB%99",
+    headers: authHeaders,
+  });
+  assert.equal(favoritesResponse.statusCode, 200);
+  assert.deepEqual(favoritesResponse.json().data.items, [favorite]);
+
+  const createSeasonResponse = await app.inject({
+    method: "POST",
+    url: `/api/media/${MEDIA_ID}/seasons`,
+    headers: authHeaders,
+    payload: { name: "第二季", episode_count: 12 },
+  });
+  assert.equal(createSeasonResponse.statusCode, 201);
+  assert.deepEqual(supabase.rpcCalls.at(-1), {
+    name: "create_media_season_with_episodes",
+    params: { p_media_entry_id: MEDIA_ID, p_name: "第二季", p_episode_count: 12 },
+  });
+
+  const updateEpisodeResponse = await app.inject({
+    method: "PUT",
+    url: `/api/media-episodes/${EPISODE_ID}`,
+    headers: authHeaders,
+    payload: { is_favorite: false, plot_summary: "更新后的剧情" },
+  });
+  assert.equal(updateEpisodeResponse.statusCode, 200);
+  assert.equal(updateEpisodeResponse.json().data.item.is_favorite, false);
+  assert.equal(updateEpisodeResponse.json().data.item.plot_summary, "更新后的剧情");
 });
 
 test("delete routes return a JSON success envelope", async (t) => {
