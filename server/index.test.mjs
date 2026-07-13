@@ -273,12 +273,14 @@ test("episodic media routes expose seasons, favorites, and episode updates", asy
     episode_number: 2,
     title: "重逢",
     plot_summary: "两人在车站重逢。",
+    timeline_notes: [],
     is_favorite: true,
   };
   const season = {
     id: SEASON_ID,
     media_entry_id: MEDIA_ID,
     name: "第一季",
+    cover_url: "https://example.com/season-one.webp",
     sort_order: 1000,
     media_episodes: [episode],
   };
@@ -356,15 +358,48 @@ test("episodic media routes expose seasons, favorites, and episode updates", asy
     params: { p_media_entry_id: MEDIA_ID, p_name: "第二季", p_episode_count: 12 },
   });
 
+  const setCoverResponse = await app.inject({
+    method: "PUT",
+    url: `/api/media/${MEDIA_ID}/cover`,
+    headers: authHeaders,
+    payload: { season_id: SEASON_ID },
+  });
+  assert.equal(setCoverResponse.statusCode, 200);
+  assert.equal(
+    setCoverResponse.json().data.item.cover_url,
+    "https://example.com/season-one.webp",
+  );
+
   const updateEpisodeResponse = await app.inject({
     method: "PUT",
     url: `/api/media-episodes/${EPISODE_ID}`,
     headers: authHeaders,
-    payload: { is_favorite: false, plot_summary: "更新后的剧情" },
+    payload: {
+      plot_summary: "更新后的剧情",
+      timeline_notes: [
+        { id: "note-later", timecode: "01:03:09", content: "发现关键线索" },
+        { id: "note-earlier", timecode: "00:12:30", content: "两人在车站见面" },
+      ],
+    },
   });
   assert.equal(updateEpisodeResponse.statusCode, 200);
-  assert.equal(updateEpisodeResponse.json().data.item.is_favorite, false);
+  assert.equal(updateEpisodeResponse.json().data.item.is_favorite, true);
   assert.equal(updateEpisodeResponse.json().data.item.plot_summary, "更新后的剧情");
+  assert.deepEqual(updateEpisodeResponse.json().data.item.timeline_notes, [
+    { id: "note-earlier", timecode: "00:12:30", content: "两人在车站见面" },
+    { id: "note-later", timecode: "01:03:09", content: "发现关键线索" },
+  ]);
+
+  const invalidTimecodeResponse = await app.inject({
+    method: "PUT",
+    url: `/api/media-episodes/${EPISODE_ID}`,
+    headers: authHeaders,
+    payload: {
+      timeline_notes: [{ id: "bad-time", timecode: "1:70:00", content: "无效时间" }],
+    },
+  });
+  assert.equal(invalidTimecodeResponse.statusCode, 400);
+  assert.equal(invalidTimecodeResponse.json().error.code, "INVALID_TIMECODE");
 });
 
 test("delete routes return a JSON success envelope", async (t) => {
@@ -443,6 +478,34 @@ test("media writes validate and normalize platforms before the create RPC", asyn
   assert.equal(invalidResponse.json().error.code, "INVALID_MEDIA_PLATFORM");
   assert.equal(supabase.rpcCalls.length, 0);
 
+  const emptyResponse = await app.inject({
+    method: "POST",
+    url: "/api/media",
+    headers: authHeaders,
+    payload: {
+      title: "缺少平台条目",
+      media_type: "电影",
+      platforms: [],
+    },
+  });
+  assert.equal(emptyResponse.statusCode, 400);
+  assert.equal(emptyResponse.json().error.code, "MEDIA_PLATFORM_REQUIRED");
+  assert.equal(supabase.rpcCalls.length, 0);
+
+  const mixedPendingResponse = await app.inject({
+    method: "POST",
+    url: "/api/media",
+    headers: authHeaders,
+    payload: {
+      title: "矛盾平台条目",
+      media_type: "电影",
+      platforms: ["待定", "腾讯视频"],
+    },
+  });
+  assert.equal(mixedPendingResponse.statusCode, 400);
+  assert.equal(mixedPendingResponse.json().error.code, "INVALID_MEDIA_PLATFORM_SELECTION");
+  assert.equal(supabase.rpcCalls.length, 0);
+
   const duplicateResponse = await app.inject({
     method: "POST",
     url: "/api/media",
@@ -450,7 +513,7 @@ test("media writes validate and normalize platforms before the create RPC", asyn
     payload: {
       title: " 千与千寻 ",
       media_type: "电影",
-      platforms: [],
+      platforms: ["待定"],
     },
   });
   assert.equal(duplicateResponse.statusCode, 409);
@@ -477,6 +540,19 @@ test("media writes validate and normalize platforms before the create RPC", asyn
       p_platforms: ["猫耳", "漫播"],
     },
   });
+
+  const pendingResponse = await app.inject({
+    method: "POST",
+    url: "/api/media",
+    headers: authHeaders,
+    payload: {
+      title: "来源待确认",
+      media_type: "电影",
+      platforms: ["待定"],
+    },
+  });
+  assert.equal(pendingResponse.statusCode, 201);
+  assert.deepEqual(supabase.rpcCalls[1].params.p_platforms, ["待定"]);
 });
 
 test("cross-type media updates use the destination-locked move RPC", async (t) => {
@@ -709,6 +785,40 @@ test("reorder routes map invalid database order lists to HTTP 400", async (t) =>
   });
   assert.equal(mediaResponse.statusCode, 400);
   assert.equal(mediaResponse.json().error.code, "INVALID_MEDIA_ORDER");
+});
+
+test("required media-platform migration backfills pending sources and rejects empty arrays", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/202607130001_required_media_platforms.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /set platforms = array\['待定'\]/);
+  assert.match(migration, /cardinality\(platforms\) > 0/);
+  assert.match(migration, /'待定'.*'猫耳'.*'漫播'/s);
+  assert.match(migration, /not \('待定' = any\(platforms\)\).*cardinality\(platforms\) = 1/s);
+});
+
+test("episode timeline migration stores arrays and includes notes in favorite search", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/202607130002_media_episode_timeline_notes.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /timeline_notes jsonb not null default '\[\]'::jsonb/i);
+  assert.match(migration, /jsonb_typeof\(timeline_notes\) = 'array'/i);
+  assert.match(migration, /jsonb_array_elements\(episode\.timeline_notes\)/i);
+  assert.match(migration, /note ->> 'content' ilike/i);
+});
+
+test("animation movies are included in episodic media creation", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/202607130003_animation_movies_episodic.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    migration,
+    /array\['电视剧', '动漫', '动画', '动画片', '广播剧'\]::text\[\]/,
+  );
+  assert.match(migration, /create_media_season_with_episodes/);
 });
 
 test("sort-order migration declares atomic create and deferrable swap contracts", async () => {

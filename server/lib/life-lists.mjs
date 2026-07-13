@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { assertCondition } from "./errors.mjs";
 import { throwSupabaseError } from "./supabase.mjs";
 
 export const MEDIA_STATUSES = ["planned", "in_progress", "completed"];
-export const MEDIA_PLATFORMS = ["腾讯视频", "爱奇艺", "哔哩哔哩", "夸克", "优酷", "芒果 TV", "猫耳", "漫播"];
-export const EPISODIC_MEDIA_TYPES = ["电视剧", "动漫", "动画", "广播剧"];
+export const MEDIA_PLATFORMS = ["待定", "腾讯视频", "爱奇艺", "哔哩哔哩", "夸克", "优酷", "芒果 TV", "猫耳", "漫播"];
+export const EPISODIC_MEDIA_TYPES = ["电视剧", "动漫", "动画", "动画片", "广播剧"];
 export const ACTIVITY_TYPES = ["室内", "户外", "居家"];
 export const DINING_MODES = ["takeout", "dine_in"];
 
@@ -67,12 +68,60 @@ function integerValue(value, fieldName, minimum, maximum) {
 function mediaPlatforms(value) {
   const platforms = textArray(value, "平台", MEDIA_PLATFORMS.length);
   assertCondition(
+    platforms.length > 0,
+    400,
+    "MEDIA_PLATFORM_REQUIRED",
+    "请选择平台/来源。",
+  );
+  assertCondition(
     platforms.every((platform) => MEDIA_PLATFORMS.includes(platform)),
     400,
     "INVALID_MEDIA_PLATFORM",
     "影视平台无效，请从给出的选项中选择。",
   );
+  assertCondition(
+    !platforms.includes("待定") || platforms.length === 1,
+    400,
+    "INVALID_MEDIA_PLATFORM_SELECTION",
+    "“待定”不能和其他平台同时选择。",
+  );
   return platforms;
+}
+
+function timelineNotes(value) {
+  assertCondition(Array.isArray(value), 400, "INVALID_TIMELINE_NOTES", "时间点记录格式无效。");
+  assertCondition(value.length <= 100, 400, "TOO_MANY_TIMELINE_NOTES", "每集最多记录 100 个时间点。");
+  const ids = new Set();
+  const notes = value.map((item) => {
+    assertCondition(
+      item && typeof item === "object" && !Array.isArray(item),
+      400,
+      "INVALID_TIMELINE_NOTE",
+      "时间点记录格式无效。",
+    );
+    const suppliedId = typeof item.id === "string" ? item.id.trim() : "";
+    assertCondition(
+      !suppliedId || /^[a-zA-Z0-9_-]{1,80}$/.test(suppliedId),
+      400,
+      "INVALID_TIMELINE_NOTE_ID",
+      "时间点记录编号无效。",
+    );
+    const id = suppliedId || randomUUID();
+    assertCondition(!ids.has(id), 400, "DUPLICATE_TIMELINE_NOTE_ID", "时间点记录编号不能重复。");
+    ids.add(id);
+    const timecode = typeof item.timecode === "string" ? item.timecode.trim() : "";
+    assertCondition(
+      /^\d{2}:[0-5]\d:[0-5]\d$/.test(timecode),
+      400,
+      "INVALID_TIMECODE",
+      "时间点需使用 HH:MM:SS 格式，例如 01:03:09。",
+    );
+    const content = typeof item.content === "string" ? item.content.trim() : "";
+    assertCondition(content.length > 0, 400, "TIMELINE_CONTENT_REQUIRED", "请填写时间点内容。");
+    assertCondition(content.length <= 500, 400, "TIMELINE_CONTENT_TOO_LONG", "单条时间点内容不能超过 500 个字符。");
+    return { id, timecode, content };
+  });
+  return notes.sort((left, right) => left.timecode.localeCompare(right.timecode));
 }
 
 async function assertMediaTitleAvailable(supabase, title, mediaType, excludedId = "") {
@@ -176,6 +225,7 @@ export async function getMediaEntry(supabase, id) {
 export async function createMediaEntry(supabase, body) {
   const mediaType = requiredText(body.media_type, "影视分类", 40);
   const title = requiredText(body.title, "名称");
+  const platforms = mediaPlatforms(body.platforms || []);
   await assertMediaTitleAvailable(supabase, title, mediaType);
   let { data, error } = await supabase
     .rpc("create_media_entry_at_end", {
@@ -186,7 +236,7 @@ export async function createMediaEntry(supabase, body) {
         MEDIA_STATUSES,
         "观看状态",
       ),
-      p_platforms: mediaPlatforms(body.platforms || []),
+      p_platforms: platforms,
     })
     .single();
   throwSupabaseError(error, "新增影视条目失败。", MEDIA_TITLE_UNIQUE_ERROR);
@@ -273,6 +323,39 @@ export async function deleteMediaEntry(supabase, id) {
   await requireRecord(supabase, "media_entries", id, "id");
   const { error } = await supabase.from("media_entries").delete().eq("id", id);
   throwSupabaseError(error, "删除影视条目失败。");
+}
+
+export async function setMediaEntryCoverFromSeason(supabase, id, body) {
+  assertCondition(UUID_PATTERN.test(id), 400, "INVALID_ID", "影视条目编号无效。");
+  const seasonId = typeof body.season_id === "string" ? body.season_id.trim() : "";
+  assertCondition(UUID_PATTERN.test(seasonId), 400, "INVALID_ID", "季编号无效。");
+  await requireRecord(supabase, "media_entries", id, "id");
+  const season = await requireRecord(
+    supabase,
+    "media_seasons",
+    seasonId,
+    "id,media_entry_id,cover_url",
+  );
+  assertCondition(
+    season.media_entry_id === id,
+    400,
+    "SEASON_ENTRY_MISMATCH",
+    "所选季不属于这部作品。",
+  );
+  assertCondition(
+    typeof season.cover_url === "string" && season.cover_url.trim().length > 0,
+    400,
+    "SEASON_COVER_MISSING",
+    "这一季还没有图片，不能设为作品封面。",
+  );
+  const { data, error } = await supabase
+    .from("media_entries")
+    .update({ cover_url: season.cover_url.trim() })
+    .eq("id", id)
+    .select("*")
+    .single();
+  throwSupabaseError(error, "设置作品封面失败。");
+  return data;
 }
 
 export async function reorderMediaEntries(supabase, body) {
@@ -386,6 +469,9 @@ export async function updateMediaEpisode(supabase, id, body) {
     assertCondition(typeof body.plot_summary === "string", 400, "INVALID_TEXT", "剧情记录无效。");
     changes.plot_summary = body.plot_summary.trim();
     assertCondition(changes.plot_summary.length <= 2000, 400, "TEXT_TOO_LONG", "剧情记录不能超过 2000 个字符。");
+  }
+  if (body.timeline_notes !== undefined) {
+    changes.timeline_notes = timelineNotes(body.timeline_notes);
   }
   if (body.is_favorite !== undefined) {
     changes.is_favorite = booleanValue(body.is_favorite, "喜欢标记");

@@ -53,6 +53,7 @@ import {
   listFavoriteMediaEpisodes,
   listMediaCategories,
   reorderMediaEntries,
+  setMediaEntryCoverFromSeason,
   swapMediaEntrySortOrders,
   swapMediaCategorySortOrders,
   updateActivityItem,
@@ -290,6 +291,17 @@ export function buildServer(options = {}) {
     );
     return reply.code(201).send({ ok: true, data: { item } });
   });
+
+  app.put("/api/media/:id/cover", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: {
+      item: await setMediaEntryCoverFromSeason(
+        getSupabaseAdmin(),
+        request.params.id,
+        request.body || {},
+      ),
+    },
+  }));
 
   app.put("/api/media-seasons/:id", { preHandler: writable }, async (request) => ({
     ok: true,
