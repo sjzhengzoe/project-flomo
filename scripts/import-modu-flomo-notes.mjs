@@ -145,7 +145,9 @@ for (const memo of memos) {
   const imported = memo.notes.map((content, index) => ({
     id: `${IMPORT_ID_PREFIX}s${memo.seasonNumber}_e${memo.episodeNumber}_n${index + 1}`,
     timecode: DEFAULT_TIMECODE,
+    type: 'normal',
     content,
+    dialogues: [],
   }))
   const timelineNotes = [...preserved, ...imported]
   if (!sameJson(existing, timelineNotes)) updates.push({ memo, episode, timelineNotes, preserved: preserved.length })

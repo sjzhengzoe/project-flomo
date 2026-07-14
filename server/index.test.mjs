@@ -377,7 +377,23 @@ test("episodic media routes expose seasons, favorites, and episode updates", asy
     payload: {
       plot_summary: "更新后的剧情",
       timeline_notes: [
-        { id: "note-later", timecode: "01:03:09", content: "发现关键线索" },
+        {
+          id: "note-later",
+          timecode: "01:03:09",
+          type: "key",
+          content: "发现关键线索",
+          dialogues: [],
+        },
+        {
+          id: "note-quote",
+          timecode: "00:30:00",
+          type: "quote",
+          content: "不会被保存的摘要",
+          dialogues: [
+            { id: "line-one", speaker: "费渡", content: "你是不是觉得我特别无情？" },
+            { id: "line-two", speaker: "骆闻舟", content: "我觉得你特别能装。" },
+          ],
+        },
         { id: "note-earlier", timecode: "00:12:30", content: "两人在车站见面" },
       ],
     },
@@ -386,8 +402,30 @@ test("episodic media routes expose seasons, favorites, and episode updates", asy
   assert.equal(updateEpisodeResponse.json().data.item.is_favorite, true);
   assert.equal(updateEpisodeResponse.json().data.item.plot_summary, "更新后的剧情");
   assert.deepEqual(updateEpisodeResponse.json().data.item.timeline_notes, [
-    { id: "note-earlier", timecode: "00:12:30", content: "两人在车站见面" },
-    { id: "note-later", timecode: "01:03:09", content: "发现关键线索" },
+    {
+      id: "note-earlier",
+      timecode: "00:12:30",
+      type: "normal",
+      content: "两人在车站见面",
+      dialogues: [],
+    },
+    {
+      id: "note-quote",
+      timecode: "00:30:00",
+      type: "quote",
+      content: "",
+      dialogues: [
+        { id: "line-one", speaker: "费渡", content: "你是不是觉得我特别无情？" },
+        { id: "line-two", speaker: "骆闻舟", content: "我觉得你特别能装。" },
+      ],
+    },
+    {
+      id: "note-later",
+      timecode: "01:03:09",
+      type: "key",
+      content: "发现关键线索",
+      dialogues: [],
+    },
   ]);
 
   const invalidTimecodeResponse = await app.inject({
@@ -400,6 +438,23 @@ test("episodic media routes expose seasons, favorites, and episode updates", asy
   });
   assert.equal(invalidTimecodeResponse.statusCode, 400);
   assert.equal(invalidTimecodeResponse.json().error.code, "INVALID_TIMECODE");
+
+  const invalidQuoteResponse = await app.inject({
+    method: "PUT",
+    url: `/api/media-episodes/${EPISODE_ID}`,
+    headers: authHeaders,
+    payload: {
+      timeline_notes: [{
+        id: "bad-quote",
+        timecode: "00:20:00",
+        type: "quote",
+        content: "",
+        dialogues: [{ id: "empty-speaker", speaker: "", content: "没有说话人" }],
+      }],
+    },
+  });
+  assert.equal(invalidQuoteResponse.statusCode, 400);
+  assert.equal(invalidQuoteResponse.json().error.code, "TEXT_REQUIRED");
 });
 
 test("delete routes return a JSON success envelope", async (t) => {
@@ -807,6 +862,16 @@ test("episode timeline migration stores arrays and includes notes in favorite se
   assert.match(migration, /jsonb_typeof\(timeline_notes\) = 'array'/i);
   assert.match(migration, /jsonb_array_elements\(episode\.timeline_notes\)/i);
   assert.match(migration, /note ->> 'content' ilike/i);
+});
+
+test("timeline note type migration includes quote speakers and dialogue in favorite search", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/202607140001_media_timeline_note_types.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /jsonb_typeof\(note -> 'dialogues'\) = 'array'/i);
+  assert.match(migration, /dialogue ->> 'speaker' ilike/i);
+  assert.match(migration, /dialogue ->> 'content' ilike/i);
 });
 
 test("animation movies are included in episodic media creation", async () => {
