@@ -49,7 +49,7 @@ def upload_folder(local_folder, cos_folder):
                 cos_file = os.path.join(cos_folder, cos_file)
             upload_file(local_file, cos_file)
 
-# 上传 dist 文件夹
-local_folder = 'dist'
-cos_folder = 'project-flomo'  # 如果要上传到根目录，可以留空；否则指定子目录
+# 上传 public 静态素材文件夹
+local_folder = 'public'
+cos_folder = 'human_draft'  # 如果要上传到根目录，可以留空；否则指定子目录
 upload_folder(local_folder, cos_folder)

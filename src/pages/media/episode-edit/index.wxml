@@ -1,0 +1,136 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载单集记录…</view>
+</view>
+
+<form wx:else class="page" bindsubmit="handleSave">
+  <view class="episode-overview">
+    <view class="episode-overview__title">{{mediaTitle || '单集记录'}}</view>
+    <view class="episode-overview__meta">{{seasonName}} · EP{{episodeNumber}}</view>
+  </view>
+
+  <view class="form-card">
+    <view class="field">
+      <view class="field-label">单集标题</view>
+      <input class="field-input" name="title" value="{{title}}" maxlength="120" placeholder="例如：真相" bindinput="handleTitleInput" />
+    </view>
+    <view class="field">
+      <view class="field-label field-label--primary">整集概括</view>
+      <textarea class="summary-input" name="plot_summary" value="{{plotSummary}}" maxlength="2000" placeholder="概括这一整集发生了什么" bindinput="handleSummaryInput" />
+      <view class="word-count">{{plotSummary.length}} / 2000</view>
+    </view>
+  </view>
+
+  <view class="timeline-card">
+    <view class="timeline-heading">
+      <view>
+        <view class="timeline-heading__title">时间点记录</view>
+        <view class="timeline-heading__help">点击时间，上下滑动选择数字</view>
+      </view>
+      <view class="timeline-add" bindtap="handleAddTimelineNote"><app-icon name="plus-white" size="24" /><text>新增</text></view>
+    </view>
+    <view wx:if="{{timelineNotes.length === 0}}" class="timeline-empty">还没有时间点，点击“新增”开始记录</view>
+    <view wx:else class="timeline-list">
+      <view wx:for="{{timelineNotes}}" wx:for-index="noteIndex" wx:key="id" class="timeline-row">
+        <view class="timeline-row__toolbar">
+          <view class="timeline-type-switch">
+            <view
+              wx:for="{{timelineNoteTypes}}"
+              wx:for-item="typeOption"
+              wx:key="value"
+              class="timeline-type-option {{item.type === typeOption.value ? 'timeline-type-option--active' : ''}}"
+              data-index="{{noteIndex}}"
+              data-type="{{typeOption.value}}"
+              bindtap="handleTimelineTypeChange"
+            >{{typeOption.label}}</view>
+          </view>
+          <view class="timeline-remove" role="button" aria-label="删除时间点" data-index="{{noteIndex}}" bindtap="handleRemoveTimelineNote"><app-icon name="trash-2-danger" size="25" /></view>
+        </view>
+        <view class="timeline-row__body {{item.type === 'quote' ? 'timeline-row__body--quote' : ''}}">
+          <view class="timeline-row__time-group">
+            <view class="timeline-row__label">时间</view>
+            <picker
+              class="timeline-time-picker"
+              mode="multiSelector"
+              range="{{timePickerRange}}"
+              value="{{item.timePickerValue}}"
+              data-index="{{noteIndex}}"
+              bindchange="handleTimelineTimeChange"
+              bindcolumnchange="handleTimelineTimeColumnChange"
+            >
+              <view class="timeline-time">
+                <text>{{item.timecode}}</text>
+              </view>
+            </picker>
+          </view>
+          <view class="timeline-row__content-group">
+            <view class="timeline-row__label">{{item.type === 'quote' ? '多人对话' : '剧情记录'}}</view>
+            <view wx:if="{{item.type === 'quote'}}" class="timeline-dialogues">
+              <view
+                wx:for="{{item.dialogues}}"
+                wx:for-item="dialogue"
+                wx:for-index="dialogueIndex"
+                wx:key="id"
+                class="timeline-dialogue-row"
+              >
+                <input
+                  class="timeline-dialogue-speaker"
+                  name="dialogue_speaker_{{noteIndex}}_{{dialogueIndex}}"
+                  value="{{dialogue.speaker}}"
+                  maxlength="40"
+                  placeholder="人物"
+                  cursor-spacing="32"
+                  adjust-position="{{true}}"
+                  data-index="{{noteIndex}}"
+                  data-note-index="{{noteIndex}}"
+                  data-dialogue-index="{{dialogueIndex}}"
+                  bindinput="handleDialogueSpeakerInput"
+                />
+                <textarea
+                  class="timeline-dialogue-content"
+                  name="dialogue_content_{{noteIndex}}_{{dialogueIndex}}"
+                  value="{{dialogue.content}}"
+                  maxlength="500"
+                  auto-height
+                  cursor-spacing="32"
+                  adjust-position="{{true}}"
+                  placeholder="文案"
+                  data-index="{{noteIndex}}"
+                  data-note-index="{{noteIndex}}"
+                  data-dialogue-index="{{dialogueIndex}}"
+                  bindinput="handleDialogueContentInput"
+                />
+                <view
+                  wx:if="{{item.dialogues.length > 1}}"
+                  class="timeline-dialogue-remove"
+                  role="button"
+                  aria-label="删除这句对话"
+                  data-note-index="{{noteIndex}}"
+                  data-dialogue-index="{{dialogueIndex}}"
+                  bindtap="handleRemoveDialogue"
+                >×</view>
+              </view>
+              <view class="timeline-dialogue-add" data-index="{{noteIndex}}" bindtap="handleAddDialogue">＋ 添加一句对话</view>
+            </view>
+            <textarea
+              wx:else
+              class="timeline-content"
+              name="timeline_content_{{noteIndex}}"
+              value="{{item.content}}"
+              maxlength="500"
+              auto-height
+              cursor-spacing="32"
+              adjust-position="{{true}}"
+              placeholder="记录这个时间点发生的内容"
+              data-index="{{noteIndex}}"
+              bindinput="handleTimelineContentInput"
+              bindblur="handleTimelineContentBlur"
+            />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <button class="save-button" loading="{{saving}}" disabled="{{saving}}" form-type="submit">保存</button>
+</form>

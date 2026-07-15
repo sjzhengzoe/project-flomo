@@ -1,0 +1,18 @@
+[Unit]
+Description=human_draft Node Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/human_draft
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+EnvironmentFile=-/etc/human-draft.env
+ExecStart=/usr/bin/env node server/index.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

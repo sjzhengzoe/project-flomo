@@ -1,0 +1,18 @@
+<view class="page">
+  <textarea
+    class="editor-textarea"
+    value="{{content}}"
+    maxlength="{{20000}}"
+    auto-height="{{false}}"
+    cursor-spacing="120"
+    adjust-position="{{true}}"
+    show-confirm-bar="{{false}}"
+    placeholder="输入文案"
+    bindinput="handleInput"
+  />
+
+  <view class="editor-actions">
+    <button class="btn-primary" bindtap="saveContent">保存</button>
+    <button class="btn-secondary" bindtap="clearContent">清空</button>
+  </view>
+</view>

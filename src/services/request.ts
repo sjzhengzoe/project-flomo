@@ -1,0 +1,120 @@
+import { API_BASE_URL } from "../config/env"
+import type { ApiEnvelope } from "../types/api"
+import { ensureLogin, redirectToLogin } from "./auth"
+
+export class ApiRequestError extends Error {
+  readonly code: string
+  readonly statusCode: number
+
+  constructor(message: string, code = "REQUEST_FAILED", statusCode = 0) {
+    super(message)
+    this.name = "ApiRequestError"
+    this.code = code
+    this.statusCode = statusCode
+  }
+}
+
+type RequestOptions = {
+  path: string
+  method?: "GET" | "POST" | "PUT" | "DELETE"
+  data?: WechatMiniprogram.IAnyObject | string | ArrayBuffer
+}
+
+function toApiEnvelope<T>(value: unknown): ApiEnvelope<T> {
+  if (value !== null && typeof value === "object") {
+    return value as ApiEnvelope<T>
+  }
+  return { ok: false }
+}
+
+async function sendRequest<T>(options: RequestOptions): Promise<T> {
+  const session = await ensureLogin()
+  const response = await new Promise<WechatMiniprogram.RequestSuccessCallbackResult<ApiEnvelope<T>>>(
+    (resolve, reject) => {
+      wx.request<ApiEnvelope<T>>({
+        url: `${API_BASE_URL}${options.path}`,
+        method: options.method || "GET",
+        data:
+          options.data === undefined && options.method === "DELETE"
+            ? {}
+            : options.data,
+        header: { Authorization: `Bearer ${session.token}` },
+        success: resolve,
+        fail: reject
+      })
+    }
+  )
+  const body = toApiEnvelope<T>(response.data)
+
+  if (response.statusCode === 401) {
+    redirectToLogin(session.token)
+    throw new ApiRequestError(
+      body.error?.message || "登录已过期，请重新登录。",
+      body.error?.code || "UNAUTHORIZED",
+      response.statusCode
+    )
+  }
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (response.statusCode === 204) return undefined as T
+    return body.data as T
+  }
+  throw new ApiRequestError(
+    body.error?.message || "请求失败，请稍后重试。",
+    body.error?.code,
+    response.statusCode
+  )
+}
+
+export function request<T>(options: RequestOptions): Promise<T> {
+  return sendRequest<T>(options)
+}
+
+type UploadOptions = {
+  path: string
+  filePath: string
+  formData?: Record<string, string>
+}
+
+async function sendUpload<T>(options: UploadOptions): Promise<T> {
+  const session = await ensureLogin()
+  const response = await new Promise<WechatMiniprogram.UploadFileSuccessCallbackResult>(
+    (resolve, reject) => {
+      wx.uploadFile({
+        url: `${API_BASE_URL}${options.path}`,
+        filePath: options.filePath,
+        name: "image",
+        formData: options.formData,
+        header: { Authorization: `Bearer ${session.token}` },
+        success: resolve,
+        fail: reject
+      })
+    }
+  )
+  let body: ApiEnvelope<T> = { ok: false }
+  try {
+    body = JSON.parse(response.data) as ApiEnvelope<T>
+  } catch (_error) {
+    // 统一走下面的错误信息。
+  }
+
+  if (response.statusCode === 401) {
+    redirectToLogin(session.token)
+    throw new ApiRequestError(
+      body.error?.message || "登录已过期，请重新登录。",
+      body.error?.code || "UNAUTHORIZED",
+      response.statusCode
+    )
+  }
+  if (response.statusCode >= 200 && response.statusCode < 300 && body.data) {
+    return body.data
+  }
+  throw new ApiRequestError(
+    body.error?.message || "上传失败，请稍后重试。",
+    body.error?.code,
+    response.statusCode
+  )
+}
+
+export function upload<T>(options: UploadOptions): Promise<T> {
+  return sendUpload<T>(options)
+}

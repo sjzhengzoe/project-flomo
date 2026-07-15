@@ -1,6 +1,6 @@
 ---
 name: menu-dish-image-generation
-description: Generate or document printable A6 menu dish images for project-flomo. Use when the user asks to 生菜图, 生成菜品图片, 菜的图片, 食物待打印, 菜单主图, 透明底菜图, or wants dish images matching the accepted tomato scrambled egg watercolor style and naming standard.
+description: Generate or document printable A6 menu dish images for human_draft. Use when the user asks to 生菜图, 生成菜品图片, 菜的图片, 食物待打印, 菜单主图, 透明底菜图, or wants dish images matching the accepted tomato scrambled egg watercolor style and naming standard.
 ---
 
 # Menu Dish Image Generation

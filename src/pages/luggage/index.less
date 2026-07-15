@@ -1,0 +1,31 @@
+.page { display: flex; min-height: 100vh; background: #f7f7f7; }
+.scene-tabs { position: fixed; top: 0; bottom: 0; left: 0; width: 144rpx; box-sizing: border-box; overflow-y: auto; padding: 0; border-right: 1rpx solid #e2e2e2; background: #fff; }
+.scene-tab { position: relative; display: flex; min-height: 96rpx; box-sizing: border-box; align-items: center; justify-content: center; padding: 18rpx 12rpx; color: #777; font-size: 23rpx; line-height: 1.35; text-align: center; }
+.scene-tab--active { background: #f7f7f7; color: #111; font-weight: 650; }
+.scene-tab--active::before { position: absolute; top: 24rpx; bottom: 24rpx; left: 0; width: 6rpx; border-radius: 0 6rpx 6rpx 0; background: #111; content: ""; }
+.content { width: 100%; box-sizing: border-box; padding: 34rpx 24rpx 54rpx 168rpx; }
+.luggage-overview { min-height: 206rpx; }
+.luggage-title-row { display: flex; min-width: 0; align-items: center; gap: 8rpx; }
+.luggage-title-row .app-overview__title { min-width: 0; flex: 0 1 auto; }
+.scene-overview-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 10rpx; }
+.scene-icon-button { position: relative; display: flex; width: 52rpx; height: 52rpx; flex: 0 0 52rpx; align-items: center; justify-content: center; border-radius: 999rpx; background: #f0f0f0; color: #666660; }
+.scene-icon-button--rename { width: 46rpx; height: 46rpx; flex-basis: 46rpx; background: transparent; }
+.scene-icon-button--delete { width: 60rpx; height: 60rpx; flex-basis: 60rpx; background: #f8ecea; color: #b43c36; }
+.inline-icon-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8rpx; }
+.inline-icon-button { display: flex; width: 48rpx; height: 48rpx; flex: 0 0 48rpx; align-items: center; justify-content: center; border-radius: 999rpx; background: #f0f0f0; color: #666660; }
+.inline-icon-button--delete { background: #f8ecea; color: #b43c36; }
+.danger { color: #b43c36; }
+.group-list { display: flex; flex-direction: column; gap: 18rpx; margin-top: 28rpx; }
+.group-card { overflow: hidden; border: 1rpx solid #e1e1e1; border-radius: 15rpx; background: #fff; }
+.group-header { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; padding: 20rpx 22rpx; border-bottom: 1rpx solid #ededed; }
+.group-title { color: #222; font-size: 27rpx; font-weight: 600; }
+.required-tag { margin-left: 10rpx; padding: 5rpx 10rpx; border-radius: 13rpx; background: #eeeeee; color: #555; font-size: 18rpx; }
+.luggage-items { padding: 10rpx 22rpx; }
+.luggage-item { display: flex; min-height: 58rpx; align-items: center; justify-content: space-between; gap: 12rpx; color: #444; font-size: 25rpx; }
+.items-empty { padding: 22rpx 0; color: #aaa; font-size: 23rpx; }
+.add-item { display: flex; align-items: center; gap: 7rpx; padding: 18rpx 22rpx; border-top: 1rpx solid #efefef; color: #555; font-size: 23rpx; }
+.add-group-button, .primary-button { display: flex; height: 76rpx; align-items: center; justify-content: center; gap: 8rpx; border-radius: 38rpx; background: #111; color: #fff; font-size: 25rpx; line-height: 1; }
+.add-group-button::after, .primary-button::after { border: 0; }
+.add-group-button { margin-top: 22rpx; }
+.state, .empty-state { padding: 150rpx 20rpx; color: #888; font-size: 25rpx; text-align: center; }
+.primary-button { width: 260rpx; margin-top: 26rpx; }

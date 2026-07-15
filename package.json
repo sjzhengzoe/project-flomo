@@ -1,42 +1,25 @@
 {
-  "name": "create-vue-app-vite-typescript",
+  "name": "human_draft",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
     "server": "node --env-file-if-exists=.env --watch server/index.mjs",
     "server:start": "node --env-file-if-exists=.env server/index.mjs",
     "server:test": "NODE_ENV=test node --test server/**/*.test.mjs",
     "import:dishes": "node --env-file-if-exists=.env scripts/import-dishes.mjs",
-    "dev:https": "DEV_HTTPS=1 vite --host",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "typecheck": "tsc --noEmit",
+    "build": "pnpm run typecheck"
   },
   "dependencies": {
     "@fastify/multipart": "^10.1.0",
     "@supabase/supabase-js": "^2.110.2",
-    "@types/file-saver": "^2.0.7",
-    "dom-to-image": "^2.6.0",
     "fastify": "^5.10.0",
-    "file-saver": "^2.0.5",
-    "html2canvas": "^1.4.1",
-    "jszip": "^3.10.1",
-    "lucide-vue-next": "^1.0.0",
-    "pinia": "^2.1.7",
-    "sharp": "^0.35.3",
-    "swiper": "^11.1.14",
-    "vue": "^3.4.21",
-    "vue-clipboard3": "^2.0.0",
-    "vue-router": "^4.3.0"
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "less": "^4.2.0",
-    "postcss-px-to-viewport": "^1.1.1",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
-    "vue-tsc": "^2.0.6"
+    "miniprogram-api-typings": "^2.8.3-1",
+    "typescript": "^5.2.2"
   },
   "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81"
 }

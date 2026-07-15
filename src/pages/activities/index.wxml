@@ -1,0 +1,56 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载活动…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="side-tabs">
+    <view wx:for="{{activityTypes}}" wx:key="*this" class="side-tab {{activeType === item ? 'side-tab--active' : ''}}" data-type="{{item}}" bindtap="handleTypeTap">{{item}}</view>
+  </view>
+  <view class="content">
+    <view class="app-overview activity-overview">
+      <view class="app-overview__topline">
+        <view class="app-overview__title">{{activeType}}项目</view>
+        <button wx:if="{{canWrite}}" class="app-overview__action" bindtap="handleAdd"><app-icon name="plus-white" size="22" /><text>新增</text></button>
+      </view>
+      <view class="app-overview__stats">
+        <view class="app-overview__stat">
+          <view class="app-overview__value">{{items.length}}</view>
+          <view class="app-overview__label">当前项目</view>
+        </view>
+        <view class="app-overview__stat">
+          <view class="app-overview__value">{{activityTypes.length}}</view>
+          <view class="app-overview__label">活动分类</view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{contentLoading}}" class="content-loading">
+      <view class="content-loading__spinner" />
+      <view class="content-loading__text">正在加载活动…</view>
+    </view>
+    <view wx:elif="{{items.length === 0}}" class="state">还没有记录</view>
+    <view wx:else class="item-list">
+      <view wx:for="{{items}}" wx:key="id" class="item-card">
+        <view class="item-name">{{item.name}}</view>
+        <view wx:if="{{canWrite}}" class="item-actions">
+          <view class="item-icon-button" role="button" aria-label="编辑活动" data-id="{{item.id}}" bindtap="handleEdit"><app-icon name="pencil" size="26" /></view>
+          <view class="item-icon-button item-icon-button--danger" role="button" aria-label="删除活动" data-id="{{item.id}}" bindtap="handleDelete"><app-icon name="trash-2-danger" size="26" /></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showEditor}}" class="modal" bindtap="closeEditor">
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-title">{{editingId ? '编辑活动' : '新增活动'}}</view>
+      <input class="modal-input" value="{{editorName}}" maxlength="120" placeholder="例如：红花湖骑行" focus bindinput="handleEditorNameInput" />
+      <view class="type-options">
+        <view wx:for="{{activityTypes}}" wx:key="*this" class="type-option {{editorType === item ? 'type-option--active' : ''}}" data-type="{{item}}" bindtap="handleEditorTypeTap">{{item}}</view>
+      </view>
+      <view class="modal-actions">
+        <button class="cancel-button" bindtap="closeEditor">取消</button>
+        <button class="save-button" loading="{{saving}}" disabled="{{saving}}" bindtap="saveEditor">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

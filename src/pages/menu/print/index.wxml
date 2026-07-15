@@ -1,0 +1,97 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载菜单…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="app-overview print-intro">
+    <view class="app-overview__title">四张打印</view>
+    <view class="app-overview__stats">
+      <view class="app-overview__stat">
+        <view class="app-overview__value">{{selectedIds.length}}</view>
+        <view class="app-overview__label">已选择</view>
+      </view>
+      <view class="app-overview__stat">
+        <view class="app-overview__value">{{dishes.length}}</view>
+        <view class="app-overview__label">当前可选</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="print-status-filter">
+    <view
+      class="print-status-filter__item {{activePrintStatus === 'all' ? 'print-status-filter__item--active' : ''}}"
+      data-status="all"
+      bindtap="handlePrintStatusTap"
+    >全部</view>
+    <view
+      class="print-status-filter__item {{activePrintStatus === 'printed' ? 'print-status-filter__item--active' : ''}}"
+      data-status="printed"
+      bindtap="handlePrintStatusTap"
+    >已打印</view>
+    <view
+      class="print-status-filter__item {{activePrintStatus === 'unprinted' ? 'print-status-filter__item--active' : ''}}"
+      data-status="unprinted"
+      bindtap="handlePrintStatusTap"
+    >未打印</view>
+  </view>
+
+  <scroll-view class="category-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="category-list">
+      <view class="category-chip {{activeCategoryId === '' ? 'category-chip--active' : ''}}" data-id="" bindtap="handleCategoryTap">全部</view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="category-chip {{activeCategoryId === item.id ? 'category-chip--active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="handleCategoryTap"
+      >{{item.name}}</view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{contentLoading}}" class="content-loading">
+    <view class="content-loading__spinner" />
+    <view class="content-loading__text">正在加载菜单…</view>
+  </view>
+  <view wx:elif="{{errorMessage}}" class="state-block">
+    <view>{{errorMessage}}</view>
+    <button class="retry-button" bindtap="handleRetry">重试</button>
+  </view>
+  <view wx:elif="{{dishes.length === 0}}" class="state-block">当前筛选没有菜品</view>
+
+  <view wx:else class="dish-grid">
+    <view
+      wx:for="{{dishes}}"
+      wx:key="id"
+      class="dish-card {{item.selectionOrder > 0 ? 'dish-card--selected' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="handleDishTap"
+    >
+      <image class="dish-card__image" src="{{item.thumbnail_url || item.image_url}}" mode="aspectFit" lazy-load />
+      <view wx:if="{{item.selectionOrder > 0}}" class="dish-card__order">
+        {{item.selectionOrder}}
+      </view>
+      <view class="dish-card__body">
+        <view class="dish-card__category">{{item.category && item.category.name ? item.category.name : '未分类'}}</view>
+        <view class="dish-card__name">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="print-footer">
+    <view class="selection-count">已选 <text>{{selectedIds.length}}</text>/4</view>
+    <view class="print-footer__buttons">
+      <button
+        class="generate-button"
+        disabled="{{selectedIds.length !== 4 || contentLoading || generating || updatingPrinted}}"
+        loading="{{generating}}"
+        bindtap="handleGenerate"
+      >{{outputPath ? '重新生成' : '生成打印图'}}</button>
+      <button wx:if="{{outputPath}}" class="secondary-button" disabled="{{contentLoading || updatingPrinted}}" bindtap="handlePreview">预览</button>
+      <button wx:if="{{outputPath}}" class="secondary-button" disabled="{{contentLoading || updatingPrinted}}" bindtap="handleSave">保存</button>
+      <button wx:if="{{outputPath && canWrite}}" class="confirm-button" loading="{{updatingPrinted}}" disabled="{{contentLoading || updatingPrinted}}" bindtap="handleConfirmPrinted">确认已打印</button>
+    </view>
+  </view>
+
+  <canvas type="2d" id="menuPrintCanvas" class="print-canvas"></canvas>
+</view>

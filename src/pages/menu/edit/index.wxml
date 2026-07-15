@@ -1,0 +1,65 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载菜品…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="record-overview">
+    <view class="record-overview__title">{{dishId ? '编辑菜品' : '新增菜品'}}</view>
+    <view class="record-overview__stats">
+      <view class="record-overview__stat">
+        <view class="record-overview__value">{{categoryNames[categoryIndex] || '未选择'}}</view>
+        <view class="record-overview__label">分类</view>
+      </view>
+      <view class="record-overview__stat">
+        <view class="record-overview__value">{{selectedImagePath || currentImageUrl ? '已选择' : '未选择'}}</view>
+        <view class="record-overview__label">图片</view>
+      </view>
+    </view>
+  </view>
+  <view class="form-card">
+    <view class="image-field" bindtap="handleChooseImage">
+      <image
+        wx:if="{{selectedImagePath || currentImageUrl}}"
+        class="image-field__preview"
+        src="{{selectedImagePath || currentImageUrl}}"
+        mode="aspectFit"
+      />
+      <view wx:else class="image-field__empty">
+        <view class="image-field__plus"><app-icon name="image-plus" size="42" /></view>
+        <view>选择菜品图片</view>
+      </view>
+      <view class="image-field__hint">点击{{currentImageUrl ? '更换' : '选择'}}图片</view>
+    </view>
+
+    <view class="field">
+      <view class="field__label">菜名</view>
+      <input
+        class="field__input"
+        value="{{name}}"
+        maxlength="80"
+        placeholder="例如：番茄炒鸡蛋"
+        bindinput="handleNameInput"
+      />
+    </view>
+
+    <view class="field">
+      <view class="field__label">分类</view>
+      <picker mode="selector" range="{{categoryNames}}" value="{{categoryIndex}}" bindchange="handleCategoryChange">
+        <view class="field__picker">
+          <text>{{categoryNames[categoryIndex] || '请选择分类'}}</text>
+          <view class="field__arrow"><app-icon name="chevron-right" size="28" /></view>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="footer-actions">
+    <button class="save-button" loading="{{saving}}" disabled="{{saving || deleting}}" bindtap="handleSave">
+      保存菜品
+    </button>
+    <button wx:if="{{dishId}}" class="delete-button" loading="{{deleting}}" disabled="{{saving || deleting}}" bindtap="handleDelete">
+      <app-icon name="trash-2-danger" size="25" /><text>删除菜品</text>
+    </button>
+  </view>
+</view>

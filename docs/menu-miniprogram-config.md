@@ -52,7 +52,7 @@
 
 生产 API 默认是 `https://gufeifei.cn`，配置位置：
 
-`../earth/miniprogram/config/env.ts`
+`../src/config/env.ts`
 
 微信开发者工具的 `develop` 环境默认请求 `http://127.0.0.1:3000`。真机调试时不能使用手机自身的 `127.0.0.1`，需要把开发地址改为电脑局域网 IP，或者先部署 HTTPS Node 服务。
 
@@ -64,11 +64,11 @@
 
 ## 4. 服务器环境
 
-生产服务器将真实配置保存在 `/etc/project-flomo.env`，不要把本机 `.env` 上传到 Git。可参考仓库根目录 `.env.example`，使用以下命令创建并限制权限：
+生产服务器将真实配置保存在 `/etc/human-draft.env`，不要把本机 `.env` 上传到 Git。可参考仓库根目录 `.env.example`，使用以下命令创建并限制权限：
 
 ```bash
-sudo install -m 600 /dev/null /etc/project-flomo.env
-sudoedit /etc/project-flomo.env
+sudo install -m 600 /dev/null /etc/human-draft.env
+sudoedit /etc/human-draft.env
 ```
 
 至少需要填写：
@@ -81,7 +81,7 @@ WECHAT_APP_SECRET=你的小程序 AppSecret
 WECHAT_ALLOWED_OPENIDS=允许修改数据的openid，多个用逗号分隔
 ```
 
-`SUPABASE_SECRET_KEY` 和 `WECHAT_APP_SECRET` 只能存在服务器上。systemd unit 已通过 `EnvironmentFile=/etc/project-flomo.env` 读取它们。
+`SUPABASE_SECRET_KEY` 和 `WECHAT_APP_SECRET` 只能存在服务器上。systemd unit 已通过 `EnvironmentFile=/etc/human-draft.env` 读取它们。
 
 TLS 证书和私钥也不要放进 Git。将腾讯云下载的 Nginx 完整证书链与私钥单独安装到服务器：
 
@@ -96,9 +96,9 @@ sudo install -m 600 /你的临时路径/gufeifei.cn.key /etc/nginx/ssl/gufeifei.
 配置完成后：
 
 ```bash
-sudo cp deploy/project-flomo-server.service /etc/systemd/system/project-flomo-server.service
+sudo cp deploy/human-draft-server.service /etc/systemd/system/human-draft-server.service
 sudo systemctl daemon-reload
-sudo systemctl restart project-flomo-server
+sudo systemctl restart human-draft-server
 curl https://gufeifei.cn/api/health
 ```
 

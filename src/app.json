@@ -1,0 +1,64 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/create/index",
+    "pages/menu/index",
+    "pages/menu/edit/index",
+    "pages/menu/print/index",
+    "pages/media/index",
+    "pages/media/edit/index",
+    "pages/media/detail/index",
+    "pages/media/episode-edit/index",
+    "pages/media/categories/index",
+    "pages/media/category-edit/index",
+    "pages/activities/index",
+    "pages/luggage/index",
+    "pages/dining/index",
+    "pages/dining/edit/index",
+    "pages/wardrobe/index",
+    "pages/wardrobe/categories/index",
+    "pages/wardrobe/category-edit/index",
+    "pages/wardrobe/item-edit/index",
+    "pages/xiaohongshu/index",
+    "pages/douyin2/index",
+    "pages/editor/index",
+    "pages/settings/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Earth",
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#ffffff"
+  },
+  "usingComponents": {
+    "app-icon": "/components/app-icon/index"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#8a8a8a",
+    "selectedColor": "#111111",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/create/index",
+        "text": "创作"
+      },
+      {
+        "pagePath": "pages/settings/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -79,7 +79,7 @@ Fill `{style_direction}` and `{motifs}` with the user's desired style. If unspec
 
 ## Generating Assets In The Project
 
-When asked to generate actual background images for `project-flomo`:
+When asked to generate actual background images for `human_draft`:
 
 1. Inspect the current base/reference image if provided, usually under `public/菜谱背景图/`.
 2. Check the current CSS before generating if foreground layout may have changed. Current default is image `43,13,78,52mm` and text `43,70,78,26mm`.
