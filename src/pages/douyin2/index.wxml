@@ -1,0 +1,51 @@
+<view class="page">
+  <swiper
+    class="card-swiper"
+    current="{{activeIndex}}"
+    indicator-dots="{{renderedImageUrls.length > 1}}"
+    indicator-color="rgba(0, 0, 0, 0.18)"
+    indicator-active-color="#111111"
+    bindchange="handleSwiperChange"
+  >
+    <swiper-item wx:for="{{renderedImageUrls}}" wx:key="*this" class="card-slide">
+      <view class="card-item">
+        <image class="card-image" src="{{item}}" mode="widthFix" show-menu-by-longpress />
+      </view>
+    </swiper-item>
+
+    <swiper-item wx:if="{{!renderedImageUrls.length}}" class="card-slide">
+      <view class="card-item card-item--loading">
+        <view class="card-loading">
+          <view class="card-loading__title">卡片生成中</view>
+          <view class="card-loading__desc">正在同步页面和导出样式</view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <view class="page-count" wx:if="{{pages.length}}">
+    {{activeIndex + 1}} / {{pages.length}}
+  </view>
+
+  <view class="action-bar" aria-label="抖音模板操作">
+    <view
+      wx:for="{{actions}}"
+      wx:key="key"
+      class="action-bar__item {{isGenerating ? 'action-bar__item--disabled' : ''}}"
+      hover-class="action-bar__item--hover"
+      hover-stay-time="80"
+      data-key="{{item.key}}"
+      bindtap="handleAction"
+    >
+      <view class="action-bar__icon"><app-icon name="{{item.icon}}" size="30" /></view>
+      <view class="action-bar__label">{{item.label}}</view>
+    </view>
+  </view>
+
+  <canvas
+    type="2d"
+    id="douyin2ExportCanvas"
+    class="export-canvas"
+    style="width: 1px; height: 1px;"
+  />
+</view>

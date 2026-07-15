@@ -1,0 +1,68 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx calc(136rpx + env(safe-area-inset-bottom));
+  background: #f7f7f7;
+}
+
+.editor-textarea {
+  width: 100%;
+  height: calc(100vh - 184rpx - env(safe-area-inset-bottom));
+  min-height: 720rpx;
+  box-sizing: border-box;
+  padding: 28rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: #111111;
+  font-size: 28rpx;
+  line-height: 1.65;
+}
+
+.editor-actions {
+  position: fixed;
+  right: 24rpx;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
+  left: 24rpx;
+  display: flex;
+  gap: 16rpx;
+  padding: 14rpx;
+  border: 1rpx solid #e8e8e8;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.035);
+}
+
+.btn-primary,
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  margin: 0;
+  padding: 0;
+  border-radius: 46rpx;
+  font-size: 29rpx;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.btn-primary::after,
+.btn-secondary::after {
+  border: 0;
+}
+
+.btn-primary {
+  flex: 1;
+  border: 0;
+  background: #111111;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  flex: none;
+  width: 148rpx;
+  border: 1rpx solid #e8e8e8;
+  background: #ffffff;
+  color: #111111;
+}

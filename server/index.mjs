@@ -121,7 +121,7 @@ export function buildServer(options = {}) {
 
   app.get("/api/health", async () => ({
     ok: true,
-    service: "project-flomo-server",
+    service: "human-draft-server",
     configured: getMissingRuntimeConfig().length === 0,
     missing_config: getMissingRuntimeConfig(),
     uptime: Math.round(process.uptime()),

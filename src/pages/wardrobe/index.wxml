@@ -1,0 +1,103 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在整理衣橱…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="sidebar">
+    <scroll-view class="side-tabs" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        class="side-tab {{activeCategoryId === '' ? 'side-tab--active' : ''}}"
+        data-id=""
+        bindtap="handleCategoryTap"
+      >全部</view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="id"
+        class="side-tab {{activeCategoryId === item.id ? 'side-tab--active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="handleCategoryTap"
+      >{{item.name}}</view>
+    </scroll-view>
+  </view>
+
+  <scroll-view class="content" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="header">
+      <view class="header__topline">
+        <view class="header__title-group">
+          <view class="header__title">我的衣橱</view>
+          <view class="header__manage" bindtap="handleManageCategories">
+            <app-icon name="settings-2" size="22" />
+            <text>管理分类</text>
+            <view class="header__manage-arrow"><app-icon name="chevron-right" size="22" /></view>
+          </view>
+        </view>
+        <button class="header__add" bindtap="handleAddItem"><app-icon name="plus-white" size="22" /><text>新增</text></button>
+      </view>
+      <view class="header__stats">
+        <view class="header-stat">
+          <view class="header-stat__value">{{totalItemCount}}</view>
+          <view class="header-stat__label">衣物</view>
+        </view>
+        <view class="header-stat">
+          <view class="header-stat__value">{{totalCategoryCount}}</view>
+          <view class="header-stat__label">分类</view>
+        </view>
+        <view class="header-stat">
+          <view class="header-stat__value">{{monthlyItemCount}}</view>
+          <view class="header-stat__label">本月新增</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{canReorder}}" class="sort-hint">长按卡片右下角的拖拽图标，拖到目标衣物即可交换位置</view>
+
+    <view wx:if="{{contentLoading}}" class="content-loading">
+      <view class="content-loading__spinner" />
+      <view class="content-loading__text">正在加载衣物…</view>
+    </view>
+    <view wx:elif="{{errorMessage}}" class="state-block">
+      <view>{{errorMessage}}</view>
+      <button class="retry-button" bindtap="handleRetry">重试</button>
+    </view>
+    <view wx:elif="{{items.length === 0}}" class="empty-state">
+      <view class="empty-state__title">暂无衣物</view>
+      <view class="empty-state__desc">点击右上角“新增”开始记录</view>
+    </view>
+
+    <view wx:else class="item-list">
+      <view
+        wx:for="{{items}}"
+        wx:key="id"
+        class="item-card js-sortable-wardrobe {{draggingIndex === index ? 'item-card--dragging' : ''}} {{dragTargetIndex === index && draggingIndex !== index ? 'item-card--drop-target' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="handleItemTap"
+      >
+        <image class="item-card__image" src="{{item.thumbnail_url || item.image_url}}" mode="aspectFill" lazy-load />
+        <view class="item-card__body {{canReorder ? 'item-card__body--sortable' : ''}}">
+          <view class="item-card__topline">
+            <view class="item-card__name">{{item.name}}</view>
+            <view class="item-card__category">{{item.category.name}}</view>
+          </view>
+          <view wx:if="{{item.displayValues.length}}" class="attribute-grid">
+            <view wx:for="{{item.displayValues}}" wx:for-item="attribute" wx:key="id" class="attribute">
+              <text class="attribute__name">{{attribute.name}}</text>
+              <text class="attribute__value">{{attribute.value}}</text>
+            </view>
+          </view>
+          <view wx:else class="attribute-empty">暂未填写尺寸</view>
+          <view
+            wx:if="{{canReorder}}"
+            class="drag-handle"
+            data-index="{{index}}"
+            catchlongpress="handleDragStart"
+            catchtouchmove="handleDragMove"
+            catchtouchend="handleDragEnd"
+            catchtouchcancel="handleDragCancel"
+          ><app-icon name="grip-vertical" size="30" /></view>
+        </view>
+      </view>
+    </view>
+    <view class="bottom-space" />
+  </scroll-view>
+</view>

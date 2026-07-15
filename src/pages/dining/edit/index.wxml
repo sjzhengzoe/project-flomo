@@ -1,0 +1,39 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载店铺资料…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="record-overview">
+    <view class="record-overview__title">{{id ? '编辑店铺' : '新增店铺'}}</view>
+    <view class="record-overview__stats">
+      <view class="record-overview__stat">
+        <view class="record-overview__value">{{supportsTakeout ? '支持' : '未选'}}</view>
+        <view class="record-overview__label">外卖</view>
+      </view>
+      <view class="record-overview__stat">
+        <view class="record-overview__value">{{supportsDineIn ? '支持' : '未选'}}</view>
+        <view class="record-overview__label">堂食</view>
+      </view>
+    </view>
+  </view>
+  <view class="form-card">
+    <view class="field">
+      <view class="field-label">店铺名</view>
+      <input class="field-input" value="{{name}}" maxlength="120" placeholder="输入店铺名称" bindinput="handleNameInput" />
+    </view>
+    <view class="field">
+      <view class="field-label">可用方式（可多选）</view>
+      <view class="mode-options">
+        <view class="mode-option {{supportsTakeout ? 'mode-option--active' : ''}}" bindtap="toggleTakeout">可外卖</view>
+        <view class="mode-option {{supportsDineIn ? 'mode-option--active' : ''}}" bindtap="toggleDineIn">可堂食</view>
+      </view>
+    </view>
+    <view class="field">
+      <view class="field-label">推荐菜品（可不填，每行一个）</view>
+      <textarea class="menu-input" value="{{menuText}}" maxlength="3000" placeholder="例如：\n招牌牛肉饭\n冰柠茶" bindinput="handleMenuInput" />
+    </view>
+  </view>
+  <button class="save-button" loading="{{saving}}" disabled="{{saving || deleting}}" bindtap="handleSave">保存</button>
+  <button wx:if="{{id}}" class="delete-button" loading="{{deleting}}" disabled="{{saving || deleting}}" bindtap="handleDelete"><app-icon name="trash-2-danger" size="25" /><text>删除</text></button>
+</view>

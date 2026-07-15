@@ -1,0 +1,124 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载行李清单…</view>
+</view>
+
+<view wx:else class="page">
+  <view class="scene-tabs">
+    <view wx:for="{{scenes}}" wx:key="id" class="scene-tab {{activeSceneId === item.id ? 'scene-tab--active' : ''}}" data-id="{{item.id}}" bindtap="handleSceneTap">{{item.name}}</view>
+  </view>
+
+  <view class="content">
+    <view wx:if="{{contentLoading}}" class="content-loading">
+      <view class="content-loading__spinner" />
+      <view class="content-loading__text">正在加载行李清单…</view>
+    </view>
+    <view wx:elif="{{!activeScene}}" class="empty-state">
+      <view>还没有行李场景</view>
+      <button wx:if="{{canWrite}}" class="primary-button" bindtap="handleAddScene">新增第一个场景</button>
+    </view>
+    <block wx:else>
+      <view class="app-overview luggage-overview">
+        <view class="app-overview__topline">
+          <view class="app-overview__title-group">
+            <view class="luggage-title-row">
+              <view class="app-overview__title">{{activeScene.name}}</view>
+              <view
+                wx:if="{{canWrite}}"
+                class="scene-icon-button scene-icon-button--rename"
+                role="button"
+                aria-label="修改场景名称"
+                bindtap="handleRenameScene"
+              >
+                <app-icon name="pencil" size="26" />
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{canWrite}}" class="scene-overview-actions">
+            <view
+              class="scene-icon-button scene-icon-button--delete"
+              role="button"
+              aria-label="删除场景"
+              bindtap="handleDeleteScene"
+            >
+              <app-icon name="trash-2-danger" size="27" />
+            </view>
+            <button class="app-overview__action" bindtap="handleAddScene"><app-icon name="plus-white" size="22" /><text>场景</text></button>
+          </view>
+        </view>
+        <view class="app-overview__stats">
+          <view class="app-overview__stat">
+            <view class="app-overview__value">{{activeGroupCount}}</view>
+            <view class="app-overview__label">携带层级</view>
+          </view>
+          <view class="app-overview__stat">
+            <view class="app-overview__value">{{activeItemCount}}</view>
+            <view class="app-overview__label">物品</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="group-list">
+        <view wx:for="{{activeScene.groups}}" wx:key="id" class="group-card">
+          <view class="group-header">
+            <view>
+              <text class="group-title">{{item.name}}</text>
+              <text wx:if="{{item.is_required}}" class="required-tag">必备</text>
+            </view>
+            <view wx:if="{{canWrite}}" class="inline-icon-actions">
+              <view
+                class="inline-icon-button"
+                role="button"
+                aria-label="修改层级名称"
+                data-id="{{item.id}}"
+                data-name="{{item.name}}"
+                bindtap="handleRenameGroup"
+              >
+                <app-icon name="pencil" size="24" />
+              </view>
+              <view
+                wx:if="{{!item.is_required}}"
+                class="inline-icon-button inline-icon-button--delete"
+                role="button"
+                aria-label="删除层级"
+                data-id="{{item.id}}"
+                bindtap="handleDeleteGroup"
+              >
+                <app-icon name="trash-2-danger" size="24" />
+              </view>
+            </view>
+          </view>
+          <view class="luggage-items">
+            <view wx:for="{{item.items}}" wx:for-item="luggageItem" wx:key="id" class="luggage-item">
+              <text>· {{luggageItem.name}}</text>
+              <view wx:if="{{canWrite}}" class="inline-icon-actions">
+                <view
+                  class="inline-icon-button"
+                  role="button"
+                  aria-label="编辑物品"
+                  data-id="{{luggageItem.id}}"
+                  data-name="{{luggageItem.name}}"
+                  bindtap="handleRenameItem"
+                >
+                  <app-icon name="pencil" size="24" />
+                </view>
+                <view
+                  class="inline-icon-button inline-icon-button--delete"
+                  role="button"
+                  aria-label="删除物品"
+                  data-id="{{luggageItem.id}}"
+                  bindtap="handleDeleteItem"
+                >
+                  <app-icon name="trash-2-danger" size="24" />
+                </view>
+              </view>
+            </view>
+            <view wx:if="{{item.items.length === 0}}" class="items-empty">暂无物品</view>
+          </view>
+          <view wx:if="{{canWrite}}" class="add-item" data-group-id="{{item.id}}" bindtap="handleAddItem"><app-icon name="plus" size="22" /><text>添加物品</text></view>
+        </view>
+      </view>
+      <button wx:if="{{canWrite}}" class="add-group-button" bindtap="handleAddGroup"><app-icon name="plus-white" size="22" /><text>新增携带层级</text></button>
+    </block>
+  </view>
+</view>

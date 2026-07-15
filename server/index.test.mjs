@@ -142,7 +142,7 @@ test("health endpoint reports configuration state without exposing secrets", asy
   assert.equal(response.statusCode, 200);
   assert.equal(response.headers["cache-control"], "no-store");
   assert.equal(body.ok, true);
-  assert.equal(body.service, "project-flomo-server");
+  assert.equal(body.service, "human-draft-server");
   assert.equal(typeof body.configured, "boolean");
   assert.ok(Array.isArray(body.missing_config));
   assert.equal(JSON.stringify(body).includes("sb_secret_"), false);

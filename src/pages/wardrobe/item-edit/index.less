@@ -1,0 +1,180 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+  background: #f7f7f7;
+}
+
+.state {
+  padding: 160rpx 0;
+  color: #888883;
+  font-size: 25rpx;
+  text-align: center;
+}
+
+.form-card,
+.size-card {
+  padding: 28rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+}
+
+.image-field {
+  position: relative;
+  width: 420rpx;
+  height: 560rpx;
+  max-width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 18rpx;
+  background: #eeeeee;
+}
+
+.image-field__preview {
+  width: 100%;
+  height: 100%;
+}
+
+.image-field__empty {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #92928c;
+  font-size: 25rpx;
+}
+
+.image-field__plus {
+  margin-bottom: 8rpx;
+  color: #555550;
+  font-size: 52rpx;
+  font-weight: 300;
+}
+
+.image-field__hint {
+  position: absolute;
+  right: 18rpx;
+  bottom: 18rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.62);
+  color: #ffffff;
+  font-size: 21rpx;
+}
+
+.field {
+  margin-top: 28rpx;
+}
+
+.field__label,
+.size-field__label {
+  color: #555550;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.field__input,
+.field__picker,
+.size-field__input {
+  height: 80rpx;
+  box-sizing: border-box;
+  margin-top: 12rpx;
+  padding: 0 22rpx;
+  border: 1rpx solid #dedede;
+  border-radius: 14rpx;
+  background: #fafafa;
+  color: #111111;
+  font-size: 27rpx;
+}
+
+.field__picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field__arrow {
+  color: #aaa9a4;
+  font-size: 36rpx;
+}
+
+.size-card {
+  margin-top: 20rpx;
+}
+
+.size-card__title {
+  color: #111111;
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.size-card__desc {
+  margin-top: 8rpx;
+  color: #999994;
+  font-size: 21rpx;
+  line-height: 1.45;
+}
+
+.size-empty {
+  padding: 64rpx 0 32rpx;
+  color: #aaa9a4;
+  font-size: 23rpx;
+  text-align: center;
+}
+
+.size-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24rpx 18rpx;
+  margin-top: 28rpx;
+}
+
+.size-field {
+  min-width: 0;
+}
+
+.size-field__input {
+  width: 100%;
+  margin-top: 10rpx;
+  font-size: 25rpx;
+}
+
+.footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.save-button,
+.delete-button {
+  display: flex;
+  height: 92rpx;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 9rpx;
+  border-radius: 46rpx;
+  font-size: 29rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.save-button {
+  background: #111111;
+  color: #ffffff;
+}
+
+.delete-button {
+  background: transparent;
+  color: #c9342f;
+}
+
+.save-button::after,
+.delete-button::after {
+  border: 0;
+}

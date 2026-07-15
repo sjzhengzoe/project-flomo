@@ -1,0 +1,245 @@
+page {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #111111;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.fullscreen-loading {
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.fullscreen-loading__spinner {
+  width: 48rpx;
+  height: 48rpx;
+  box-sizing: border-box;
+  border: 4rpx solid #e8e8e8;
+  border-top-color: #111111;
+  border-radius: 50%;
+  animation: fullscreen-loading-spin 0.75s linear infinite;
+}
+
+.fullscreen-loading__text {
+  margin-top: 24rpx;
+  color: #999994;
+  font-size: 23rpx;
+  line-height: 1.4;
+}
+
+@keyframes fullscreen-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.content-loading {
+  display: flex;
+  min-height: 260rpx;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-loading__spinner {
+  width: 36rpx;
+  height: 36rpx;
+  box-sizing: border-box;
+  border: 3rpx solid #e8e8e8;
+  border-top-color: #111111;
+  border-radius: 50%;
+  animation: fullscreen-loading-spin 0.75s linear infinite;
+}
+
+.content-loading__text {
+  margin-top: 18rpx;
+  color: #999994;
+  font-size: 22rpx;
+  line-height: 1.4;
+}
+
+.record-overview {
+  min-height: 176rpx;
+  box-sizing: border-box;
+  padding: 24rpx;
+  border: 1rpx solid #ececec;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.022);
+}
+
+.record-overview__title {
+  color: #111111;
+  font-size: 34rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+  line-height: 1.25;
+}
+
+.record-overview__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #efefef;
+}
+
+.record-overview__stat {
+  position: relative;
+  min-width: 0;
+  text-align: center;
+}
+
+.record-overview__stat + .record-overview__stat::before {
+  position: absolute;
+  top: 5rpx;
+  bottom: 5rpx;
+  left: 0;
+  width: 1rpx;
+  background: #eeeeee;
+  content: "";
+}
+
+.record-overview__value {
+  overflow: hidden;
+  color: #222220;
+  font-size: 26rpx;
+  font-weight: 650;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-overview__label {
+  margin-top: 7rpx;
+  color: #999994;
+  font-size: 20rpx;
+  line-height: 1.2;
+}
+
+.record-overview + .form-card {
+  margin-top: 20rpx;
+}
+
+.app-overview {
+  box-sizing: border-box;
+  padding: 22rpx 24rpx 20rpx;
+  border: 1rpx solid #ececec;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.022);
+}
+
+.app-overview__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.app-overview__title-group {
+  min-width: 0;
+  flex: 1;
+}
+
+.app-overview__title {
+  overflow: hidden;
+  color: #111111;
+  font-size: 34rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-overview__link {
+  display: inline-flex;
+  min-height: 42rpx;
+  align-items: center;
+  gap: 5rpx;
+  margin-top: 5rpx;
+  color: #8d8d87;
+  font-size: 21rpx;
+  line-height: 1;
+}
+
+.app-overview__link-arrow {
+  color: #b5b5af;
+  font-size: 28rpx;
+}
+
+.app-overview__action {
+  display: flex;
+  width: 128rpx !important;
+  min-width: 128rpx !important;
+  max-width: 128rpx !important;
+  height: 60rpx !important;
+  box-sizing: border-box !important;
+  flex: 0 0 128rpx !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7rpx;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 999rpx !important;
+  background: #111111;
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.app-overview__action::after {
+  border: 0;
+}
+
+.app-overview__stats {
+  display: flex;
+  margin-top: 16rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #efefef;
+}
+
+.app-overview__stat {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.app-overview__stat + .app-overview__stat::before {
+  position: absolute;
+  top: 6rpx;
+  bottom: 6rpx;
+  left: 0;
+  width: 1rpx;
+  background: #eeeeee;
+  content: "";
+}
+
+.app-overview__value {
+  overflow: hidden;
+  color: #111111;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-overview__label {
+  margin-top: 7rpx;
+  color: #999994;
+  font-size: 20rpx;
+  line-height: 1.2;
+}

@@ -1,0 +1,81 @@
+<view wx:if="{{loading}}" class="fullscreen-loading">
+  <view class="fullscreen-loading__spinner" />
+  <view class="fullscreen-loading__text">正在加载衣物…</view>
+</view>
+
+<view wx:else class="page">
+    <view class="record-overview">
+      <view class="record-overview__title">{{itemId ? '编辑衣物' : '新增衣物'}}</view>
+      <view class="record-overview__stats">
+        <view class="record-overview__stat">
+          <view class="record-overview__value">{{categoryNames[categoryIndex] || '未选择'}}</view>
+          <view class="record-overview__label">分类</view>
+        </view>
+        <view class="record-overview__stat">
+          <view class="record-overview__value">{{formFields.length}}</view>
+          <view class="record-overview__label">属性</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-card">
+      <view class="image-field" bindtap="handleChooseImage">
+        <image
+          wx:if="{{selectedImagePath || currentImageUrl}}"
+          class="image-field__preview"
+          src="{{selectedImagePath || currentImageUrl}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="image-field__empty">
+          <view class="image-field__plus"><app-icon name="image-plus" size="42" /></view>
+          <view>选择衣物图片</view>
+        </view>
+        <view class="image-field__hint">点击{{currentImageUrl ? '更换' : '选择'}}图片</view>
+      </view>
+
+      <view class="field">
+        <view class="field__label">名称</view>
+        <input
+          class="field__input"
+          value="{{name}}"
+          maxlength="80"
+          placeholder="例如：白色基础 T 恤"
+          bindinput="handleNameInput"
+        />
+      </view>
+
+      <view class="field">
+        <view class="field__label">分类</view>
+        <picker mode="selector" range="{{categoryNames}}" value="{{categoryIndex}}" bindchange="handleCategoryChange">
+          <view class="field__picker">
+            <text>{{categoryNames[categoryIndex] || '请选择分类'}}</text>
+            <view class="field__arrow"><app-icon name="chevron-right" size="28" /></view>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="size-card">
+      <view class="size-card__title">尺寸与属性</view>
+      <view class="size-card__desc">所有值都是文字，可填写 42cm、M、80-86 等。</view>
+      <view wx:if="{{formFields.length === 0}}" class="size-empty">这个分类还没有预设属性</view>
+      <view wx:else class="size-list">
+        <view wx:for="{{formFields}}" wx:key="id" class="size-field">
+          <view class="size-field__label">{{item.name}}</view>
+          <input
+            class="size-field__input"
+            value="{{item.value}}"
+            maxlength="120"
+            placeholder="填写{{item.name}}"
+            data-index="{{index}}"
+            bindinput="handleValueInput"
+          />
+        </view>
+      </view>
+    </view>
+
+    <view class="footer-actions">
+      <button class="save-button" loading="{{saving}}" disabled="{{saving || deleting}}" bindtap="handleSave">保存衣物</button>
+      <button wx:if="{{itemId}}" class="delete-button" loading="{{deleting}}" disabled="{{saving || deleting}}" bindtap="handleDelete"><app-icon name="trash-2-danger" size="25" /><text>删除衣物</text></button>
+    </view>
+</view>

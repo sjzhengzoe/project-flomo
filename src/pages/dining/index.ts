@@ -1,0 +1,83 @@
+import { ensureLogin } from "../../services/auth"
+import { listDiningPlaces } from "../../services/life-lists"
+import type { DiningPlace } from "../../types/life-lists"
+import {
+  activateAsyncPage,
+  beginAsyncPageRequest,
+  deactivateAsyncPage,
+  isAsyncPageRequestCurrent
+} from "../../utils/async-page"
+
+type DiningPlaceView = DiningPlace & {
+  supportsTakeout: boolean
+  supportsDineIn: boolean
+}
+
+Page({
+  data: {
+    items: [] as DiningPlaceView[],
+    takeoutCount: 0,
+    dineInCount: 0,
+    canWrite: false,
+    loading: true,
+    contentLoading: false,
+    hasLoaded: false,
+    errorMessage: ""
+  },
+
+  onShow() {
+    activateAsyncPage(this)
+    this.loadItems()
+  },
+
+  onUnload() {
+    deactivateAsyncPage(this)
+  },
+
+  async loadItems() {
+    const generation = beginAsyncPageRequest(this)
+    const showInitialLoading = !this.data.hasLoaded
+    this.setData({
+      loading: showInitialLoading,
+      contentLoading: !showInitialLoading,
+      errorMessage: ""
+    })
+    try {
+      const session = await ensureLogin()
+      const items = await listDiningPlaces()
+      if (!isAsyncPageRequestCurrent(this, generation)) return
+      this.setData({
+        items: items.map((item) => ({
+          ...item,
+          supportsTakeout: item.service_modes.includes("takeout"),
+          supportsDineIn: item.service_modes.includes("dine_in")
+        })),
+        takeoutCount: items.filter((item) => item.service_modes.includes("takeout")).length,
+        dineInCount: items.filter((item) => item.service_modes.includes("dine_in")).length,
+        canWrite: session.user.can_write
+      })
+    } catch (error) {
+      if (!isAsyncPageRequestCurrent(this, generation)) return
+      this.setData({ errorMessage: error instanceof Error ? error.message : "加载失败" })
+    } finally {
+      if (isAsyncPageRequestCurrent(this, generation)) {
+        this.setData({ loading: false, contentLoading: false, hasLoaded: true })
+      }
+    }
+  },
+
+  handleAdd() {
+    if (!this.data.canWrite || this.data.loading || this.data.contentLoading) return
+    wx.removeStorageSync("DINING_EDIT_ITEM")
+    wx.navigateTo({ url: "/pages/dining/edit/index" })
+  },
+
+  handleEdit(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.loading || this.data.contentLoading) return
+    const id = String(event.currentTarget.dataset.id || "")
+    const item = this.data.items.find((place) => place.id === id)
+    if (!item) return
+    wx.setStorageSync("DINING_EDIT_ITEM", item)
+    wx.navigateTo({ url: `/pages/dining/edit/index?id=${id}` })
+  }
+})
