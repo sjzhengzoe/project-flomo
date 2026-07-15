@@ -3,7 +3,7 @@ import { assertCondition } from "./errors.mjs";
 import { throwSupabaseError } from "./supabase.mjs";
 
 export const MEDIA_STATUSES = ["planned", "in_progress", "completed"];
-export const MEDIA_PLATFORMS = ["待定", "腾讯视频", "爱奇艺", "哔哩哔哩", "夸克", "优酷", "芒果 TV", "猫耳", "漫播"];
+export const MEDIA_PLATFORMS = ["待定", "腾讯视频", "爱奇艺", "哔哩哔哩", "夸克", "优酷", "芒果 TV", "猫耳", "漫播", "Books"];
 export const EPISODIC_MEDIA_TYPES = ["电视剧", "动漫", "动画", "动画片", "广播剧"];
 export const ACTIVITY_TYPES = ["室内", "户外", "居家"];
 export const DINING_MODES = ["takeout", "dine_in"];

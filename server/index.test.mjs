@@ -582,7 +582,7 @@ test("media writes validate and normalize platforms before the create RPC", asyn
     payload: {
       title: "合法平台条目",
       media_type: "电影",
-      platforms: ["猫耳", "猫耳", "漫播"],
+      platforms: ["猫耳", "猫耳", "漫播", "Books"],
     },
   });
   assert.equal(validResponse.statusCode, 201);
@@ -592,7 +592,7 @@ test("media writes validate and normalize platforms before the create RPC", asyn
       p_title: "合法平台条目",
       p_media_type: "电影",
       p_watch_status: "completed",
-      p_platforms: ["猫耳", "漫播"],
+      p_platforms: ["猫耳", "漫播", "Books"],
     },
   });
 
@@ -851,6 +851,16 @@ test("required media-platform migration backfills pending sources and rejects em
   assert.match(migration, /cardinality\(platforms\) > 0/);
   assert.match(migration, /'待定'.*'猫耳'.*'漫播'/s);
   assert.match(migration, /not \('待定' = any\(platforms\)\).*cardinality\(platforms\) = 1/s);
+});
+
+test("Books media-platform migration updates novel sources and keeps the platform valid", async () => {
+  const migration = await readFile(
+    new URL("../supabase/migrations/202607140002_books_media_platform.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /set platforms = array\['Books'\]::text\[\]/);
+  assert.match(migration, /where media_type = '小说'/);
+  assert.match(migration, /'待定'.*'猫耳'.*'漫播'.*'Books'/s);
 });
 
 test("episode timeline migration stores arrays and includes notes in favorite search", async () => {
