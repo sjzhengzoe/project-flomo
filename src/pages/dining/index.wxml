@@ -1,4 +1,4 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载店铺…</view>
 </view>
@@ -24,11 +24,7 @@
       </view>
     </view>
   </view>
-  <view wx:if="{{contentLoading}}" class="content-loading">
-    <view class="content-loading__spinner" />
-    <view class="content-loading__text">正在加载店铺…</view>
-  </view>
-  <view wx:elif="{{errorMessage}}" class="state">{{errorMessage}}</view>
+  <view wx:if="{{errorMessage}}" class="state">{{errorMessage}}</view>
   <view wx:elif="{{items.length === 0}}" class="state">还没有店铺记录</view>
   <view wx:else class="place-list">
     <view wx:for="{{items}}" wx:key="id" class="place-card" data-id="{{item.id}}" bindtap="handleEdit">

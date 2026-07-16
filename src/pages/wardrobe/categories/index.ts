@@ -56,9 +56,9 @@ Page({
       })
     } catch (error) {
       if (!isAsyncPageRequestCurrent(this, generation)) return
-      this.setData({
-        errorMessage: error instanceof Error ? error.message : "分类加载失败"
-      })
+      const message = error instanceof Error ? error.message : "分类加载失败"
+      if (showInitialLoading) this.setData({ errorMessage: message })
+      else wx.showToast({ title: message, icon: "none" })
     } finally {
       if (isAsyncPageRequestCurrent(this, generation)) {
         this.setData({ loading: false, contentLoading: false, hasLoaded: true })

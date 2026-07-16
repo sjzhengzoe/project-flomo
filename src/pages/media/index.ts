@@ -2,12 +2,10 @@ import { ensureLogin } from "../../services/auth"
 import {
   listMediaCategories,
   listMediaEntries,
-  listFavoriteMediaEpisodes,
   updateMediaEntry,
   swapMediaEntrySortOrders
 } from "../../services/life-lists"
 import type {
-  FavoriteMediaEpisode,
   MediaEntry,
   MediaStatus,
   MediaType
@@ -24,8 +22,22 @@ import { findClosestSortTarget } from "../../utils/drag-sort"
 import type { SortableRect } from "../../utils/drag-sort"
 
 type StatusFilter = "all" | "revisitable" | MediaStatus
-type ListMode = "works" | "favorites"
 type LoadItemsOptions = { append?: boolean; reset?: boolean }
+type MediaListSnapshot = {
+  mediaTypes: MediaType[]
+  activeType: MediaType
+  statusFilter: StatusFilter
+  isEpisodic: boolean
+  isAudio: boolean
+  keyword: string
+  appliedKeyword: string
+  items: MediaEntry[]
+  page: number
+  totalItems: number
+  hasMore: boolean
+  canWrite: boolean
+  canReorder: boolean
+}
 
 const EPISODIC_MEDIA_TYPES = ["电视剧", "动漫", "动画", "动画片", "广播剧"]
 const PAGE_SIZE = 20
@@ -36,6 +48,15 @@ let dragRects: SortableRect[] = []
 let dragItemIds: string[] = []
 let suppressEditTapUntil = 0
 let savedPageScrollTop = 0
+let mediaListSnapshot: MediaListSnapshot | null = null
+
+function snapshotMediaList(data: MediaListSnapshot): void {
+  mediaListSnapshot = {
+    ...data,
+    mediaTypes: [...data.mediaTypes],
+    items: [...data.items]
+  }
+}
 
 function resetDragSession(): void {
   dragSourceIndex = -1
@@ -49,13 +70,11 @@ Page({
     mediaTypes: [] as MediaType[],
     activeType: "电影" as MediaType,
     statusFilter: "all" as StatusFilter,
-    listMode: "works" as ListMode,
     isEpisodic: false,
     isAudio: false,
     keyword: "",
     appliedKeyword: "",
     items: [] as MediaEntry[],
-    favoriteItems: [] as FavoriteMediaEpisode[],
     page: 0,
     totalItems: 0,
     hasMore: false,
@@ -73,6 +92,15 @@ Page({
 
   onLoad() {
     savedPageScrollTop = 0
+    if (mediaListSnapshot) {
+      this.setData({
+        ...mediaListSnapshot,
+        loading: false,
+        contentLoading: false,
+        hasLoaded: true,
+        errorMessage: ""
+      })
+    }
   },
 
   onShow() {
@@ -81,6 +109,7 @@ Page({
   },
 
   onUnload() {
+    if (this.data.hasLoaded) snapshotMediaList(this.data)
     deactivateAsyncPage(this)
     resetDragSession()
     savedPageScrollTop = 0
@@ -92,7 +121,6 @@ Page({
 
   onReachBottom() {
     if (
-      this.data.listMode === "works" &&
       this.data.hasMore &&
       !this.data.contentLoading &&
       !this.data.loadingMore &&
@@ -103,7 +131,7 @@ Page({
   },
 
   async loadItems(options: LoadItemsOptions = {}) {
-    const append = Boolean(options.append && this.data.listMode === "works")
+    const append = Boolean(options.append)
     if (
       append &&
       (!this.data.hasMore || this.data.contentLoading || this.data.loadingMore)
@@ -118,7 +146,7 @@ Page({
     } else {
       this.setData({
         loading: showInitialLoading,
-        contentLoading: !showInitialLoading,
+        contentLoading: !showInitialLoading && Boolean(options.reset),
         errorMessage: "",
         draggingIndex: -1,
         dragTargetIndex: -1
@@ -135,11 +163,10 @@ Page({
         : mediaTypes[0] || ""
       const isEpisodic = EPISODIC_MEDIA_TYPES.includes(activeType)
       const isAudio = activeType === "广播剧"
-      const listMode = isEpisodic ? this.data.listMode : "works"
       const refreshPageSize = !append && !options.reset && this.data.items.length
         ? Math.min(100, Math.max(PAGE_SIZE, this.data.items.length))
         : PAGE_SIZE
-      const mediaPage = activeType && listMode === "works"
+      const mediaPage = activeType
         ? await listMediaEntries({
             mediaType: activeType,
             status:
@@ -152,12 +179,6 @@ Page({
             pageSize: append ? PAGE_SIZE : refreshPageSize
           })
         : null
-      const favoriteItems = activeType && listMode === "favorites"
-        ? await listFavoriteMediaEpisodes({
-            mediaType: activeType,
-            keyword: this.data.appliedKeyword || undefined
-          })
-        : []
       if (!isAsyncPageRequestCurrent(this, generation)) return
       const items = mediaPage
         ? append
@@ -167,14 +188,12 @@ Page({
           : mediaPage.items
         : []
       const totalItems = mediaPage?.pagination.total || 0
-      this.setData({
+      const nextData = {
         mediaTypes,
         activeType,
         items,
-        favoriteItems,
         isEpisodic,
         isAudio,
-        listMode,
         page: mediaPage ? Math.ceil(items.length / PAGE_SIZE) : 0,
         totalItems,
         hasMore: Boolean(mediaPage && items.length < totalItems),
@@ -182,9 +201,10 @@ Page({
         canReorder:
           session.user.can_write &&
           statusFilter === "all" &&
-          listMode === "works" &&
           !this.data.appliedKeyword
-      })
+      }
+      this.setData(nextData)
+      snapshotMediaList({ ...this.data, ...nextData })
     } catch (error) {
       if (!isAsyncPageRequestCurrent(this, generation)) return
       const message = error instanceof Error ? error.message : "加载失败"
@@ -213,7 +233,6 @@ Page({
     this.setData({
       activeType: type,
       statusFilter: "all",
-      listMode: "works",
       keyword: "",
       appliedKeyword: ""
     }, () => this.loadItems({ reset: true }))
@@ -224,17 +243,6 @@ Page({
     const status = event.currentTarget.dataset.status as StatusFilter
     if (!status || status === this.data.statusFilter) return
     this.setData({ statusFilter: status }, () => this.loadItems({ reset: true }))
-  },
-
-  handleModeTap(event: WechatMiniprogram.TouchEvent) {
-    if (this.data.sorting) return
-    const listMode = event.currentTarget.dataset.mode as ListMode
-    if (!this.data.isEpisodic || !listMode || listMode === this.data.listMode) return
-    this.setData({
-      listMode,
-      keyword: "",
-      appliedKeyword: ""
-    }, () => this.loadItems({ reset: true }))
   },
 
   handleKeywordInput(event: WechatMiniprogram.Input) {
@@ -300,15 +308,6 @@ Page({
       })
       wx.showToast({ title: error instanceof Error ? error.message : "更新失败", icon: "none" })
     }
-  },
-
-  handleFavoriteTap(event: WechatMiniprogram.TouchEvent) {
-    const mediaEntryId = String(event.currentTarget.dataset.mediaId || "")
-    const seasonId = String(event.currentTarget.dataset.seasonId || "")
-    if (!mediaEntryId) return
-    wx.navigateTo({
-      url: `/pages/media/detail/index?id=${mediaEntryId}&seasonId=${seasonId}`
-    })
   },
 
   handleDragStart(event: WechatMiniprogram.TouchEvent) {

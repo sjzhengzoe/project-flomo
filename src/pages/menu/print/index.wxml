@@ -1,4 +1,4 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载菜单…</view>
 </view>
@@ -49,11 +49,7 @@
     </view>
   </scroll-view>
 
-  <view wx:if="{{contentLoading}}" class="content-loading">
-    <view class="content-loading__spinner" />
-    <view class="content-loading__text">正在加载菜单…</view>
-  </view>
-  <view wx:elif="{{errorMessage}}" class="state-block">
+  <view wx:if="{{errorMessage}}" class="state-block">
     <view>{{errorMessage}}</view>
     <button class="retry-button" bindtap="handleRetry">重试</button>
   </view>

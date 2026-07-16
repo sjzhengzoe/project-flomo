@@ -83,14 +83,17 @@ function normalizeMediaSeasons(seasons: MediaSeason[]): MediaSeason[] {
 
 function filterTimelineEpisodes(
   season: MediaSeason | null,
-  selectedTypes: MediaTimelineNoteType[]
+  selectedTypes: MediaTimelineNoteType[],
+  favoriteOnly = false
 ): MediaEpisode[] {
   if (!season) return []
   const selected = new Set(selectedTypes)
-  return season.episodes.map((episode) => ({
-    ...episode,
-    timeline_notes: episode.timeline_notes.filter((note) => selected.has(normalizedTimelineType(note.type)))
-  }))
+  return season.episodes
+    .filter((episode) => !favoriteOnly || episode.is_favorite)
+    .map((episode) => ({
+      ...episode,
+      timeline_notes: episode.timeline_notes.filter((note) => selected.has(normalizedTimelineType(note.type)))
+    }))
 }
 
 Page({
@@ -106,6 +109,7 @@ Page({
     timelineFilterOpen: false,
     timelineFilterOptions,
     timelineTypeFilters: [...allTimelineTypes] as MediaTimelineNoteType[],
+    favoriteEpisodesOnly: false,
     coverUrl: "",
     canWrite: false,
     isAudio: false,
@@ -167,7 +171,7 @@ Page({
         seasons: normalizedSeasons,
         activeSeasonIndex,
         activeSeason,
-        filteredEpisodes: filterTimelineEpisodes(activeSeason, this.data.timelineTypeFilters),
+        filteredEpisodes: filterTimelineEpisodes(activeSeason, this.data.timelineTypeFilters, this.data.favoriteEpisodesOnly),
         activeSeasonFavoriteCount: favoriteCount(activeSeason),
         coverUrl: entry.cover_url || normalizedSeasons[0]?.cover_url || "",
         canWrite: session.user.can_write,
@@ -198,13 +202,25 @@ Page({
     this.setData({
       activeSeasonIndex: index,
       activeSeason,
-      filteredEpisodes: filterTimelineEpisodes(activeSeason, this.data.timelineTypeFilters),
+      filteredEpisodes: filterTimelineEpisodes(activeSeason, this.data.timelineTypeFilters, this.data.favoriteEpisodesOnly),
       activeSeasonFavoriteCount: favoriteCount(activeSeason)
     })
   },
 
   handleTimelineFilterToggle() {
     this.setData({ timelineFilterOpen: !this.data.timelineFilterOpen })
+  },
+
+  handleFavoriteEpisodesFilterTap(event: WechatMiniprogram.TouchEvent) {
+    const favoriteEpisodesOnly = String(event.currentTarget.dataset.scope || "") === "favorites"
+    this.setData({
+      favoriteEpisodesOnly,
+      filteredEpisodes: filterTimelineEpisodes(
+        this.data.activeSeason,
+        this.data.timelineTypeFilters,
+        favoriteEpisodesOnly
+      )
+    })
   },
 
   handleTimelineFilterTypeTap(event: WechatMiniprogram.TouchEvent) {
@@ -224,7 +240,7 @@ Page({
         ...option,
         selected: timelineTypeFilters.includes(option.value)
       })),
-      filteredEpisodes: filterTimelineEpisodes(this.data.activeSeason, timelineTypeFilters)
+      filteredEpisodes: filterTimelineEpisodes(this.data.activeSeason, timelineTypeFilters, this.data.favoriteEpisodesOnly)
     })
   },
 
@@ -232,6 +248,7 @@ Page({
     const timelineTypeFilters = [...allTimelineTypes]
     this.setData({
       timelineTypeFilters,
+      favoriteEpisodesOnly: false,
       timelineFilterOptions: this.data.timelineFilterOptions.map((option) => ({
         ...option,
         selected: true
@@ -446,7 +463,8 @@ Page({
       activeSeason: seasons[this.data.activeSeasonIndex],
       filteredEpisodes: filterTimelineEpisodes(
         seasons[this.data.activeSeasonIndex],
-        this.data.timelineTypeFilters
+        this.data.timelineTypeFilters,
+        this.data.favoriteEpisodesOnly
       ),
       activeSeasonFavoriteCount: favoriteCount(seasons[this.data.activeSeasonIndex]),
       entry: this.data.entry

@@ -3,8 +3,9 @@
   <view class="fullscreen-loading__text">正在加载单集记录…</view>
 </view>
 
-<form wx:else class="page" bindsubmit="handleSave">
-  <view class="episode-overview">
+<view wx:else class="page">
+  <form class="episode-form" bindsubmit="handleSave">
+    <view class="episode-overview">
     <view class="episode-overview__title">{{mediaTitle || '单集记录'}}</view>
     <view class="episode-overview__meta">{{seasonName}} · EP{{episodeNumber}}</view>
   </view>
@@ -132,5 +133,6 @@
     </view>
   </view>
 
-  <button class="save-button" loading="{{saving}}" disabled="{{saving}}" form-type="submit">保存</button>
-</form>
+    <button class="save-button" loading="{{saving}}" disabled="{{saving}}" form-type="submit">保存</button>
+  </form>
+</view>

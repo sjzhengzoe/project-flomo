@@ -1,4 +1,4 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载菜单…</view>
 </view>
@@ -46,11 +46,7 @@
 
     <view wx:if="{{canReorder}}" class="sort-hint">按住卡片右下角的拖拽图标，拖到目标菜品即可交换位置</view>
 
-    <view wx:if="{{contentLoading}}" class="content-loading">
-      <view class="content-loading__spinner" />
-      <view class="content-loading__text">正在加载菜品…</view>
-    </view>
-    <view wx:elif="{{errorMessage}}" class="state-block">
+    <view wx:if="{{errorMessage}}" class="state-block">
       <view>{{errorMessage}}</view>
       <button class="retry-button" bindtap="handleRetry">重试</button>
     </view>

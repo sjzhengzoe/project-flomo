@@ -1,4 +1,4 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载行李清单…</view>
 </view>
@@ -9,11 +9,7 @@
   </view>
 
   <view class="content">
-    <view wx:if="{{contentLoading}}" class="content-loading">
-      <view class="content-loading__spinner" />
-      <view class="content-loading__text">正在加载行李清单…</view>
-    </view>
-    <view wx:elif="{{!activeScene}}" class="empty-state">
+    <view wx:if="{{!activeScene}}" class="empty-state">
       <view>还没有行李场景</view>
       <button wx:if="{{canWrite}}" class="primary-button" bindtap="handleAddScene">新增第一个场景</button>
     </view>

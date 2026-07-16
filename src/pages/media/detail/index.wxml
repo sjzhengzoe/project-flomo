@@ -1,14 +1,10 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载作品详情…</view>
 </view>
 
 <view wx:else class="page">
-  <view wx:if="{{contentLoading}}" class="content-loading">
-    <view class="content-loading__spinner" />
-    <view class="content-loading__text">正在加载作品详情…</view>
-  </view>
-  <view wx:elif="{{errorMessage}}" class="state">{{errorMessage}}</view>
+  <view wx:if="{{errorMessage}}" class="state">{{errorMessage}}</view>
   <block wx:elif="{{entry}}">
     <view class="detail-card">
       <view class="detail-card__content">
@@ -35,30 +31,40 @@
       <view class="season-heading__title">季与篇章</view>
       <view class="season-heading__actions">
         <view
-          class="timeline-filter-button {{timelineTypeFilters.length < timelineFilterOptions.length ? 'timeline-filter-button--active' : ''}}"
+          class="timeline-filter-button {{favoriteEpisodesOnly || timelineTypeFilters.length < timelineFilterOptions.length ? 'timeline-filter-button--active' : ''}}"
           bindtap="handleTimelineFilterToggle"
-        >筛选<text wx:if="{{timelineTypeFilters.length < timelineFilterOptions.length}}"> · {{timelineTypeFilters.length}}</text></view>
+        >筛选<text wx:if="{{favoriteEpisodesOnly || timelineTypeFilters.length < timelineFilterOptions.length}}"> · 已筛选</text></view>
         <view wx:if="{{canWrite}}" class="season-add" bindtap="handleAddSeason">＋ 新增</view>
       </view>
     </view>
 
     <view wx:if="{{timelineFilterOpen}}" class="timeline-filter-panel">
       <view class="timeline-filter-panel__heading">
-        <view class="timeline-filter-panel__title">时间线类型</view>
+        <view class="timeline-filter-panel__title">筛选单集</view>
         <view
-          wx:if="{{timelineTypeFilters.length < timelineFilterOptions.length}}"
+          wx:if="{{favoriteEpisodesOnly || timelineTypeFilters.length < timelineFilterOptions.length}}"
           class="timeline-filter-reset"
           bindtap="handleTimelineFilterReset"
         >全部</view>
       </view>
-      <view class="timeline-filter-options">
-        <view
-          wx:for="{{timelineFilterOptions}}"
-          wx:key="value"
-          class="timeline-filter-option {{item.selected ? 'timeline-filter-option--active' : ''}}"
-          data-type="{{item.value}}"
-          bindtap="handleTimelineFilterTypeTap"
-        >{{item.label}}</view>
+      <view class="timeline-filter-section">
+        <view class="timeline-filter-section__title">单集范围</view>
+        <view class="timeline-filter-options">
+          <view class="timeline-filter-option {{!favoriteEpisodesOnly ? 'timeline-filter-option--active' : ''}}" data-scope="all" bindtap="handleFavoriteEpisodesFilterTap">全部单集</view>
+          <view class="timeline-filter-option {{favoriteEpisodesOnly ? 'timeline-filter-option--active' : ''}}" data-scope="favorites" bindtap="handleFavoriteEpisodesFilterTap">喜欢单集</view>
+        </view>
+      </view>
+      <view class="timeline-filter-section">
+        <view class="timeline-filter-section__title">时间线类型</view>
+        <view class="timeline-filter-options">
+          <view
+            wx:for="{{timelineFilterOptions}}"
+            wx:key="value"
+            class="timeline-filter-option {{item.selected ? 'timeline-filter-option--active' : ''}}"
+            data-type="{{item.value}}"
+            bindtap="handleTimelineFilterTypeTap"
+          >{{item.label}}</view>
+        </view>
       </view>
     </view>
 
@@ -93,6 +99,7 @@
         </view>
       </view>
       <view wx:if="{{activeSeason.episodes.length === 0}}" class="empty-episodes">还没有单集，可从“管理”增加下一集</view>
+      <view wx:elif="{{favoriteEpisodesOnly && filteredEpisodes.length === 0}}" class="empty-episodes">这一季还没有喜欢的单集</view>
       <view wx:else class="episode-list">
         <view wx:for="{{filteredEpisodes}}" wx:key="id" class="episode-row">
           <view class="episode-row__header">

@@ -1,4 +1,4 @@
-<view wx:if="{{loading}}" class="fullscreen-loading">
+<view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载活动…</view>
 </view>
@@ -24,11 +24,7 @@
         </view>
       </view>
     </view>
-    <view wx:if="{{contentLoading}}" class="content-loading">
-      <view class="content-loading__spinner" />
-      <view class="content-loading__text">正在加载活动…</view>
-    </view>
-    <view wx:elif="{{items.length === 0}}" class="state">还没有记录</view>
+    <view wx:if="{{items.length === 0}}" class="state">还没有记录</view>
     <view wx:else class="item-list">
       <view wx:for="{{items}}" wx:key="id" class="item-card">
         <view class="item-name">{{item.name}}</view>

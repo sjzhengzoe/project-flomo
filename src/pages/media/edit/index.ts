@@ -24,7 +24,8 @@ const BUILTIN_PLATFORMS = [
   "优酷",
   "芒果 TV",
   "猫耳",
-  "漫播"
+  "漫播",
+  "Books"
 ]
 const EPISODIC_MEDIA_TYPES = ["电视剧", "动漫", "动画", "动画片", "广播剧"]
 const ERROR_TOAST_DURATION = 3000
