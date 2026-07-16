@@ -5,7 +5,12 @@
 
 <view wx:else class="page">
   <view class="scene-tabs">
-    <view wx:for="{{scenes}}" wx:key="id" class="scene-tab {{activeSceneId === item.id ? 'scene-tab--active' : ''}}" data-id="{{item.id}}" bindtap="handleSceneTap">{{item.name}}</view>
+    <scroll-view class="scene-tabs__list" scroll-y enhanced show-scrollbar="{{false}}">
+      <view wx:for="{{scenes}}" wx:key="id" class="scene-tab {{activeSceneId === item.id ? 'scene-tab--active' : ''}}" data-id="{{item.id}}" bindtap="handleSceneTap">{{item.name}}</view>
+    </scroll-view>
+    <view wx:if="{{canWrite}}" class="scene-add-fixed" role="button" aria-label="新增场景" bindtap="handleAddScene">
+      <view class="scene-add-fixed__button"><app-icon name="plus" size="27" /></view>
+    </view>
   </view>
 
   <view class="content">
@@ -19,18 +24,17 @@
           <view class="app-overview__title-group">
             <view class="luggage-title-row">
               <view class="app-overview__title">{{activeScene.name}}</view>
-              <view
-                wx:if="{{canWrite}}"
-                class="scene-icon-button scene-icon-button--rename"
-                role="button"
-                aria-label="修改场景名称"
-                bindtap="handleRenameScene"
-              >
-                <app-icon name="pencil" size="26" />
-              </view>
             </view>
           </view>
           <view wx:if="{{canWrite}}" class="scene-overview-actions">
+            <view
+              class="scene-icon-button scene-icon-button--rename"
+              role="button"
+              aria-label="修改场景名称"
+              bindtap="handleRenameScene"
+            >
+              <app-icon name="pencil" size="25" />
+            </view>
             <view
               class="scene-icon-button scene-icon-button--delete"
               role="button"
@@ -39,7 +43,7 @@
             >
               <app-icon name="trash-2-danger" size="27" />
             </view>
-            <button class="app-overview__action" bindtap="handleAddScene"><app-icon name="plus-white" size="22" /><text>场景</text></button>
+            <button class="app-overview__action luggage-add-group" bindtap="handleAddGroup"><app-icon name="plus-white" size="22" /><text>新增</text></button>
           </view>
         </view>
         <view class="app-overview__stats">
@@ -55,29 +59,39 @@
       </view>
 
       <view class="group-list">
-        <view wx:for="{{activeScene.groups}}" wx:key="id" class="group-card">
+        <view wx:for="{{activeScene.groups}}" wx:for-item="group" wx:key="id" class="group-card js-group-card js-sortable-group {{sorting && dragTargetGroupId === group.id ? 'group-card--drop-target' : ''}} {{draggingGroupIndex === index ? 'group-card--dragging' : ''}} {{dragTargetGroupIndex === index && draggingGroupIndex !== index ? 'group-card--sort-target' : ''}}" data-group-id="{{group.id}}">
           <view class="group-header">
-            <view>
-              <text class="group-title">{{item.name}}</text>
-              <text wx:if="{{item.is_required}}" class="required-tag">必备</text>
+            <view class="group-header__main">
+              <view class="group-title">{{group.name}}</view>
+              <view class="group-count">{{group.items.length}} 件物品</view>
             </view>
             <view wx:if="{{canWrite}}" class="inline-icon-actions">
+              <view
+                class="inline-icon-button group-drag-handle"
+                role="button"
+                aria-label="拖动调整分组顺序"
+                data-index="{{index}}"
+                catchlongpress="handleGroupDragStart"
+                catchtouchmove="handleGroupDragMove"
+                catchtouchend="handleGroupDragEnd"
+                catchtouchcancel="handleGroupDragCancel"
+              ><app-icon name="grip-vertical" size="27" /></view>
               <view
                 class="inline-icon-button"
                 role="button"
                 aria-label="修改层级名称"
-                data-id="{{item.id}}"
-                data-name="{{item.name}}"
+                data-id="{{group.id}}"
+                data-name="{{group.name}}"
                 bindtap="handleRenameGroup"
               >
                 <app-icon name="pencil" size="24" />
               </view>
               <view
-                wx:if="{{!item.is_required}}"
+                wx:if="{{!group.is_required}}"
                 class="inline-icon-button inline-icon-button--delete"
                 role="button"
                 aria-label="删除层级"
-                data-id="{{item.id}}"
+                data-id="{{group.id}}"
                 bindtap="handleDeleteGroup"
               >
                 <app-icon name="trash-2-danger" size="24" />
@@ -85,36 +99,46 @@
             </view>
           </view>
           <view class="luggage-items">
-            <view wx:for="{{item.items}}" wx:for-item="luggageItem" wx:key="id" class="luggage-item">
-              <text>· {{luggageItem.name}}</text>
+            <view wx:for="{{group.items}}" wx:for-item="luggageItem" wx:for-index="itemIndex" wx:key="id" class="luggage-item js-luggage-item {{draggingItemId === luggageItem.id ? 'luggage-item--dragging' : ''}} {{dragTargetItemId === luggageItem.id && draggingItemId !== luggageItem.id ? 'luggage-item--drop-target' : ''}}" data-id="{{luggageItem.id}}" data-group-id="{{group.id}}" data-name="{{luggageItem.name}}" bindtap="handleItemTap">
+              <view class="luggage-item__marker">{{itemIndex + 1}}</view>
+              <view class="luggage-item__name">{{luggageItem.name}}</view>
               <view wx:if="{{canWrite}}" class="inline-icon-actions">
                 <view
-                  class="inline-icon-button"
+                  class="item-drag-handle"
                   role="button"
-                  aria-label="编辑物品"
+                  aria-label="拖动调整物品层级或顺序"
                   data-id="{{luggageItem.id}}"
-                  data-name="{{luggageItem.name}}"
-                  bindtap="handleRenameItem"
-                >
-                  <app-icon name="pencil" size="24" />
-                </view>
+                  data-group-id="{{group.id}}"
+                  catchlongpress="handleDragStart"
+                  catchtouchmove="handleDragMove"
+                  catchtouchend="handleDragEnd"
+                  catchtouchcancel="handleDragCancel"
+                ><app-icon name="grip-vertical" size="28" /></view>
                 <view
-                  class="inline-icon-button inline-icon-button--delete"
+                  class="item-delete-button"
                   role="button"
                   aria-label="删除物品"
                   data-id="{{luggageItem.id}}"
-                  bindtap="handleDeleteItem"
+                  catchtap="handleDeleteItem"
                 >
                   <app-icon name="trash-2-danger" size="24" />
                 </view>
               </view>
             </view>
-            <view wx:if="{{item.items.length === 0}}" class="items-empty">暂无物品</view>
+            <view wx:if="{{group.items.length === 0}}" class="items-empty">这个分组还没有物品</view>
           </view>
-          <view wx:if="{{canWrite}}" class="add-item" data-group-id="{{item.id}}" bindtap="handleAddItem"><app-icon name="plus" size="22" /><text>添加物品</text></view>
+          <view wx:if="{{canWrite}}" class="add-item" data-group-id="{{group.id}}" bindtap="handleAddItem"><app-icon name="plus" size="22" /><text>添加物品</text></view>
         </view>
       </view>
-      <button wx:if="{{canWrite}}" class="add-group-button" bindtap="handleAddGroup"><app-icon name="plus-white" size="22" /><text>新增携带层级</text></button>
     </block>
+  </view>
+
+  <view
+    wx:if="{{dragGhostVisible}}"
+    class="drag-ghost drag-ghost--{{dragGhostType}}"
+    style="left: {{dragGhostX}}px; top: {{dragGhostY}}px;"
+  >
+    <app-icon name="grip-vertical" size="27" />
+    <text class="drag-ghost__label">{{dragGhostLabel}}</text>
   </view>
 </view>

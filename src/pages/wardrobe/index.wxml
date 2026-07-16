@@ -19,6 +19,9 @@
         bindtap="handleCategoryTap"
       >{{item.name}}</view>
     </scroll-view>
+    <view class="sidebar__edit" role="button" aria-label="编辑分类" bindtap="handleManageCategories">
+      <view class="sidebar__edit-button"><app-icon name="pencil" size="26" /></view>
+    </view>
   </view>
 
   <scroll-view class="content" scroll-y enhanced show-scrollbar="{{false}}">
@@ -26,11 +29,6 @@
       <view class="header__topline">
         <view class="header__title-group">
           <view class="header__title">我的衣橱</view>
-          <view class="header__manage" bindtap="handleManageCategories">
-            <app-icon name="settings-2" size="22" />
-            <text>管理分类</text>
-            <view class="header__manage-arrow"><app-icon name="chevron-right" size="22" /></view>
-          </view>
         </view>
         <button class="header__add" bindtap="handleAddItem"><app-icon name="plus-white" size="22" /><text>新增</text></button>
       </view>

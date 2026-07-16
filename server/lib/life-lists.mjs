@@ -815,6 +815,17 @@ export async function deleteLuggageGroup(supabase, id) {
   throwSupabaseError(error, "删除行李层级失败。");
 }
 
+export async function swapLuggageGroupSortOrders(supabase, body) {
+  const sourceId = requiredText(body.source_id, "源行李层级");
+  const targetId = requiredText(body.target_id, "目标行李层级");
+  assertCondition(sourceId !== targetId, 400, "SAME_RECORD", "请选择不同的行李层级。" );
+  const { error } = await supabase.rpc("swap_luggage_group_sort_orders", {
+    p_source_id: sourceId,
+    p_target_id: targetId,
+  });
+  throwSupabaseError(error, "调整行李层级顺序失败。");
+}
+
 export async function createLuggageItem(supabase, body) {
   const groupId = requiredText(body.group_id, "行李层级");
   await requireRecord(supabase, "luggage_groups", groupId, "id");
@@ -841,6 +852,19 @@ export async function updateLuggageItem(supabase, id, body) {
     .single();
   throwSupabaseError(error, "更新行李物品失败。");
   return data;
+}
+
+export async function moveLuggageItem(supabase, id, body) {
+  const targetGroupId = requiredText(body.target_group_id, "目标行李层级");
+  const targetItemId = body.target_item_id == null || body.target_item_id === ""
+    ? null
+    : requiredText(body.target_item_id, "目标物品");
+  const { error } = await supabase.rpc("move_luggage_item", {
+    p_source_id: id,
+    p_target_group_id: targetGroupId,
+    p_target_item_id: targetItemId,
+  });
+  throwSupabaseError(error, "移动行李物品失败。");
 }
 
 export async function deleteLuggageItem(supabase, id) {

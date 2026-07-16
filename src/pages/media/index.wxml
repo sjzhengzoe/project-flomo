@@ -5,13 +5,18 @@
 
 <view wx:else class="page">
   <view class="side-tabs">
-    <view
-      wx:for="{{mediaTypes}}"
-      wx:key="*this"
-      class="side-tab {{activeType === item ? 'side-tab--active' : ''}}"
-      data-type="{{item}}"
-      bindtap="handleTypeTap"
-    >{{item}}</view>
+    <scroll-view class="side-tabs__list" scroll-y enhanced show-scrollbar="{{false}}">
+      <view
+        wx:for="{{mediaTypes}}"
+        wx:key="*this"
+        class="side-tab {{activeType === item ? 'side-tab--active' : ''}}"
+        data-type="{{item}}"
+        bindtap="handleTypeTap"
+      >{{item}}</view>
+    </scroll-view>
+    <view wx:if="{{canWrite}}" class="side-tabs__edit" role="button" aria-label="编辑分类" bindtap="handleManageCategories">
+      <view class="side-tabs__edit-button"><app-icon name="pencil" size="26" /></view>
+    </view>
   </view>
 
   <view class="content">
@@ -19,9 +24,6 @@
       <view class="app-overview__topline">
         <view class="app-overview__title-group">
           <view class="app-overview__title">{{activeType || '影视清单'}}</view>
-          <view wx:if="{{canWrite}}" class="media-manage" bindtap="handleManageCategories">
-            <app-icon name="settings-2" size="22" /><text>管理分类</text>
-          </view>
         </view>
         <button wx:if="{{canWrite}}" class="app-overview__action" bindtap="handleAdd"><app-icon name="plus-white" size="22" /><text>新增</text></button>
       </view>

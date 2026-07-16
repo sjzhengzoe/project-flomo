@@ -7,6 +7,8 @@ import {
   deleteLuggageItem,
   deleteLuggageScene,
   listLuggageScenes,
+  moveLuggageItem,
+  swapLuggageGroupSortOrders,
   updateLuggageGroup,
   updateLuggageItem,
   updateLuggageScene
@@ -16,9 +18,44 @@ import {
   activateAsyncPage,
   beginAsyncPageRequest,
   deactivateAsyncPage,
+  invalidateAsyncPageRequests,
   isAsyncPageActive,
   isAsyncPageRequestCurrent
 } from "../../utils/async-page"
+import { findClosestSortTarget } from "../../utils/drag-sort"
+import type { SortableRect } from "../../utils/drag-sort"
+
+let dragSourceId = ""
+let dragSourceGroupId = ""
+let dragTargetItemId = ""
+let dragItems: Array<SortableRect & { id: string; groupId: string }> = []
+let dragGroupRects: Array<SortableRect & { id: string }> = []
+let dragTargetGroupId = ""
+let suppressItemTapUntil = 0
+let groupDragSourceIndex = -1
+let groupDragTargetIndex = -1
+let groupDragIds: string[] = []
+let groupDragRects: SortableRect[] = []
+
+function resetDragSession(): void {
+  dragSourceId = ""
+  dragSourceGroupId = ""
+  dragTargetItemId = ""
+  dragItems = []
+  dragGroupRects = []
+  dragTargetGroupId = ""
+}
+
+function resetGroupDragSession(): void {
+  groupDragSourceIndex = -1
+  groupDragTargetIndex = -1
+  groupDragIds = []
+  groupDragRects = []
+}
+
+function getTouchPoint(event: WechatMiniprogram.TouchEvent) {
+  return event.touches[0] || event.changedTouches[0] || null
+}
 
 function promptText(title: string, placeholder: string, content = ""): Promise<string | null> {
   return new Promise((resolve) => {
@@ -54,7 +91,19 @@ Page({
     canWrite: false,
     loading: true,
     contentLoading: false,
-    hasLoaded: false
+    hasLoaded: false,
+    sorting: false,
+    groupSorting: false,
+    draggingGroupIndex: -1,
+    dragTargetGroupIndex: -1,
+    draggingItemId: "",
+    dragTargetItemId: "",
+    dragTargetGroupId: "",
+    dragGhostVisible: false,
+    dragGhostLabel: "",
+    dragGhostType: "item" as "item" | "group",
+    dragGhostX: 0,
+    dragGhostY: 0
   },
 
   onShow() {
@@ -64,6 +113,8 @@ Page({
 
   onUnload() {
     deactivateAsyncPage(this)
+    resetDragSession()
+    resetGroupDragSession()
   },
 
   async loadScenes() {
@@ -102,6 +153,7 @@ Page({
   },
 
   handleSceneTap(event: WechatMiniprogram.TouchEvent) {
+    if (this.data.sorting || this.data.groupSorting) return
     const id = String(event.currentTarget.dataset.id || "")
     const activeScene = this.data.scenes.find((scene) => scene.id === id) || null
     const counts = getSceneCounts(activeScene)
@@ -165,6 +217,72 @@ Page({
     if (isAsyncPageActive(this)) this.loadScenes()
   },
 
+  handleGroupDragStart(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.sorting || this.data.groupSorting || this.data.contentLoading) return
+    const index = Number(event.currentTarget.dataset.index)
+    const groups = this.data.activeScene?.groups || []
+    if (!Number.isInteger(index) || index < 0 || index >= groups.length) return
+    groupDragSourceIndex = index
+    groupDragTargetIndex = index
+    groupDragIds = groups.map((group) => group.id)
+    const touch = getTouchPoint(event)
+    invalidateAsyncPageRequests(this)
+    this.setData({
+      groupSorting: true,
+      draggingGroupIndex: index,
+      dragTargetGroupIndex: index,
+      dragGhostVisible: true,
+      dragGhostLabel: groups[index].name,
+      dragGhostType: "group",
+      dragGhostX: touch?.clientX || 0,
+      dragGhostY: touch?.clientY || 0
+    })
+    wx.createSelectorQuery()
+      .selectAll(".js-sortable-group")
+      .boundingClientRect((result) => {
+        groupDragRects = result as unknown as SortableRect[]
+      })
+      .exec()
+  },
+
+  handleGroupDragMove(event: WechatMiniprogram.TouchEvent) {
+    if (groupDragSourceIndex < 0 || groupDragRects.length === 0) return
+    const touch = event.touches[0] || event.changedTouches[0]
+    if (!touch) return
+    this.setData({ dragGhostX: touch.clientX, dragGhostY: touch.clientY })
+    const target = findClosestSortTarget(groupDragRects, touch.clientX, touch.clientY)
+    if (target < 0 || target === groupDragTargetIndex) return
+    groupDragTargetIndex = target
+    this.setData({ dragTargetGroupIndex: target })
+  },
+
+  handleGroupDragCancel() {
+    resetGroupDragSession()
+    this.setData({ groupSorting: false, draggingGroupIndex: -1, dragTargetGroupIndex: -1, dragGhostVisible: false })
+  },
+
+  async handleGroupDragEnd() {
+    const sourceId = groupDragIds[groupDragSourceIndex] || ""
+    const targetId = groupDragIds[groupDragTargetIndex] || ""
+    resetGroupDragSession()
+    this.setData({ draggingGroupIndex: -1, dragTargetGroupIndex: -1, dragGhostVisible: false })
+    if (!sourceId || !targetId || sourceId === targetId) {
+      this.setData({ groupSorting: false })
+      return
+    }
+    try {
+      await swapLuggageGroupSortOrders(sourceId, targetId)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) {
+        wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+        await this.loadScenes()
+      }
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ groupSorting: false })
+    }
+  },
+
   async handleRenameGroup(event: WechatMiniprogram.TouchEvent) {
     const id = String(event.currentTarget.dataset.id || "")
     const name = String(event.currentTarget.dataset.name || "")
@@ -204,6 +322,107 @@ Page({
     if (!nextName || !isAsyncPageActive(this)) return
     await updateLuggageItem(id, nextName)
     if (isAsyncPageActive(this)) this.loadScenes()
+  },
+
+  handleItemTap(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.sorting || Date.now() < suppressItemTapUntil) return
+    this.handleRenameItem(event)
+  },
+
+  handleDragStart(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.sorting || this.data.contentLoading) return
+    const id = String(event.currentTarget.dataset.id || "")
+    const groupId = String(event.currentTarget.dataset.groupId || "")
+    if (!id || !groupId) return
+
+    dragSourceId = id
+    dragSourceGroupId = groupId
+    dragTargetItemId = id
+    dragTargetGroupId = groupId
+    suppressItemTapUntil = Date.now() + 1000
+    const item = this.data.activeScene?.groups
+      .find((group) => group.id === groupId)?.items.find((entry) => entry.id === id)
+    const touch = getTouchPoint(event)
+    invalidateAsyncPageRequests(this)
+    this.setData({
+      sorting: true,
+      draggingItemId: id,
+      dragTargetItemId: id,
+      dragTargetGroupId,
+      dragGhostVisible: true,
+      dragGhostLabel: item?.name || "物品",
+      dragGhostType: "item",
+      dragGhostX: touch?.clientX || 0,
+      dragGhostY: touch?.clientY || 0
+    })
+
+    wx.createSelectorQuery()
+      .selectAll(".js-luggage-item")
+      .fields({ rect: true, dataset: true }, (itemResult) => {
+        dragItems = (itemResult as unknown as Array<SortableRect & { dataset: { id: string; groupId: string } }>).map((rect) => ({
+          ...rect,
+          id: String(rect.dataset.id || ""),
+          groupId: String(rect.dataset.groupId || "")
+        }))
+      })
+      .selectAll(".js-group-card")
+      .fields({ rect: true, dataset: true }, (groupResult) => {
+        dragGroupRects = (groupResult as unknown as Array<SortableRect & { dataset: { groupId: string } }>).map((rect) => ({
+          ...rect,
+          id: String(rect.dataset.groupId || "")
+        }))
+      })
+      .exec()
+  },
+
+  handleDragMove(event: WechatMiniprogram.TouchEvent) {
+    if (!dragSourceId) return
+    const touch = event.touches[0] || event.changedTouches[0]
+    if (!touch) return
+    this.setData({ dragGhostX: touch.clientX, dragGhostY: touch.clientY })
+    const hoveredGroup = dragGroupRects.find((rect) =>
+      touch.clientX >= rect.left && touch.clientX <= rect.right &&
+      touch.clientY >= rect.top && touch.clientY <= rect.bottom
+    )
+    const nextGroupId = hoveredGroup?.id || dragTargetGroupId || dragSourceGroupId
+    const groupItems = dragItems.filter((item) => item.groupId === nextGroupId)
+    const nextIndex = findClosestSortTarget(groupItems, touch.clientX, touch.clientY)
+    const nextItemId = nextIndex >= 0 ? groupItems[nextIndex]?.id || "" : ""
+    if (nextGroupId === dragTargetGroupId && nextItemId === dragTargetItemId) return
+    dragTargetGroupId = nextGroupId
+    dragTargetItemId = nextItemId
+    this.setData({ dragTargetGroupId: nextGroupId, dragTargetItemId: nextItemId })
+  },
+
+  handleDragCancel() {
+    resetDragSession()
+    this.setData({ sorting: false, draggingItemId: "", dragTargetItemId: "", dragTargetGroupId: "", dragGhostVisible: false })
+  },
+
+  async handleDragEnd() {
+    const sourceId = dragSourceId
+    const sourceGroupId = dragSourceGroupId
+    const targetGroupId = dragTargetGroupId
+    const targetItemId = dragTargetItemId
+    const unchanged = targetGroupId === sourceGroupId && sourceId === targetItemId
+    resetDragSession()
+    this.setData({ draggingItemId: "", dragTargetItemId: "", dragTargetGroupId: "", dragGhostVisible: false })
+    if (!sourceId || !targetGroupId || unchanged) {
+      this.setData({ sorting: false })
+      return
+    }
+    try {
+      await moveLuggageItem(sourceId, targetGroupId, targetItemId)
+      if (!isAsyncPageActive(this)) return
+      await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) {
+        wx.showToast({ title: error instanceof Error ? error.message : "移动失败", icon: "none" })
+        await this.loadScenes()
+      }
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ sorting: false })
+    }
   },
 
   handleDeleteItem(event: WechatMiniprogram.TouchEvent) {

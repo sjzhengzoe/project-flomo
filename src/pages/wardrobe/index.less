@@ -19,6 +19,22 @@
   flex: 1;
 }
 
+.sidebar__edit {
+  display: flex;
+  min-height: 96rpx;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 8rpx calc(12rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #e8e8e8;
+  background: #ffffff;
+  color: #555555;
+}
+
+.sidebar__edit-button { display: flex; width: 56rpx; height: 56rpx; align-items: center; justify-content: center; }
+.sidebar__edit:active .sidebar__edit-button { opacity: .5; }
+
 .side-tab {
   position: relative;
   display: flex;
@@ -89,23 +105,6 @@
 .header__title-group {
   min-width: 0;
   flex: 1;
-}
-
-.header__manage {
-  display: inline-flex;
-  min-height: 42rpx;
-  align-items: center;
-  gap: 7rpx;
-  margin-top: 5rpx;
-  color: #8d8d87;
-  font-size: 21rpx;
-  line-height: 1;
-}
-
-.header__manage-arrow {
-  color: #b5b5af;
-  font-size: 28rpx;
-  line-height: 1;
 }
 
 .header__add {

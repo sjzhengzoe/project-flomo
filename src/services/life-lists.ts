@@ -301,6 +301,14 @@ export function deleteLuggageGroup(id: string): Promise<void> {
   return request<void>({ path: `/api/luggage/groups/${id}`, method: "DELETE" })
 }
 
+export function swapLuggageGroupSortOrders(sourceId: string, targetId: string): Promise<void> {
+  return request<void>({
+    path: "/api/luggage/groups/order/swap",
+    method: "PUT",
+    data: { source_id: sourceId, target_id: targetId }
+  })
+}
+
 export async function createLuggageItem(groupId: string, name: string): Promise<LuggageItem> {
   const data = await request<{ item: LuggageItem }>({
     path: "/api/luggage/items",
@@ -312,6 +320,18 @@ export async function createLuggageItem(groupId: string, name: string): Promise<
 
 export function updateLuggageItem(id: string, name: string): Promise<void> {
   return request<void>({ path: `/api/luggage/items/${id}`, method: "PUT", data: { name } })
+}
+
+export function moveLuggageItem(
+  id: string,
+  targetGroupId: string,
+  targetItemId?: string
+): Promise<void> {
+  return request<void>({
+    path: `/api/luggage/items/${id}/move`,
+    method: "PUT",
+    data: { target_group_id: targetGroupId, target_item_id: targetItemId || null }
+  })
 }
 
 export function deleteLuggageItem(id: string): Promise<void> {

@@ -52,10 +52,12 @@ import {
   listMediaSeasons,
   listFavoriteMediaEpisodes,
   listMediaCategories,
+  moveLuggageItem,
   reorderMediaEntries,
   setMediaEntryCoverFromSeason,
   swapMediaEntrySortOrders,
   swapMediaCategorySortOrders,
+  swapLuggageGroupSortOrders,
   updateActivityItem,
   updateDiningPlace,
   updateLuggageGroup,
@@ -428,6 +430,11 @@ export function buildServer(options = {}) {
     return { ok: true, data: { deleted: true } };
   });
 
+  app.put("/api/luggage/groups/order/swap", { preHandler: writable }, async (request) => {
+    await swapLuggageGroupSortOrders(getSupabaseAdmin(), request.body || {});
+    return { ok: true, data: { swapped: true } };
+  });
+
   app.post("/api/luggage/items", { preHandler: writable }, async (request, reply) => {
     const item = await createLuggageItem(getSupabaseAdmin(), request.body || {});
     return reply.code(201).send({ ok: true, data: { item } });
@@ -443,6 +450,15 @@ export function buildServer(options = {}) {
       ),
     },
   }));
+
+  app.put("/api/luggage/items/:id/move", { preHandler: writable }, async (request) => {
+    await moveLuggageItem(
+      getSupabaseAdmin(),
+      request.params.id,
+      request.body || {},
+    );
+    return { ok: true, data: { moved: true } };
+  });
 
   app.delete("/api/luggage/items/:id", { preHandler: writable }, async (request) => {
     await deleteLuggageItem(getSupabaseAdmin(), request.params.id);
