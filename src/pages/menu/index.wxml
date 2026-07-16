@@ -61,7 +61,7 @@
         data-index="{{index}}"
         bindtap="handleDishTap"
         bindlongpress="handleDragStart"
-        bindtouchmove="handleDragMove"
+        catchtouchmove="{{sorting ? 'handleDragMove' : ''}}"
         bindtouchend="handleDragEnd"
         bindtouchcancel="handleDragCancel"
       >

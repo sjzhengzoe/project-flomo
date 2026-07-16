@@ -78,7 +78,7 @@
         data-index="{{index}}"
         bindtap="handleEdit"
         bindlongpress="handleDragStart"
-        bindtouchmove="handleDragMove"
+        catchtouchmove="{{sorting ? 'handleDragMove' : ''}}"
         bindtouchend="handleDragEnd"
         bindtouchcancel="handleDragCancel"
       >
