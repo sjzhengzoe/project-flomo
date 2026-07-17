@@ -1,5 +1,3 @@
-<page-meta page-style="{{sorting ? 'overflow: hidden;' : ''}}" />
-
 <view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载影视清单…</view>
@@ -73,14 +71,10 @@
       <view
         wx:for="{{items}}"
         wx:key="id"
-        class="media-card js-sortable-media {{draggingIndex === index ? 'media-card--dragging' : ''}} {{dragTargetIndex === index && draggingIndex !== index ? (dragInsertAfter ? 'media-card--insert-after' : 'media-card--insert-before') : ''}}"
+        class="media-card"
         data-id="{{item.id}}"
         data-index="{{index}}"
         bindtap="handleEdit"
-        bindlongpress="handleDragStart"
-        catchtouchmove="{{sorting ? 'handleDragMove' : ''}}"
-        bindtouchend="handleDragEnd"
-        bindtouchcancel="handleDragCancel"
       >
         <view class="media-card__content">
           <image wx:if="{{item.cover_url}}" class="media-card__cover" src="{{item.cover_url}}" mode="aspectFill" lazy-load />
@@ -105,6 +99,10 @@
               data-id="{{item.id}}"
               catchtap="handleToggleRevisitable"
             >↻ {{isAudio ? '值得重听' : '值得重温'}}</view>
+            <view wx:if="{{canReorder}}" class="sort-actions">
+              <view class="sort-action {{index === 0 ? 'sort-action--disabled' : ''}}" data-index="{{index}}" data-direction="-1" catchtap="handleMove"><app-icon name="arrow-up" size="24" /></view>
+              <view class="sort-action {{index === items.length - 1 ? 'sort-action--disabled' : ''}}" data-index="{{index}}" data-direction="1" catchtap="handleMove"><app-icon name="arrow-down" size="24" /></view>
+            </view>
           </view>
         </view>
       </view>
@@ -112,7 +110,5 @@
     </view>
 
   </view>
-  <view wx:if="{{dragGhostVisible}}" class="drag-ghost" style="left: {{dragGhostX}}px; top: {{dragGhostY}}px;">
-    <app-icon name="grip-vertical" size="27" /><text class="drag-ghost__label">{{dragGhostLabel}}</text>
-  </view>
+  <operation-loading visible="{{ordering}}" text="正在调整顺序…" />
 </view>

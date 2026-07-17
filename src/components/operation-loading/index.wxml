@@ -1,0 +1,6 @@
+<view wx:if="{{visible}}" class="mask">
+  <view class="panel">
+    <view class="spinner" />
+    <view class="text">{{text}}</view>
+  </view>
+</view>

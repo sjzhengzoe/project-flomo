@@ -30,7 +30,8 @@
     "navigationBarBackgroundColor": "#ffffff"
   },
   "usingComponents": {
-    "app-icon": "/components/app-icon/index"
+    "app-icon": "/components/app-icon/index",
+    "operation-loading": "/components/operation-loading/index"
   },
   "tabBar": {
     "custom": true,

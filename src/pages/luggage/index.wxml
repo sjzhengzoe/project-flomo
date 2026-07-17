@@ -1,5 +1,3 @@
-<page-meta page-style="{{sorting || groupSorting ? 'overflow: hidden;' : ''}}" />
-
 <view wx:if="{{loading && !hasLoaded}}" class="fullscreen-loading">
   <view class="fullscreen-loading__spinner" />
   <view class="fullscreen-loading__text">正在加载行李清单…</view>
@@ -15,7 +13,7 @@
     </view>
   </view>
 
-  <view class="content">
+  <scroll-view class="content" scroll-y enhanced show-scrollbar="{{false}}">
     <view wx:if="{{!activeScene}}" class="empty-state">
       <view>还没有行李场景</view>
       <button wx:if="{{canWrite}}" class="primary-button" bindtap="handleAddScene">新增第一个场景</button>
@@ -45,7 +43,6 @@
             >
               <app-icon name="trash-2-danger" size="27" />
             </view>
-            <button class="app-overview__action luggage-add-group" bindtap="handleAddGroup"><app-icon name="plus-white" size="22" /><text>新增</text></button>
           </view>
         </view>
         <view class="app-overview__stats">
@@ -60,21 +57,29 @@
         </view>
       </view>
 
+      <view wx:if="{{canWrite}}" class="scene-toolbar">
+        <view class="scene-toolbar__action {{sortEditing ? 'scene-toolbar__action--active' : ''}}" bindtap="handleSortEditingToggle">
+          <app-icon name="settings-2" size="22" />
+          <text>{{sortEditing ? '完成排序' : '编辑排序'}}</text>
+        </view>
+        <view class="scene-toolbar__action" bindtap="handleAddGroup">
+          <app-icon name="plus" size="23" />
+          <text>新增分组</text>
+        </view>
+      </view>
+
       <view class="group-list">
-        <view wx:for="{{activeScene.groups}}" wx:for-item="group" wx:key="id" class="group-card js-group-card js-sortable-group {{sorting && dragTargetGroupId === group.id ? 'group-card--drop-target' : ''}} {{draggingGroupIndex === index ? 'group-card--dragging' : ''}} {{dragTargetGroupIndex === index && draggingGroupIndex !== index ? (groupDragInsertAfter ? 'group-card--insert-after' : 'group-card--insert-before') : ''}}" data-group-id="{{group.id}}">
-          <view
-            class="group-header"
-            data-index="{{index}}"
-            bindlongpress="handleGroupDragStart"
-            catchtouchmove="{{groupSorting ? 'handleGroupDragMove' : ''}}"
-            bindtouchend="handleGroupDragEnd"
-            bindtouchcancel="handleGroupDragCancel"
-          >
+        <view wx:for="{{activeScene.groups}}" wx:for-item="group" wx:for-index="groupIndex" wx:key="id" class="group-card">
+          <view class="group-header">
             <view class="group-header__main">
               <view class="group-title">{{group.name}}</view>
               <view class="group-count">{{group.items.length}} 件物品</view>
             </view>
             <view wx:if="{{canWrite}}" class="inline-icon-actions">
+              <block wx:if="{{sortEditing}}">
+                <view class="inline-icon-button {{groupIndex === 0 ? 'inline-icon-button--disabled' : ''}}" data-index="{{groupIndex}}" data-direction="-1" catchtap="handleGroupMove"><app-icon name="arrow-up" size="24" /></view>
+                <view class="inline-icon-button {{groupIndex === activeScene.groups.length - 1 ? 'inline-icon-button--disabled' : ''}}" data-index="{{groupIndex}}" data-direction="1" catchtap="handleGroupMove"><app-icon name="arrow-down" size="24" /></view>
+              </block>
               <view
                 class="inline-icon-button"
                 role="button"
@@ -86,7 +91,6 @@
                 <app-icon name="pencil" size="24" />
               </view>
               <view
-                wx:if="{{!group.is_required}}"
                 class="inline-icon-button inline-icon-button--delete"
                 role="button"
                 aria-label="删除层级"
@@ -103,19 +107,19 @@
               wx:for-item="luggageItem"
               wx:for-index="itemIndex"
               wx:key="id"
-              class="luggage-item js-luggage-item {{draggingItemId === luggageItem.id ? 'luggage-item--dragging' : ''}} {{dragTargetItemId === luggageItem.id && draggingItemId !== luggageItem.id ? (dragInsertAfter ? 'luggage-item--insert-after' : 'luggage-item--insert-before') : ''}}"
+              class="luggage-item"
               data-id="{{luggageItem.id}}"
               data-group-id="{{group.id}}"
               data-name="{{luggageItem.name}}"
               bindtap="handleItemTap"
-              catchlongpress="handleDragStart"
-              catchtouchmove="{{sorting ? 'handleDragMove' : ''}}"
-              bindtouchend="handleDragEnd"
-              bindtouchcancel="handleDragCancel"
             >
               <view class="luggage-item__marker">{{itemIndex + 1}}</view>
               <view class="luggage-item__name">{{luggageItem.name}}</view>
               <view wx:if="{{canWrite}}" class="inline-icon-actions">
+                <block wx:if="{{sortEditing}}">
+                  <view class="inline-icon-button {{itemIndex === 0 ? 'inline-icon-button--disabled' : ''}}" data-group-id="{{group.id}}" data-index="{{itemIndex}}" data-direction="-1" catchtap="handleItemMove"><app-icon name="arrow-up" size="23" /></view>
+                  <view class="inline-icon-button {{itemIndex === group.items.length - 1 ? 'inline-icon-button--disabled' : ''}}" data-group-id="{{group.id}}" data-index="{{itemIndex}}" data-direction="1" catchtap="handleItemMove"><app-icon name="arrow-down" size="23" /></view>
+                </block>
                 <view
                   class="item-delete-button"
                   role="button"
@@ -133,14 +137,11 @@
         </view>
       </view>
     </block>
-  </view>
+  </scroll-view>
 
-  <view
-    wx:if="{{dragGhostVisible}}"
-    class="drag-ghost drag-ghost--{{dragGhostType}}"
-    style="left: {{dragGhostX}}px; top: {{dragGhostY}}px;"
-  >
-    <app-icon name="grip-vertical" size="27" />
-    <text class="drag-ghost__label">{{dragGhostLabel}}</text>
-  </view>
+  <operation-loading
+    visible="{{ordering || savingItem || savingGroup || savingScene || editing || deleting}}"
+    text="{{deleting ? deletingLabel : editing ? editingLabel : savingItem ? '正在添加物品…' : savingGroup ? '正在添加分组…' : savingScene ? '正在添加场景…' : '正在调整顺序…'}}"
+  />
+
 </view>

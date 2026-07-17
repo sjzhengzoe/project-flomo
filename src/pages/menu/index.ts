@@ -42,6 +42,7 @@ Page({
     dragTargetIndex: -1,
     dragInsertAfter: false,
     sorting: false,
+    ordering: false,
     dragGhostVisible: false,
     dragGhostLabel: "",
     dragGhostX: 0,
@@ -132,6 +133,28 @@ Page({
     ) return
     const id = String(event.currentTarget.dataset.id || "")
     if (id) wx.navigateTo({ url: `/pages/menu/edit/index?id=${id}` })
+  },
+
+  async handleMove(event: WechatMiniprogram.TouchEvent) {
+    const index = Number(event.currentTarget.dataset.index)
+    const direction = Number(event.currentTarget.dataset.direction)
+    const targetIndex = index + direction
+    if (!this.data.canReorder || this.data.ordering || targetIndex < 0 || targetIndex >= this.data.dishes.length) return
+    this.setData({ ordering: true })
+    const dishes = [...this.data.dishes]
+    const [dish] = dishes.splice(index, 1)
+    dishes.splice(targetIndex, 0, dish)
+    this.setData({ dishes })
+    try {
+      await reorderDishSortOrders(dishes.map((item) => item.id))
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) {
+        await this.refreshData()
+        if (isAsyncPageActive(this)) this.setData({ ordering: false })
+      }
+    }
   },
 
   handleDragStart(event: WechatMiniprogram.TouchEvent) {

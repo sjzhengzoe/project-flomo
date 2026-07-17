@@ -96,6 +96,15 @@ Page({
     loading: true,
     contentLoading: false,
     hasLoaded: false,
+    ordering: false,
+    savingItem: false,
+    savingGroup: false,
+    savingScene: false,
+    editing: false,
+    editingLabel: "",
+    deleting: false,
+    deletingLabel: "",
+    sortEditing: false,
     sorting: false,
     groupSorting: false,
     draggingGroupIndex: -1,
@@ -166,15 +175,22 @@ Page({
     this.setData({
       activeSceneId: id,
       activeScene,
+      sortEditing: false,
       activeGroupCount: counts.groupCount,
       activeItemCount: counts.itemCount
     })
   },
 
+  handleSortEditingToggle() {
+    if (!this.data.canWrite || this.data.ordering) return
+    this.setData({ sortEditing: !this.data.sortEditing })
+  },
+
   async handleAddScene() {
-    if (!this.data.canWrite) return
+    if (!this.data.canWrite || this.data.savingScene) return
     const name = await promptText("新增场景", "例如：成都三日游")
     if (!name || !isAsyncPageActive(this)) return
+    this.setData({ savingScene: true })
     try {
       const scene = await createLuggageScene(name)
       if (!isAsyncPageActive(this)) return
@@ -184,21 +200,30 @@ Page({
       if (isAsyncPageActive(this)) {
         wx.showToast({ title: error instanceof Error ? error.message : "新增失败", icon: "none" })
       }
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ savingScene: false })
     }
   },
 
   async handleRenameScene() {
     const scene = this.data.activeScene
-    if (!scene || !this.data.canWrite) return
+    if (!scene || !this.data.canWrite || this.data.editing) return
     const name = await promptText("修改场景名", "输入场景名称", scene.name)
     if (!name || !isAsyncPageActive(this)) return
-    await updateLuggageScene(scene.id, name)
-    if (isAsyncPageActive(this)) this.loadScenes()
+    this.setData({ editing: true, editingLabel: "正在修改场景…" })
+    try {
+      await updateLuggageScene(scene.id, name)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "修改失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ editing: false, editingLabel: "" })
+    }
   },
 
   handleDeleteScene() {
     const scene = this.data.activeScene
-    if (!scene || !this.data.canWrite) return
+    if (!scene || !this.data.canWrite || this.data.deleting) return
     wx.showModal({
       title: "删除场景",
       content: `将同时删除“${scene.name}”下的全部层级和物品。`,
@@ -206,21 +231,72 @@ Page({
       confirmColor: "#c9342f",
       success: async (result) => {
         if (!result.confirm || !isAsyncPageActive(this)) return
-        await deleteLuggageScene(scene.id)
-        if (!isAsyncPageActive(this)) return
-        this.setData({ activeSceneId: "" })
-        this.loadScenes()
+        this.setData({ deleting: true, deletingLabel: "正在删除场景…" })
+        try {
+          await deleteLuggageScene(scene.id)
+          if (!isAsyncPageActive(this)) return
+          this.setData({ activeSceneId: "" })
+          await this.loadScenes()
+        } catch (error) {
+          if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "删除失败", icon: "none" })
+        } finally {
+          if (isAsyncPageActive(this)) this.setData({ deleting: false, deletingLabel: "" })
+        }
       }
     })
   },
 
   async handleAddGroup() {
     const scene = this.data.activeScene
-    if (!scene || !this.data.canWrite) return
+    if (!scene || !this.data.canWrite || this.data.savingGroup) return
     const name = await promptText("新增携带层级", "例如：更加精致")
     if (!name || !isAsyncPageActive(this)) return
-    await createLuggageGroup(scene.id, name)
-    if (isAsyncPageActive(this)) this.loadScenes()
+    this.setData({ savingGroup: true })
+    try {
+      await createLuggageGroup(scene.id, name)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) {
+        wx.showToast({ title: error instanceof Error ? error.message : "新增失败", icon: "none" })
+      }
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ savingGroup: false })
+    }
+  },
+
+  async handleGroupMove(event: WechatMiniprogram.TouchEvent) {
+    const index = Number(event.currentTarget.dataset.index)
+    const direction = Number(event.currentTarget.dataset.direction)
+    const groups = this.data.activeScene?.groups || []
+    const targetIndex = index + direction
+    if (!this.data.canWrite || this.data.ordering || targetIndex < 0 || targetIndex >= groups.length) return
+    this.setData({ ordering: true })
+    try {
+      await moveLuggageGroup(groups[index].id, groups[targetIndex].id, direction > 0)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ ordering: false })
+    }
+  },
+
+  async handleItemMove(event: WechatMiniprogram.TouchEvent) {
+    const groupId = String(event.currentTarget.dataset.groupId || "")
+    const index = Number(event.currentTarget.dataset.index)
+    const direction = Number(event.currentTarget.dataset.direction)
+    const items = this.data.activeScene?.groups.find((group) => group.id === groupId)?.items || []
+    const targetIndex = index + direction
+    if (!this.data.canWrite || this.data.ordering || targetIndex < 0 || targetIndex >= items.length) return
+    this.setData({ ordering: true })
+    try {
+      await moveLuggageItem(items[index].id, groupId, items[targetIndex].id, direction > 0)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ ordering: false })
+    }
   },
 
   handleGroupDragStart(event: WechatMiniprogram.TouchEvent) {
@@ -294,15 +370,24 @@ Page({
   },
 
   async handleRenameGroup(event: WechatMiniprogram.TouchEvent) {
+    if (this.data.editing) return
     const id = String(event.currentTarget.dataset.id || "")
     const name = String(event.currentTarget.dataset.name || "")
     const nextName = await promptText("修改层级名", "输入层级名称", name)
     if (!nextName || !isAsyncPageActive(this)) return
-    await updateLuggageGroup(id, nextName)
-    if (isAsyncPageActive(this)) this.loadScenes()
+    this.setData({ editing: true, editingLabel: "正在修改分组…" })
+    try {
+      await updateLuggageGroup(id, nextName)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "修改失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ editing: false, editingLabel: "" })
+    }
   },
 
   handleDeleteGroup(event: WechatMiniprogram.TouchEvent) {
+    if (this.data.deleting) return
     const id = String(event.currentTarget.dataset.id || "")
     wx.showModal({
       title: "删除携带层级",
@@ -311,27 +396,52 @@ Page({
       confirmColor: "#c9342f",
       success: async (result) => {
         if (!result.confirm || !isAsyncPageActive(this)) return
-        await deleteLuggageGroup(id)
-        if (isAsyncPageActive(this)) this.loadScenes()
+        this.setData({ deleting: true, deletingLabel: "正在删除分组…" })
+        try {
+          await deleteLuggageGroup(id)
+          if (isAsyncPageActive(this)) await this.loadScenes()
+        } catch (error) {
+          if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "删除失败", icon: "none" })
+        } finally {
+          if (isAsyncPageActive(this)) this.setData({ deleting: false, deletingLabel: "" })
+        }
       }
     })
   },
 
   async handleAddItem(event: WechatMiniprogram.TouchEvent) {
     const groupId = String(event.currentTarget.dataset.groupId || "")
+    if (this.data.savingItem) return
     const name = await promptText("新增物品", "例如：身份证")
     if (!name || !isAsyncPageActive(this)) return
-    await createLuggageItem(groupId, name)
-    if (isAsyncPageActive(this)) this.loadScenes()
+    this.setData({ savingItem: true })
+    try {
+      await createLuggageItem(groupId, name)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) {
+        wx.showToast({ title: error instanceof Error ? error.message : "新增失败", icon: "none" })
+      }
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ savingItem: false })
+    }
   },
 
   async handleRenameItem(event: WechatMiniprogram.TouchEvent) {
+    if (this.data.editing) return
     const id = String(event.currentTarget.dataset.id || "")
     const name = String(event.currentTarget.dataset.name || "")
     const nextName = await promptText("修改物品", "输入物品名称", name)
     if (!nextName || !isAsyncPageActive(this)) return
-    await updateLuggageItem(id, nextName)
-    if (isAsyncPageActive(this)) this.loadScenes()
+    this.setData({ editing: true, editingLabel: "正在修改物品…" })
+    try {
+      await updateLuggageItem(id, nextName)
+      if (isAsyncPageActive(this)) await this.loadScenes()
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "修改失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) this.setData({ editing: false, editingLabel: "" })
+    }
   },
 
   handleItemTap(event: WechatMiniprogram.TouchEvent) {
@@ -441,6 +551,7 @@ Page({
   },
 
   handleDeleteItem(event: WechatMiniprogram.TouchEvent) {
+    if (this.data.deleting) return
     const id = String(event.currentTarget.dataset.id || "")
     wx.showModal({
       title: "删除物品",
@@ -449,8 +560,15 @@ Page({
       confirmColor: "#c9342f",
       success: async (result) => {
         if (!result.confirm || !isAsyncPageActive(this)) return
-        await deleteLuggageItem(id)
-        if (isAsyncPageActive(this)) this.loadScenes()
+        this.setData({ deleting: true, deletingLabel: "正在删除物品…" })
+        try {
+          await deleteLuggageItem(id)
+          if (isAsyncPageActive(this)) await this.loadScenes()
+        } catch (error) {
+          if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "删除失败", icon: "none" })
+        } finally {
+          if (isAsyncPageActive(this)) this.setData({ deleting: false, deletingLabel: "" })
+        }
       }
     })
   }

@@ -87,6 +87,7 @@ Page({
     dragTargetIndex: -1,
     dragInsertAfter: false,
     sorting: false,
+    ordering: false,
     dragGhostVisible: false,
     dragGhostLabel: "",
     dragGhostX: 0,
@@ -314,6 +315,28 @@ Page({
         )
       })
       wx.showToast({ title: error instanceof Error ? error.message : "更新失败", icon: "none" })
+    }
+  },
+
+  async handleMove(event: WechatMiniprogram.TouchEvent) {
+    const index = Number(event.currentTarget.dataset.index)
+    const direction = Number(event.currentTarget.dataset.direction)
+    const targetIndex = index + direction
+    if (!this.data.canReorder || this.data.ordering || targetIndex < 0 || targetIndex >= this.data.items.length) return
+    this.setData({ ordering: true })
+    const items = [...this.data.items]
+    const [item] = items.splice(index, 1)
+    items.splice(targetIndex, 0, item)
+    this.setData({ items })
+    try {
+      await reorderMediaEntrySortOrders(this.data.activeType, items.map((entry) => entry.id))
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) {
+        await this.loadItems()
+        if (isAsyncPageActive(this)) this.setData({ ordering: false })
+      }
     }
   },
 
