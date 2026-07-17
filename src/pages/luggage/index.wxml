@@ -91,6 +91,15 @@
                 <app-icon name="pencil" size="24" />
               </view>
               <view
+                class="inline-icon-button"
+                role="button"
+                aria-label="添加物品"
+                data-group-id="{{group.id}}"
+                catchtap="handleAddItem"
+              >
+                <app-icon name="plus" size="24" />
+              </view>
+              <view
                 class="inline-icon-button inline-icon-button--delete"
                 role="button"
                 aria-label="删除层级"
@@ -133,7 +142,6 @@
             </view>
             <view wx:if="{{group.items.length === 0}}" class="items-empty">这个分组还没有物品</view>
           </view>
-          <view wx:if="{{canWrite}}" class="add-item" data-group-id="{{group.id}}" bindtap="handleAddItem"><app-icon name="plus" size="22" /><text>添加物品</text></view>
         </view>
       </view>
     </block>
