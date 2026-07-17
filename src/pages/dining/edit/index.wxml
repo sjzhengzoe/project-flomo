@@ -23,6 +23,15 @@
       <input class="field-input" value="{{name}}" maxlength="120" placeholder="输入店铺名称" bindinput="handleNameInput" />
     </view>
     <view class="field">
+      <view class="field-label">所属场景</view>
+      <picker mode="selector" range="{{sceneNames}}" value="{{sceneIndex}}" bindchange="handleSceneChange">
+        <view class="scene-picker">
+          <text>{{sceneNames[sceneIndex] || '请选择场景'}}</text>
+          <app-icon name="chevron-right" size="25" />
+        </view>
+      </picker>
+    </view>
+    <view class="field">
       <view class="field-label">可用方式（可多选）</view>
       <view class="mode-options">
         <view class="mode-option {{supportsTakeout ? 'mode-option--active' : ''}}" bindtap="toggleTakeout">可外卖</view>

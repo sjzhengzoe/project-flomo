@@ -3,9 +3,10 @@ import {
   createDiningPlace,
   deleteDiningPlace,
   getDiningPlace,
+  listDiningScenes,
   updateDiningPlace
 } from "../../../services/life-lists"
-import type { DiningMode, DiningPlace } from "../../../types/life-lists"
+import type { DiningMode, DiningPlace, DiningScene } from "../../../types/life-lists"
 import {
   activateAsyncPage,
   beginAsyncPageRequest,
@@ -18,6 +19,9 @@ Page({
   data: {
     id: "",
     sceneId: "",
+    scenes: [] as DiningScene[],
+    sceneNames: [] as string[],
+    sceneIndex: 0,
     name: "",
     supportsTakeout: true,
     supportsDineIn: false,
@@ -49,7 +53,16 @@ Page({
       }
 
       const id = String(query.id || "")
-      this.setData({ sceneId: String(query.sceneId || "") })
+      const scenes = await listDiningScenes()
+      if (!isAsyncPageRequestCurrent(this, generation)) return
+      const requestedSceneId = String(query.sceneId || "")
+      const sceneIndex = Math.max(0, scenes.findIndex((scene) => scene.id === requestedSceneId))
+      this.setData({
+        scenes,
+        sceneNames: scenes.map((scene) => scene.name),
+        sceneIndex,
+        sceneId: scenes[sceneIndex]?.id || ""
+      })
       if (!id) {
         wx.setNavigationBarTitle({ title: "新增店铺" })
         return
@@ -77,9 +90,11 @@ Page({
   },
 
   applyPlace(place: DiningPlace) {
+    const sceneIndex = Math.max(0, this.data.scenes.findIndex((scene) => scene.id === place.scene_id))
     this.setData({
       id: place.id,
       sceneId: place.scene_id,
+      sceneIndex,
       name: place.name,
       supportsTakeout: place.service_modes.includes("takeout"),
       supportsDineIn: place.service_modes.includes("dine_in"),
@@ -93,6 +108,12 @@ Page({
 
   handleMenuInput(event: WechatMiniprogram.Input) {
     this.setData({ menuText: event.detail.value })
+  },
+
+  handleSceneChange(event: WechatMiniprogram.PickerChange) {
+    const sceneIndex = Number(event.detail.value)
+    const scene = this.data.scenes[sceneIndex]
+    if (scene) this.setData({ sceneIndex, sceneId: scene.id })
   },
 
   toggleTakeout() {
@@ -111,6 +132,10 @@ Page({
     if (this.data.supportsDineIn) modes.push("dine_in")
     if (!name) {
       wx.showToast({ title: "请填写店铺名", icon: "none" })
+      return
+    }
+    if (!this.data.sceneId) {
+      wx.showToast({ title: "请选择所属场景", icon: "none" })
       return
     }
     if (modes.length === 0) {
