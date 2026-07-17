@@ -19,6 +19,12 @@ Component({
   },
   pageLifetimes: {
     show() {
+      const page = this as WechatMiniprogram.Component.TrivialInstance & {
+        getTabBar?: () => WechatMiniprogram.Component.TrivialInstance
+      }
+      const tabBar = page.getTabBar && page.getTabBar()
+      if (tabBar) tabBar.setData({ selected: 1 })
+
       const user = getCurrentUser()
       if (!user) {
         this.setData({
@@ -33,12 +39,6 @@ Component({
         })
         return
       }
-
-      const page = this as WechatMiniprogram.Component.TrivialInstance & {
-        getTabBar?: () => WechatMiniprogram.Component.TrivialInstance
-      }
-      const tabBar = page.getTabBar && page.getTabBar()
-      if (tabBar) tabBar.setData({ selected: 1 })
 
       this.setData({
         ready: true,
