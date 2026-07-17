@@ -17,6 +17,7 @@ import {
 Page({
   data: {
     id: "",
+    sceneId: "",
     name: "",
     supportsTakeout: true,
     supportsDineIn: false,
@@ -48,6 +49,7 @@ Page({
       }
 
       const id = String(query.id || "")
+      this.setData({ sceneId: String(query.sceneId || "") })
       if (!id) {
         wx.setNavigationBarTitle({ title: "新增店铺" })
         return
@@ -77,6 +79,7 @@ Page({
   applyPlace(place: DiningPlace) {
     this.setData({
       id: place.id,
+      sceneId: place.scene_id,
       name: place.name,
       supportsTakeout: place.service_modes.includes("takeout"),
       supportsDineIn: place.service_modes.includes("dine_in"),
@@ -116,6 +119,7 @@ Page({
     }
     const input = {
       name,
+      scene_id: this.data.sceneId,
       service_modes: modes,
       menu_items: this.data.menuText
         .split(/[\n，,、]/)

@@ -888,6 +888,10 @@ export async function deleteLuggageItem(supabase, id) {
 
 export async function listDiningPlaces(supabase, query) {
   let request = supabase.from("dining_places").select("*");
+  if (typeof query.scene_id === "string" && query.scene_id.trim()) {
+    assertCondition(UUID_PATTERN.test(query.scene_id), 400, "INVALID_ID", "用餐场景编号无效。");
+    request = request.eq("scene_id", query.scene_id);
+  }
   if (typeof query.keyword === "string" && query.keyword.trim()) {
     request = request.ilike("name", `%${query.keyword.trim().slice(0, 80)}%`);
   }
@@ -913,9 +917,52 @@ function diningPayload(body) {
   );
   return {
     name: requiredText(body.name, "店铺名"),
+    scene_id: requiredText(body.scene_id, "用餐场景"),
     service_modes: modes,
     menu_items: textArray(body.menu_items || [], "菜品", 100),
   };
+}
+
+export async function listDiningScenes(supabase) {
+  const { data, error } = await supabase.from("dining_scenes").select("*").order("sort_order", { ascending: true });
+  throwSupabaseError(error, "读取用餐场景失败。");
+  return data;
+}
+
+export async function getDiningScene(supabase, id) {
+  assertCondition(UUID_PATTERN.test(id), 400, "INVALID_ID", "用餐场景编号无效。");
+  return requireRecord(supabase, "dining_scenes", id);
+}
+
+export async function createDiningScene(supabase, body) {
+  const { data, error } = await supabase.rpc("create_dining_scene_at_end", { p_name: requiredText(body.name, "场景名称", 40) }).single();
+  throwSupabaseError(error, "新增用餐场景失败。", { 23505: { statusCode: 409, code: "DINING_SCENE_EXISTS", message: "场景名称已存在。" } });
+  return data;
+}
+
+export async function updateDiningScene(supabase, id, body) {
+  await getDiningScene(supabase, id);
+  const { data, error } = await supabase.from("dining_scenes").update({ name: requiredText(body.name, "场景名称", 40) }).eq("id", id).select("*").single();
+  throwSupabaseError(error, "更新用餐场景失败。", { 23505: { statusCode: 409, code: "DINING_SCENE_EXISTS", message: "场景名称已存在。" } });
+  return data;
+}
+
+export async function deleteDiningScene(supabase, id) {
+  await getDiningScene(supabase, id);
+  const { data: place, error: placeError } = await supabase.from("dining_places").select("id").eq("scene_id", id).limit(1).maybeSingle();
+  throwSupabaseError(placeError, "检查用餐场景失败。");
+  assertCondition(!place, 409, "DINING_SCENE_NOT_EMPTY", "场景下还有店铺，暂时不能删除。");
+  const { error } = await supabase.from("dining_scenes").delete().eq("id", id);
+  throwSupabaseError(error, "删除用餐场景失败。");
+}
+
+export async function swapDiningSceneSortOrders(supabase, body) {
+  const sourceId = typeof body.source_id === "string" ? body.source_id.trim() : "";
+  const targetId = typeof body.target_id === "string" ? body.target_id.trim() : "";
+  assertCondition(UUID_PATTERN.test(sourceId) && UUID_PATTERN.test(targetId) && sourceId !== targetId, 400, "INVALID_IDS", "请选择两个不同的用餐场景。");
+  const { error } = await supabase.rpc("swap_dining_scene_sort_orders", { p_source_id: sourceId, p_target_id: targetId });
+  throwSupabaseError(error, "调整用餐场景排序失败。");
+  return { updated: 2 };
 }
 
 export async function createDiningPlace(supabase, body) {

@@ -27,6 +27,7 @@ import { HttpError } from "./lib/errors.mjs";
 import {
   createActivityItem,
   createDiningPlace,
+  createDiningScene,
   createLuggageGroup,
   createLuggageItem,
   createLuggageScene,
@@ -35,6 +36,7 @@ import {
   createMediaCategory,
   deleteActivityItem,
   deleteDiningPlace,
+  deleteDiningScene,
   deleteLuggageGroup,
   deleteLuggageItem,
   deleteLuggageScene,
@@ -42,11 +44,13 @@ import {
   deleteMediaSeason,
   deleteMediaCategory,
   getDiningPlace,
+  getDiningScene,
   getMediaEntry,
   getMediaEpisode,
   getMediaCategory,
   listActivityItems,
   listDiningPlaces,
+  listDiningScenes,
   listLuggageScenes,
   listMediaEntries,
   listMediaSeasons,
@@ -61,6 +65,8 @@ import {
   swapLuggageGroupSortOrders,
   updateActivityItem,
   updateDiningPlace,
+  updateDiningScene,
+  swapDiningSceneSortOrders,
   updateLuggageGroup,
   updateLuggageItem,
   updateLuggageScene,
@@ -476,6 +482,13 @@ export function buildServer(options = {}) {
     ok: true,
     data: { items: await listDiningPlaces(getSupabaseAdmin(), request.query || {}) },
   }));
+
+  app.get("/api/dining-scenes", { preHandler: authenticated }, async () => ({ ok: true, data: { items: await listDiningScenes(getSupabaseAdmin()) } }));
+  app.get("/api/dining-scenes/:id", { preHandler: authenticated }, async (request) => ({ ok: true, data: { item: await getDiningScene(getSupabaseAdmin(), request.params.id) } }));
+  app.post("/api/dining-scenes", { preHandler: writable }, async (request, reply) => reply.code(201).send({ ok: true, data: { item: await createDiningScene(getSupabaseAdmin(), request.body || {}) } }));
+  app.put("/api/dining-scenes/order/swap", { preHandler: writable }, async (request) => ({ ok: true, data: await swapDiningSceneSortOrders(getSupabaseAdmin(), request.body || {}) }));
+  app.put("/api/dining-scenes/:id", { preHandler: writable }, async (request) => ({ ok: true, data: { item: await updateDiningScene(getSupabaseAdmin(), request.params.id, request.body || {}) } }));
+  app.delete("/api/dining-scenes/:id", { preHandler: writable }, async (request) => { await deleteDiningScene(getSupabaseAdmin(), request.params.id); return { ok: true, data: { deleted: true } }; });
 
   app.get("/api/dining/:id", { preHandler: authenticated }, async (request) => ({
     ok: true,

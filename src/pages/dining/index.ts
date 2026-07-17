@@ -1,6 +1,6 @@
 import { ensureLogin } from "../../services/auth"
-import { listDiningPlaces } from "../../services/life-lists"
-import type { DiningPlace } from "../../types/life-lists"
+import { listDiningPlaces, listDiningScenes } from "../../services/life-lists"
+import type { DiningPlace, DiningScene } from "../../types/life-lists"
 import {
   activateAsyncPage,
   beginAsyncPageRequest,
@@ -16,6 +16,9 @@ type DiningPlaceView = DiningPlace & {
 Page({
   data: {
     items: [] as DiningPlaceView[],
+    scenes: [] as DiningScene[],
+    activeSceneId: "",
+    activeSceneName: "",
     takeoutCount: 0,
     dineInCount: 0,
     canWrite: false,
@@ -44,7 +47,9 @@ Page({
     })
     try {
       const session = await ensureLogin()
-      const items = await listDiningPlaces()
+      const scenes = await listDiningScenes()
+      const activeSceneId = scenes.some((scene) => scene.id === this.data.activeSceneId) ? this.data.activeSceneId : (scenes[0]?.id || "")
+      const items = activeSceneId ? await listDiningPlaces(activeSceneId) : []
       if (!isAsyncPageRequestCurrent(this, generation)) return
       this.setData({
         items: items.map((item) => ({
@@ -52,6 +57,9 @@ Page({
           supportsTakeout: item.service_modes.includes("takeout"),
           supportsDineIn: item.service_modes.includes("dine_in")
         })),
+        scenes,
+        activeSceneId,
+        activeSceneName: scenes.find((scene) => scene.id === activeSceneId)?.name || "用餐清单",
         takeoutCount: items.filter((item) => item.service_modes.includes("takeout")).length,
         dineInCount: items.filter((item) => item.service_modes.includes("dine_in")).length,
         canWrite: session.user.can_write
@@ -71,7 +79,17 @@ Page({
   handleAdd() {
     if (!this.data.canWrite || this.data.loading || this.data.contentLoading) return
     wx.removeStorageSync("DINING_EDIT_ITEM")
-    wx.navigateTo({ url: "/pages/dining/edit/index" })
+    wx.navigateTo({ url: `/pages/dining/edit/index?sceneId=${this.data.activeSceneId}` })
+  },
+
+  handleSceneTap(event: WechatMiniprogram.TouchEvent) {
+    const activeSceneId = String(event.currentTarget.dataset.id || "")
+    if (!activeSceneId || activeSceneId === this.data.activeSceneId) return
+    this.setData({ activeSceneId }, () => this.loadItems())
+  },
+
+  handleManageScenes() {
+    if (this.data.canWrite && !this.data.contentLoading) wx.navigateTo({ url: "/pages/dining/scenes/index" })
   },
 
   handleEdit(event: WechatMiniprogram.TouchEvent) {
