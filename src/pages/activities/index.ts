@@ -3,6 +3,7 @@ import {
   createActivityItem,
   deleteActivityItem,
   listActivityItems,
+  swapActivityItemSortOrders,
   updateActivityItem
 } from "../../services/life-lists"
 import type { ActivityItem, ActivityType } from "../../types/life-lists"
@@ -30,7 +31,9 @@ Page({
     editorName: "",
     editorType: "室内" as ActivityType,
     saving: false,
-    deleting: false
+    deleting: false,
+    ordering: false,
+    sortEditing: false
   },
 
   onShow() {
@@ -69,7 +72,12 @@ Page({
     if (this.data.saving || this.data.deleting) return
     const type = event.currentTarget.dataset.type as ActivityType
     if (!type || type === this.data.activeType) return
-    this.setData({ activeType: type }, () => this.loadItems())
+    this.setData({ activeType: type, sortEditing: false }, () => this.loadItems())
+  },
+
+  handleSortEditingToggle() {
+    if (!this.data.canWrite || this.data.contentLoading || this.data.ordering) return
+    this.setData({ sortEditing: !this.data.sortEditing })
   },
 
   noop() {},
@@ -165,5 +173,28 @@ Page({
         if (isAsyncPageActive(this)) this.setData({ deleting: false })
       }
     })
+  },
+
+  async handleMove(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.ordering || this.data.contentLoading) return
+    const index = Number(event.currentTarget.dataset.index)
+    const targetIndex = index + Number(event.currentTarget.dataset.direction)
+    const source = this.data.items[index]
+    const target = this.data.items[targetIndex]
+    if (!source || !target) return
+    const items = [...this.data.items]
+    items[index] = target
+    items[targetIndex] = source
+    this.setData({ items, ordering: true })
+    try {
+      await swapActivityItemSortOrders(source.id, target.id)
+    } catch (error) {
+      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "排序失败", icon: "none" })
+    } finally {
+      if (isAsyncPageActive(this)) {
+        this.setData({ ordering: false })
+        await this.loadItems()
+      }
+    }
   }
 })

@@ -53,26 +53,24 @@
 
 .menu-toolbar {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16rpx;
-  margin: 24rpx 0 20rpx;
+  justify-content: flex-end;
+  margin-top: 18rpx;
+  padding: 14rpx 4rpx;
 }
 
-.print-button {
+.menu-toolbar__action {
   display: flex;
-  height: 64rpx;
-  margin: 0;
-  padding: 0 22rpx;
+  min-height: 48rpx;
   align-items: center;
+  gap: 7rpx;
   justify-content: center;
-  border: 1rpx solid #d8d8d8;
-  border-radius: 32rpx;
-  background: #ffffff;
-  color: #222222;
-  font-size: 24rpx;
-  line-height: 1;
+  color: #444444;
+  font-size: 23rpx;
 }
+
+.menu-toolbar__action:active { opacity: .5; }
 
 .icon-add-button {
   display: flex;
@@ -94,7 +92,7 @@
   line-height: 1;
 }
 
-.print-button::after, .icon-add-button::after, .retry-button::after { border: 0; }
+.icon-add-button::after, .retry-button::after { border: 0; }
 
 
 .dish-list { display: flex; flex-direction: column; gap: 18rpx; }

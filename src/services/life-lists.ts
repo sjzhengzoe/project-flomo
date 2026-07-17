@@ -271,6 +271,14 @@ export function deleteActivityItem(id: string): Promise<void> {
   return request<void>({ path: `/api/activities/${id}`, method: "DELETE" })
 }
 
+export function swapActivityItemSortOrders(sourceId: string, targetId: string): Promise<void> {
+  return request<void>({
+    path: "/api/activities/order/swap",
+    method: "PUT",
+    data: { source_id: sourceId, target_id: targetId }
+  })
+}
+
 export async function listLuggageScenes(): Promise<LuggageScene[]> {
   const data = await request<{ items: LuggageScene[] }>({ path: "/api/luggage" })
   return data.items

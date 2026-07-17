@@ -24,11 +24,6 @@
       <view class="app-overview__topline">
         <view class="app-overview__title-group">
           <view class="app-overview__title">我的菜单</view>
-          <view class="app-overview__link" bindtap="handlePrintTap">
-            <app-icon name="printer" size="22" />
-            <text>选四张打印</text>
-            <view class="app-overview__link-arrow"><app-icon name="chevron-right" size="24" /></view>
-          </view>
         </view>
         <button wx:if="{{canWrite}}" class="app-overview__action" bindtap="handleAddTap"><app-icon name="plus-white" size="22" /><text>新增</text></button>
       </view>
@@ -41,6 +36,13 @@
           <view class="app-overview__value">{{categories.length}}</view>
           <view class="app-overview__label">分类</view>
         </view>
+      </view>
+    </view>
+
+    <view class="menu-toolbar">
+      <view class="menu-toolbar__action" bindtap="handlePrintTap">
+        <app-icon name="printer" size="22" />
+        <text>打印</text>
       </view>
     </view>
 

@@ -711,6 +711,21 @@ export async function deleteActivityItem(supabase, id) {
   throwSupabaseError(error, "删除活动失败。");
 }
 
+export async function swapActivityItemSortOrders(supabase, body) {
+  const sourceId = typeof body.source_id === "string" ? body.source_id.trim() : "";
+  const targetId = typeof body.target_id === "string" ? body.target_id.trim() : "";
+  assertCondition(UUID_PATTERN.test(sourceId) && UUID_PATTERN.test(targetId) && sourceId !== targetId, 400, "INVALID_IDS", "请选择两个不同的活动项目。");
+  const { error } = await supabase.rpc("swap_activity_item_sort_orders", {
+    p_source_id: sourceId,
+    p_target_id: targetId,
+  });
+  throwSupabaseError(error, "调整活动排序失败。", {
+    P0002: { statusCode: 404, code: "ACTIVITY_ITEM_NOT_FOUND", message: "活动项目不存在。" },
+    "22023": { statusCode: 400, code: "INVALID_ACTIVITY_SWAP", message: "只能交换同一分类下的活动。" },
+  });
+  return { updated: 2 };
+}
+
 export async function listLuggageScenes(supabase) {
   const [sceneResult, groupResult, itemResult] = await Promise.all([
     supabase.from("luggage_scenes").select("*").order("sort_order", { ascending: true }),

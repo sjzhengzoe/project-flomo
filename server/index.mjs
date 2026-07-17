@@ -62,6 +62,7 @@ import {
   setMediaEntryCoverFromSeason,
   swapMediaEntrySortOrders,
   swapMediaCategorySortOrders,
+  swapActivityItemSortOrders,
   swapLuggageGroupSortOrders,
   updateActivityItem,
   updateDiningPlace,
@@ -374,6 +375,11 @@ export function buildServer(options = {}) {
     const item = await createActivityItem(getSupabaseAdmin(), request.body || {});
     return reply.code(201).send({ ok: true, data: { item } });
   });
+
+  app.put("/api/activities/order/swap", { preHandler: writable }, async (request) => ({
+    ok: true,
+    data: await swapActivityItemSortOrders(getSupabaseAdmin(), request.body || {}),
+  }));
 
   app.put("/api/activities/:id", { preHandler: writable }, async (request) => ({
     ok: true,
