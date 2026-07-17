@@ -1,10 +1,11 @@
 import { ensureLogin } from "../../services/auth"
-import { listDiningPlaces, listDiningScenes } from "../../services/life-lists"
+import { deleteDiningPlace, listDiningPlaces, listDiningScenes } from "../../services/life-lists"
 import type { DiningPlace, DiningScene } from "../../types/life-lists"
 import {
   activateAsyncPage,
   beginAsyncPageRequest,
   deactivateAsyncPage,
+  isAsyncPageActive,
   isAsyncPageRequestCurrent
 } from "../../utils/async-page"
 
@@ -24,7 +25,9 @@ Page({
     canWrite: false,
     loading: true,
     contentLoading: false,
+    switchingScene: false,
     hasLoaded: false,
+    deleting: false,
     errorMessage: ""
   },
 
@@ -71,7 +74,7 @@ Page({
       else wx.showToast({ title: message, icon: "none" })
     } finally {
       if (isAsyncPageRequestCurrent(this, generation)) {
-        this.setData({ loading: false, contentLoading: false, hasLoaded: true })
+        this.setData({ loading: false, contentLoading: false, switchingScene: false, hasLoaded: true })
       }
     }
   },
@@ -85,7 +88,7 @@ Page({
   handleSceneTap(event: WechatMiniprogram.TouchEvent) {
     const activeSceneId = String(event.currentTarget.dataset.id || "")
     if (!activeSceneId || activeSceneId === this.data.activeSceneId) return
-    this.setData({ activeSceneId }, () => this.loadItems())
+    this.setData({ activeSceneId, switchingScene: true }, () => this.loadItems())
   },
 
   handleManageScenes() {
@@ -99,5 +102,30 @@ Page({
     if (!item) return
     wx.setStorageSync("DINING_EDIT_ITEM", item)
     wx.navigateTo({ url: `/pages/dining/edit/index?id=${id}` })
+  },
+
+  handleDelete(event: WechatMiniprogram.TouchEvent) {
+    if (!this.data.canWrite || this.data.contentLoading || this.data.deleting) return
+    const id = String(event.currentTarget.dataset.id || "")
+    const item = this.data.items.find((place) => place.id === id)
+    if (!item) return
+    wx.showModal({
+      title: "删除店铺",
+      content: `确认删除“${item.name}”？`,
+      confirmText: "删除",
+      confirmColor: "#c9342f",
+      success: async (result) => {
+        if (!result.confirm || !isAsyncPageActive(this)) return
+        this.setData({ deleting: true })
+        try {
+          await deleteDiningPlace(id)
+          if (isAsyncPageActive(this)) await this.loadItems()
+        } catch (error) {
+          if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "删除失败", icon: "none" })
+        } finally {
+          if (isAsyncPageActive(this)) this.setData({ deleting: false })
+        }
+      }
+    })
   }
 })

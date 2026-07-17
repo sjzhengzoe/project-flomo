@@ -1,7 +1,6 @@
 import { ensureLogin } from "../../../services/auth"
 import {
   createDiningPlace,
-  deleteDiningPlace,
   getDiningPlace,
   listDiningScenes,
   updateDiningPlace
@@ -27,8 +26,7 @@ Page({
     supportsDineIn: false,
     menuText: "",
     loading: true,
-    saving: false,
-    deleting: false
+    saving: false
   },
 
   onLoad(query: Record<string, string | undefined>) {
@@ -125,7 +123,7 @@ Page({
   },
 
   async handleSave() {
-    if (this.data.loading || this.data.saving || this.data.deleting) return
+    if (this.data.loading || this.data.saving) return
     const name = this.data.name.trim()
     const modes: DiningMode[] = []
     if (this.data.supportsTakeout) modes.push("takeout")
@@ -166,43 +164,5 @@ Page({
       wx.hideLoading()
       if (isAsyncPageActive(this)) this.setData({ saving: false })
     }
-  },
-
-  handleDelete() {
-    if (!this.data.id || this.data.loading || this.data.saving || this.data.deleting) return
-    const id = this.data.id
-    this.setData({ deleting: true })
-    wx.showModal({
-      title: "删除店铺",
-      content: "确认删除这条记录？",
-      confirmText: "删除",
-      confirmColor: "#c9342f",
-      success: async (result) => {
-        if (!isAsyncPageActive(this)) return
-        if (!result.confirm) {
-          this.setData({ deleting: false })
-          return
-        }
-        wx.showLoading({ title: "删除中", mask: true })
-        let deleted = false
-        let failureMessage = ""
-        try {
-          await deleteDiningPlace(id)
-          wx.removeStorageSync("DINING_EDIT_ITEM")
-          deleted = true
-        } catch (error) {
-          failureMessage = error instanceof Error ? error.message : "删除失败"
-        } finally {
-          wx.hideLoading()
-          if (isAsyncPageActive(this)) this.setData({ deleting: false })
-        }
-        if (!isAsyncPageActive(this)) return
-        if (deleted) wx.navigateBack()
-        else wx.showToast({ title: failureMessage, icon: "none" })
-      },
-      fail: () => {
-        if (isAsyncPageActive(this)) this.setData({ deleting: false })
-      }
-    })
   }
 })

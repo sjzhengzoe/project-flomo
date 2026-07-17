@@ -37,16 +37,18 @@
     <view wx:for="{{items}}" wx:key="id" class="place-card" data-id="{{item.id}}" bindtap="handleEdit">
       <view class="place-top">
         <view class="place-name">{{item.name}}</view>
-        <view class="mode-tags">
-          <text wx:if="{{item.supportsTakeout}}" class="mode-tag">可外卖</text>
-          <text wx:if="{{item.supportsDineIn}}" class="mode-tag">可堂食</text>
-        </view>
+        <view wx:if="{{canWrite}}" class="place-delete" role="button" aria-label="删除店铺" data-id="{{item.id}}" catchtap="handleDelete"><app-icon name="trash-2-danger" size="24" /></view>
       </view>
       <view wx:if="{{item.menu_items.length}}" class="menu-items">
         <text wx:for="{{item.menu_items}}" wx:key="*this" class="menu-item">{{item}}</text>
       </view>
       <view wx:else class="no-menu">暂未记录菜品</view>
+      <view class="mode-tags">
+        <text wx:if="{{item.supportsTakeout}}" class="mode-tag">可外卖</text>
+        <text wx:if="{{item.supportsDineIn}}" class="mode-tag">可堂食</text>
+      </view>
     </view>
   </view>
   </view>
+  <operation-loading visible="{{switchingScene || deleting}}" text="{{deleting ? '正在删除店铺…' : '正在切换场景…'}}" />
 </view>

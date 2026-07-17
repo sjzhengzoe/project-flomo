@@ -29,11 +29,9 @@ jobs:
             set -e
             cd /home/ubuntu/human_draft
             git pull --ff-only origin main
-            corepack enable
-            corepack prepare pnpm@9.10.0 --activate
-            pnpm install --frozen-lockfile
-            pnpm run build
+            corepack pnpm@9.10.0 install --frozen-lockfile
+            corepack pnpm@9.10.0 run build
             sudo systemctl restart human-draft-server
             sudo systemctl is-active --quiet human-draft-server
-            curl --fail --silent --show-error --retry 5 --retry-delay 2 http://127.0.0.1:3000/api/health > /dev/null
+            curl --fail --silent --show-error --retry 5 --retry-connrefused --retry-delay 2 http://127.0.0.1:3000/api/health > /dev/null
             sudo nginx -s reload
