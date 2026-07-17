@@ -13,6 +13,8 @@
     "pages/media/category-edit/index",
     "pages/activities/index",
     "pages/luggage/index",
+    "pages/luggage/scenes/index",
+    "pages/luggage/scene-edit/index",
     "pages/dining/index",
     "pages/dining/edit/index",
     "pages/wardrobe/index",

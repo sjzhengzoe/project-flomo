@@ -2,7 +2,6 @@ import { ensureLogin } from "../../services/auth"
 import {
   createLuggageGroup,
   createLuggageItem,
-  createLuggageScene,
   deleteLuggageGroup,
   deleteLuggageItem,
   deleteLuggageScene,
@@ -10,8 +9,7 @@ import {
   moveLuggageItem,
   moveLuggageGroup,
   updateLuggageGroup,
-  updateLuggageItem,
-  updateLuggageScene
+  updateLuggageItem
 } from "../../services/life-lists"
 import type { LuggageScene } from "../../types/life-lists"
 import {
@@ -186,39 +184,15 @@ Page({
     this.setData({ sortEditing: !this.data.sortEditing })
   },
 
-  async handleAddScene() {
+  handleAddScene() {
     if (!this.data.canWrite || this.data.savingScene) return
-    const name = await promptText("新增场景", "例如：成都三日游")
-    if (!name || !isAsyncPageActive(this)) return
-    this.setData({ savingScene: true })
-    try {
-      const scene = await createLuggageScene(name)
-      if (!isAsyncPageActive(this)) return
-      this.setData({ activeSceneId: scene.id })
-      await this.loadScenes()
-    } catch (error) {
-      if (isAsyncPageActive(this)) {
-        wx.showToast({ title: error instanceof Error ? error.message : "新增失败", icon: "none" })
-      }
-    } finally {
-      if (isAsyncPageActive(this)) this.setData({ savingScene: false })
-    }
+    wx.navigateTo({ url: "/pages/luggage/scenes/index" })
   },
 
-  async handleRenameScene() {
+  handleRenameScene() {
     const scene = this.data.activeScene
     if (!scene || !this.data.canWrite || this.data.editing) return
-    const name = await promptText("修改场景名", "输入场景名称", scene.name)
-    if (!name || !isAsyncPageActive(this)) return
-    this.setData({ editing: true, editingLabel: "正在修改场景…" })
-    try {
-      await updateLuggageScene(scene.id, name)
-      if (isAsyncPageActive(this)) await this.loadScenes()
-    } catch (error) {
-      if (isAsyncPageActive(this)) wx.showToast({ title: error instanceof Error ? error.message : "修改失败", icon: "none" })
-    } finally {
-      if (isAsyncPageActive(this)) this.setData({ editing: false, editingLabel: "" })
-    }
+    wx.navigateTo({ url: `/pages/luggage/scene-edit/index?id=${scene.id}` })
   },
 
   handleDeleteScene() {
