@@ -41,6 +41,7 @@ namespace XiaohongshuPage {
     ) => void;
     fillRect: (x: number, y: number, width: number, height: number) => void;
     fillText: (text: string, x: number, y: number) => void;
+    measureText: (text: string) => { width: number };
   };
 
   const STORAGE_KEY = "XIAOHONGSHU_FORM_DATA_CONTENT";
@@ -62,7 +63,7 @@ namespace XiaohongshuPage {
   const CANVAS_LINE_HEIGHT = scaleCanvasValue(62);
   const CANVAS_ORDER_BODY_GAP = scaleCanvasValue(54);
   const CANVAS_PARAGRAPH_GAP = scaleCanvasValue(32);
-  const CANVAS_MAX_CHARS_PER_LINE = 17;
+  const CANVAS_TEXT_MAX_WIDTH = CANVAS_WIDTH - CANVAS_TEXT_X * 2;
   const XIAOHONGSHU_BLANK_LINE = "\u2800";
   const XIAOHONGSHU_TAGS =
     "#日记复兴计划[话题]# #一些有感而发[话题]# #文字复兴单元[话题]# #文字[话题]# #随便记录点什么[话题]# #日常记录[话题]# #记录真实生活[话题]#";
@@ -478,7 +479,7 @@ namespace XiaohongshuPage {
         const paragraphLines = slide.paragraphs.map((paragraph) =>
           paragraph
             .split("\n")
-            .flatMap((line) => wrapLine(line, CANVAS_MAX_CHARS_PER_LINE)),
+            .flatMap((line) => wrapLine(line, ctx, CANVAS_TEXT_MAX_WIDTH)),
         );
         const textBlockHeight = getCanvasTextBlockHeight(paragraphLines);
         const textTop = Math.max(
@@ -690,22 +691,22 @@ namespace XiaohongshuPage {
       .trim();
   }
 
-  function wrapLine(line: string, maxChars: number) {
+  function wrapLine(
+    line: string,
+    ctx: Canvas2DContext,
+    maxWidth: number,
+  ) {
     const result: string[] = [];
     let current = "";
 
     Array.from(line).forEach((char) => {
-      const charWidth = /[ -~]/.test(char) ? 0.56 : 1;
-      const currentWidth = Array.from(current).reduce(
-        (total, item) => total + (/[ -~]/.test(item) ? 0.56 : 1),
-        0,
-      );
+      const next = `${current}${char}`;
 
-      if (current && currentWidth + charWidth > maxChars) {
+      if (current && ctx.measureText(next).width > maxWidth) {
         result.push(current);
         current = char;
       } else {
-        current += char;
+        current = next;
       }
     });
 
